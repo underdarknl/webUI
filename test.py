@@ -18,21 +18,15 @@ axes = {
     "y",
     "z"
 }
-controller = machinekitController.MachinekitController(axes)
-print(controller.machine_power_status())
-print(controller.machine_emergency_status())
-# def ok_for_mdi():
-#     #Function that checks if the machine is ready to recieve commands
-#     s.poll()
-#     return not s.estop and s.enabled and s.homed and (s.interp_state == linuxcnc.INTERP_IDLE)
-
-# print(ok_for_mdi())
-# if(ok_for_mdi()):
-#     c = linuxcnc.command()
-#     s.poll()
-#     c.set_home_parameters(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0 ,0)
-#     print("Homed: ", s.axis[0]["homed"])
-#     print(c.serial)
+controller = MachinekitController(axes)
+print("power on: ", controller.power_status())
+print("emergency button pressed: ", controller.emergency_status())
+print("homed: ", controller.homed_status())
+print("ready for mdi commands: ", controller.ready_for_mdi_commands())
+print("axes: ", controller.axes_position())
+controller.e_stop("E_STOP_RESET")
+#print("TEST", controller.mdi_command("G0 X1 Y2 Z-1"))
+print("HOME AXES", controller.home_all_axes())
 
 
 @app.route("/", methods=["GET"])
