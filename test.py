@@ -4,7 +4,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import json
 import sys
-import linuxcnc 
+import linuxcnc
+import machinekitController
 
 app = Flask(__name__)
 CORS(app)
@@ -12,6 +13,14 @@ CORS(app)
 s = linuxcnc.stat()
 c = linuxcnc.command()
 
+axes = {
+    "x",
+    "y",
+    "z"
+}
+controller = machinekitController.MachinekitController(axes)
+print(controller.machine_power_status())
+print(controller.machine_emergency_status())
 # def ok_for_mdi():
 #     #Function that checks if the machine is ready to recieve commands
 #     s.poll()
@@ -25,16 +34,20 @@ c = linuxcnc.command()
 #     print("Homed: ", s.axis[0]["homed"])
 #     print(c.serial)
 
+
 @app.route("/", methods=["GET"])
 def get_customer():
     return "Hello world"
 
+
 @app.route("/status", methods=["GET"])
 def machine_status():
     s.poll()
-    status = jsonify({"estop_active": bool(s.estop), "machine_power_on": s.enabled, "homed": s.homed})
+    status = jsonify({"estop_active": bool(s.estop),
+                      "machine_power_on": s.enabled, "homed": s.homed})
     return status
-    
+
+
 @app.route("/get_current_position", methods=["GET"])
 def get_axis():
     try:
@@ -45,13 +58,14 @@ def get_axis():
             "y": s.actual_position[1],
             "z": s.actual_position[2]
         }
-        response = json.dumps({"current_position": axes,  "axis": s.axes, "estop_active": bool(s.estop), "machine_power_on": s.enabled, "homed": s.homed })
+        response = json.dumps({"current_position": axes,  "axis": s.axes, "estop_active": bool(
+            s.estop), "machine_power_on": s.enabled, "homed": s.homed})
         return response
     except linuxcnc.error, detail:
-        response = json.dumps({"error": detail} )
+        response = json.dumps({"error": detail})
         sys.exit(1)
         return response
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host = '192.168.1.224', port=5000)
+    app.run(debug=True, host='192.168.1.224', port=5000)
