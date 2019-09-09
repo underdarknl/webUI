@@ -17,6 +17,7 @@ const getAllAxesPosition = () => {
             }
 
             power = (machine_power_on !== true ? "power on" : "power off")
+            document.getElementById("emergency_button_status").disabled = estop_active;
             document.getElementById("power_button_status").innerHTML = power;
         })
         .catch(function (err) {
@@ -24,7 +25,7 @@ const getAllAxesPosition = () => {
         });
 
     let timeOutPromise = new Promise(function (resolve, reject) {
-        setTimeout(resolve, 3000, "done")
+        setTimeout(resolve, 1000, "done")
     });
 
     Promise.all(
@@ -32,10 +33,6 @@ const getAllAxesPosition = () => {
         getAllAxesPosition();
     });
 
-}
-
-const emergencyBtn = (element) => {
-    console.log(element)
 }
 
 const emergencyStop = () => {}
