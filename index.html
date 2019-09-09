@@ -35,6 +35,7 @@
           </tbody>
         </table>
       </section>
+
       <section>
         <form onsubmit="event.preventDefault()">
           <h3>Actions</h3>
@@ -48,10 +49,41 @@
             </button>
           </div>
           <div>
-            <button class="button primary" id="power_button_status">
+            <button
+              class="button primary"
+              id="power_button_status"
+              onclick="powerBtn()"
+            >
               power on
             </button>
           </div>
+        </form>
+      </section>
+
+      <section>
+        Arrow keys for movement
+        <form onsubmit="event.preventDefault()">
+          <labe>X axes</labe>
+          <button>5</button>
+          <button>1</button>
+          <button>0.5</button>
+          <button>0.1</button>
+        </form>
+
+        <form onsubmit="event.preventDefault()">
+          <labe>Y axes</labe>
+          <button>5</button>
+          <button>1</button>
+          <button>0.5</button>
+          <button>0.1</button>
+        </form>
+
+        <form onsubmit="event.preventDefault()">
+          <labe>Z axes</labe>
+          <button>5</button>
+          <button>1</button>
+          <button>0.5</button>
+          <button>0.1</button>
         </form>
       </section>
     </main>

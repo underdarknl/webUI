@@ -1,5 +1,7 @@
+const api = "http://192.168.1.224:5000/"
+
 const post = (url, data) => {
-    return fetch(url, {
+    return fetch(api + url, {
             method: "POST",
             mode: "cors",
             headers: {
@@ -16,7 +18,7 @@ const post = (url, data) => {
 }
 
 const getAllAxesPosition = () => {
-    const networkPromise = fetch("http://192.168.1.224:5000/get_current_position", {
+    const networkPromise = fetch(api + "get_current_position", {
             method: "get"
         })
         .then(response => {
@@ -42,7 +44,7 @@ const getAllAxesPosition = () => {
             }
             if (machine_power_on) {
                 pBtn.innerHTML = "power off"
-                pBtn.setAttribute("power", "off")
+                pBtn.setAttribute("power", "")
             } else {
                 pBtn.innerHTML = "power on"
                 pBtn.setAttribute("power", "on")
@@ -64,60 +66,57 @@ const getAllAxesPosition = () => {
 
 }
 
-const emergencyBtn = (element) => {
+const emergencyBtn = async (element) => {
     let btn = document.getElementById("emergency_button_status");
     if (btn.getAttribute("estop")) {
-        return fetch("http://192.168.1.224:5000/set_machine_status", {
-                method: "POST",
-                mode: "cors",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    "command": "E_STOP_RESET"
-                })
-            })
-            .then(response => {
-                return response.json()
-            })
-            .then(data => {
-                if (data === 200) {
-
-                    btn.setAttribute("estop", "");
-                    btn.innerHTML = "EMERGENCRY STOP"
-
-                }
-            })
+        const result = post("set_machine_status", {
+            "command": "E_STOP_RESET"
+        });
+        if (await result === 200) {
+            btn.setAttribute("estop", "");
+            btn.innerHTML = "EMERGENCRY STOP"
+        }
     } else {
-        fetch("http://192.168.1.224:5000/set_machine_status", {
-                method: "POST",
-                mode: "cors",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    "command": "E_STOP"
-                })
-            })
-            .then(response => {
-                return response.json()
-            })
-            .then(data => {
-                if (data === 200) {
-                    let btn = document.getElementById("emergency_button_status");
-                    btn.setAttribute("estop", "active")
-                    btn.innerHTML = "REMOVE EMERGENCRY STOP"
-                    btn.disabled = true;
-                    setTimeout(() => {
-                        btn.disabled = false;
-                    }, 2500);
-                }
-            })
+        const result = post("set_machine_status", {
+            "command": "E_STOP"
+        });
+        if (await result === 200) {
+            btn.setAttribute("estop", "active")
+            btn.innerHTML = "REMOVE EMERGENCRY STOP"
+            btn.disabled = true;
+            setTimeout(() => {
+                btn.disabled = false;
+            }, 2500);
+        }
+
     }
 }
 
-const powerBtn = (element) => {
+const powerBtn = async (element) => {
+    let btn = document.getElementById("power_button_status");
+    if (btn.getAttribute("power")) {
+        const result = post("set_machine_status", {
+            "command": "POWER_OFF"
+        });
 
+        if (await result === 200) {
+            btn.setAttribute("power", "");
+            btn.innerHTML = "power on"
+        }
+    } else {
+        const result = post("set_machine_status", {
+            "command": "POWER_ON"
+        });
+
+        if (await result === 200) {
+            btn.setAttribute("power", "on");
+            btn.innerHTML = "power off"
+            btn.disabled = true;
+            setTimeout(() => {
+                btn.disabled = false;
+            }, 2500);
+        }
+    }
 }
 
 getAllAxesPosition();
