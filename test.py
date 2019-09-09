@@ -5,7 +5,7 @@ from flask_cors import CORS
 import json
 import sys
 import linuxcnc
-import machinekitController
+from classes.machinekitController import MachinekitController
 
 app = Flask(__name__)
 CORS(app)

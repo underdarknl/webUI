@@ -20,3 +20,7 @@ class MachinekitController():
     def machine_emergency_status(self):
         self.s.poll()
         return bool(self.s.estop)
+
+    def machine_homed_status(self):
+        self.s.poll()
+        return bool(self.s.homed)
