@@ -31,10 +31,12 @@ controller = MachinekitController()
 @app.route("/get_current_position", methods=["GET"])
 def get_axis():
     return jsonify({
-        "current_position": controller.axes_position(),
-        "estop_active": controller.emergency_status(),
-        "machine_power_on": controller.power_status(),
-        "homed": controller.homed_status()
+        "machineStatus": {
+            "eStopEnabled": controller.emergency_status(),
+            "powerEnabled": controller.power_status(),
+            "homed": controller.homed_status(),
+            "position": controller.axes_position(),
+        }
     })
 
 

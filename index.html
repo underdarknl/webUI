@@ -9,7 +9,7 @@
     <link href="//css.underdark.nl/0.2/layout.css" rel="stylesheet" />
     <link href="//css.underdark.nl/0.2/module.css" rel="stylesheet" />
     <link href="//css.underdark.nl/0.2/theme.css" rel="stylesheet" />
-    <script src="js.js"></script>
+    <script src="javascript.js"></script>
   </head>
   <body>
     <main>
@@ -42,26 +42,26 @@
           <div>
             <button
               class="button primary"
-              id="emergency_button_status"
-              onClick="emergencyBtn(this)"
+              id="emergencyBtn"
+              onClick="eStopOnClick()"
             >
-              EMERGENCY STOP
+              ENABLE EMERGENCY STOP
             </button>
           </div>
           <div>
             <button
               class="button primary"
-              id="power_button_status"
-              onclick="powerBtn()"
+              id="powerBtn"
+              onclick="setPowerOnClick()"
             >
-              power on
+              turn power on
             </button>
           </div>
         </form>
       </section>
 
       <section>
-        Arrow keys for movement
+        Movement keys
         <form onsubmit="event.preventDefault()">
           <labe>X axes</labe>
           <button>5</button>
