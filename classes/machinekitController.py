@@ -6,7 +6,7 @@ class MachinekitController():
     """The Machinekit python interface in a class"""
 
     def __init__(self):
-        """ Constructor """
+        """ Constructor. Basic controllers with X Y Z axes"""
         self.axes = list(["x", "y", "z"])
         self.axes_with_cords = {}
         self.s = linuxcnc.stat()
@@ -16,28 +16,22 @@ class MachinekitController():
     # Class is split up in getters and setters
 
     def power_status(self):
-        # Function that returns if the machine is currently powered on or off
-
-        # Check for errors in the machine
-        # error = self.errors()
-        # if error:
-        #     print(error)
-
+        """ Returns bool from the current power status """
         self.s.poll()
         return bool(self.s.enabled)
 
     def emergency_status(self):
-        # Check if the emergency button is pushed in
+        """ Returns bool that represents if the emergency button is pressed """
         self.s.poll()
         return bool(self.s.estop)
 
     def homed_status(self):
-        # Check if all the axes are homed
+        """ Checks if all axes are homed """
         self.s.poll()
         return bool(self.s.homed)
 
     def axes_position(self):
-        # Loop over all the axes the user wants to use and get the current position of these axes
+        """ Loop over axes and return position in { x: 0, y: 0, z: 0 } format """
         self.s.poll()
         i = 0
         while i < len(self.axes):
@@ -47,7 +41,7 @@ class MachinekitController():
         return self.axes_with_cords
 
     def errors(self):
-        # Check if there are any errors in the machine and if so send them to a handler
+        """ Check the machine error channel """
         error = self.e.poll()
         if error:
             kind, text = error
@@ -59,11 +53,11 @@ class MachinekitController():
                 return self.handle_errors(typus, text)
 
     def handle_errors(self, typus, errors):
-        # Handle errors
+        """ Return errors """
         return ("ERRORS: ", errors)
 
     def ready_for_mdi_commands(self):
-        # Check if the machine is ready to recieve commands
+        """ Returns bool that represents if the machine is ready for MDI commands """
         self.s.poll()
         return not self.s.estop and self.s.enabled and self.s.homed and (self.s.interp_state == linuxcnc.INTERP_IDLE)
 
@@ -73,7 +67,10 @@ class MachinekitController():
         """Send a command to the machine. E_STOP, E_STOP_RESET, POWER_ON, POWER_OFF"""
         if command == "E_STOP":
             self.c.state(1)
-            return "200"
+            if self.emergency_status():
+                return "200"
+            else:
+                return "Command executed but machine still not in E_STOP modus"
         if command == "E_STOP_RESET":
             self.c.state(2)
             return "200"
@@ -93,9 +90,27 @@ class MachinekitController():
             self.c.wait_complete()
             self.c.mdi(command)
         else:
-            print("Machine not ready")
+            return "Machine not ready to recieve commands"
+
+    def manual_control(self, axes, speed, increment, command):
+        """ Manual control the CNC machine with continious transmission. axes=int speed=int in mm  increment=int in mm command=string"""
+        # Check mode 1=MDI 2=AUTO 3=MANUAL
+        self.s.poll()
+        if self.s.task_mode is not 3:
+            self.c.mode(linuxcnc.MODE_MANUAL)
+            self.c.wait_complete()
+
+        if command == "STOP":
+            return self.c.jog(linuxcnc.JOG_STOP, axes)
+
+        return self.c.jog(linuxcnc.JOG_INCREMENT, axes, speed, increment)
+
+    def set_home(self, axe):
+        """ Takes axe as int as parameter """
+        return self.c.set_home_parameters(axe, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
     def home_all_axes(self):
+        """ Return all axes to their given home position """
         machine_ready = self.ready_for_mdi_commands()
         if machine_ready:
             self.c.mode(linuxcnc.MODE_MANUAL)

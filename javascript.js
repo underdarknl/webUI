@@ -11,6 +11,7 @@ let state = {
             "z": 0
         },
     },
+    errors: [],
     buttons: {
         emergency: {
             enabled: {
@@ -117,18 +118,21 @@ const eStopOnClick = async () => {
     } = state.machineStatus;
 
     if (eStopEnabled) {
-        const result = request("set_machine_status", {
+        const result = await request("set_machine_status", {
             "command": "E_STOP_RESET"
         }, "POST");
-        if (await result === 200) {
+        if (result === 200) {
             getMachineValues();
         }
     } else {
-        const result = request("set_machine_status", {
+        const result = await request("set_machine_status", {
             "command": "E_STOP"
         }, "POST");
-        if (await result === 200) {
+        if (result === 200) {
             getMachineValues();
+        } else {
+            state.errors.push(result)
+            console.log(state.errors)
         }
     }
 }

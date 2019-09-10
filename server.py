@@ -18,14 +18,8 @@ axes = {
     "z"
 }
 controller = MachinekitController()
-# print("power on: ", controller.power_status())
-# print("emergency button pressed: ", controller.emergency_status())
-# print("homed: ", controller.homed_status())
-# print("ready for mdi commands: ", controller.ready_for_mdi_commands())
-# print("axes: ", controller.axes_position())
-# controller.e_stop("E_STOP_RESET")
 #print("TEST", controller.mdi_command("G0 X1 Y2 Z-1"))
-#print("HOME AXES", controller.home_all_axes())
+# print(controller.set_home(0))
 
 
 @app.route("/get_current_position", methods=["GET"])
@@ -45,7 +39,7 @@ def set_status():
     try:
         data = request.json
         command = data['command']
-        return controller.e_stop(command)
+        return jsonify(controller.e_stop(command))
     except KeyError:
         return "Unknow key"
 
@@ -58,9 +52,25 @@ def send_command():
         y = data['Y']
         z = data['Z']
         controller.mdi_command("G0" + "X" + x + "Y" + y + "Z" + z)
+
         return jsonify(data)
     except KeyError:
         return "Unknow key"
+
+
+@app.route("/manual", methods=["POST"])
+def manual():
+    try:
+        data = request.json
+        axes = data['axes']
+        speed = data['speed']
+        increment = data['increment']
+        command = data['command']
+
+        controller.manual_control(axes, speed, increment, command)
+        return data
+    except KeyError:
+        return "error"
 
 
 if __name__ == "__main__":
