@@ -30,6 +30,14 @@ class MachinekitController():
         self.s.poll()
         return bool(self.s.homed)
 
+    def velocity(self):
+        self.s.poll()
+        return self.s.velocity
+
+    def spindle_speed(self):
+        self.s.poll()
+        return self.s.spindle_speed
+
     def axes_position(self):
         """ Loop over axes and return position in { x: 0, y: 0, z: 0 } format """
         self.s.poll()
@@ -47,14 +55,10 @@ class MachinekitController():
             kind, text = error
             if kind in (linuxcnc.NML_ERROR, linuxcnc.OPERATOR_ERROR):
                 typus = "error"
-                return self.handle_errors(typus, text)
             else:
                 typus = "info"
-                return self.handle_errors(typus, text)
-
-    def handle_errors(self, typus, errors):
-        """ Return errors """
-        return ("ERRORS: ", errors)
+                typus, text
+        return error
 
     def ready_for_mdi_commands(self):
         """ Returns bool that represents if the machine is ready for MDI commands """

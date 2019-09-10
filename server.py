@@ -30,6 +30,8 @@ def get_axis():
             "powerEnabled": controller.power_status(),
             "homed": controller.homed_status(),
             "position": controller.axes_position(),
+            "velocity": controller.velocity(),
+            "spindle_speed": controller.spindle_speed()
         }
     })
 
@@ -68,7 +70,7 @@ def manual():
         command = data['command']
 
         controller.manual_control(axes, speed, increment, command)
-        return data
+        return jsonify({"data": data, "errors": controller.errors()})
     except KeyError:
         return "error"
 

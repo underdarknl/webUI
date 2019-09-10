@@ -100,6 +100,9 @@ const getMachineValues = async () => {
 
     (eStopEnabled) ? changeHtmlValues(emergency.enabled): changeHtmlValues(emergency.disabled);
     (powerEnabled) ? changeHtmlValues(power.enabled): changeHtmlValues(power.disabled);
+    (state.errors) ? changeHtmlValues({
+        "errors": state.errors
+    }): ""
 }
 
 const update = () => {
@@ -160,7 +163,21 @@ const setPowerOnClick = async () => {
     }
 }
 
+const manualControl = async (element) => {
+    const data = JSON.parse(element.dataset.object);
+    const result = await request("manual", {
+        "axes": data.axes,
+        "speed": 1,
+        "increment": data.increment,
+        "command": ""
+    }, "POST");
+
+    if (result.errors) {
+        state.errors.push(result.errors)
+    }
+}
+
 getMachineValues();
 setInterval(() => {
     update();
-}, 3000);
+}, 1000);
