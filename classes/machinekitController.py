@@ -12,7 +12,6 @@ class MachinekitController():
         self.s = linuxcnc.stat()
         self.c = linuxcnc.command()
         self.e = linuxcnc.error_channel()
-
     # Class is split up in getters and setters
 
     def power_status(self):
@@ -115,12 +114,11 @@ class MachinekitController():
 
     def home_all_axes(self):
         """ Return all axes to their given home position """
-        machine_ready = self.ready_for_mdi_commands()
-        if machine_ready:
-            self.c.mode(linuxcnc.MODE_MANUAL)
-            self.c.wait_complete()
-            self.c.home(0)
-            self.c.home(1)
-            self.c.home(2)
-        else:
-            print("Machine not ready")
+        self.c.mode(linuxcnc.MODE_MANUAL)
+        self.c.wait_complete()
+        self.c.home(0)
+        self.c.wait_complete()
+        self.c.home(1)
+        self.c.wait_complete()
+        self.c.home(2)
+        self.c.wait_complete()

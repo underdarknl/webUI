@@ -18,22 +18,31 @@ axes = {
     "z"
 }
 controller = MachinekitController()
-#print("TEST", controller.mdi_command("G0 X1 Y2 Z-1"))
+# controller.set_home(0)
+# controller.set_home(1)
+# controller.set_home(2)
+controller.home_all_axes()
+# print("TEST", controller.mdi_command("G0 X1 Y2 Z-1"))
 # print(controller.set_home(0))
 
 
-@app.route("/get_current_position", methods=["GET"])
+@app.route("/status", methods=["GET"])
 def get_axis():
-    return jsonify({
-        "machineStatus": {
-            "eStopEnabled": controller.emergency_status(),
-            "powerEnabled": controller.power_status(),
-            "homed": controller.homed_status(),
-            "position": controller.axes_position(),
-            "velocity": controller.velocity(),
-            "spindle_speed": controller.spindle_speed()
-        }
-    })
+    try:
+        return jsonify({
+            "machineStatus": {
+                "eStopEnabled": controller.emergency_status(),
+                "powerEnabled": controller.power_status(),
+                "homed": controller.homed_status(),
+                "position": controller.axes_position(),
+                "velocity": controller.velocity(),
+                "spindle_speed": controller.spindle_speed()
+            }
+        })
+    except Exception as e:
+        return jsonify({
+            "error": str(e)
+        })
 
 
 @app.route("/set_machine_status", methods=["POST"])
@@ -42,8 +51,10 @@ def set_status():
         data = request.json
         command = data['command']
         return jsonify(controller.e_stop(command))
-    except KeyError:
-        return "Unknow key"
+    except (KeyError, Exception) as e:
+        return jsonify({
+            "error": str(e)
+        })
 
 
 @app.route("/send_command", methods=["POST"])
@@ -56,8 +67,10 @@ def send_command():
         controller.mdi_command("G0" + "X" + x + "Y" + y + "Z" + z)
 
         return jsonify(data)
-    except KeyError:
-        return "Unknow key"
+    except (KeyError, Exception) as e:
+        return jsonify({
+            "error": str(e)
+        })
 
 
 @app.route("/manual", methods=["POST"])
@@ -71,8 +84,15 @@ def manual():
 
         controller.manual_control(axes, speed, increment, command)
         return jsonify({"data": data, "errors": controller.errors()})
-    except KeyError:
-        return "error"
+    except (KeyError, Exception) as e:
+        return jsonify({
+            "error": str(e)
+        })
+
+
+@app.route("file_upload", methods=["POST"])
+def upload:
+    return "test"
 
 
 if __name__ == "__main__":

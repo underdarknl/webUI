@@ -4,14 +4,28 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Document</title>
+    <title>CNC webUI</title>
     <link href="//css.underdark.nl/0.2/base.css" rel="stylesheet" />
     <link href="//css.underdark.nl/0.2/layout.css" rel="stylesheet" />
     <link href="//css.underdark.nl/0.2/module.css" rel="stylesheet" />
     <link href="//css.underdark.nl/0.2/theme.css" rel="stylesheet" />
-    <script src="javascript.js"></script>
+    <script src="javascript/index.js"></script>
   </head>
   <body>
+    <header>
+      <div>
+        <div class="logo">
+          <a href="/">CNC Controller</a>
+          <p>Lorem ipsum dolor sit amet</p>
+        </div>
+        <nav>
+          <ul>
+            <li><a href="/index.html">Controller</a></li>
+            <li><a href="/fileManager.html">File manager</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
     <main>
       <section>
         <h2>Status</h2>
@@ -87,6 +101,15 @@
       </section>
 
       <section>
+        <div>
+          <label>Multiply distance</label>
+          <select onchange="controlDistance(this)">
+            <option data-object="1">1</option>
+            <option data-object="2">2</option>
+            <option data-object="5">5</option>
+            <option data-object="10">10</option>
+          </select>
+        </div>
         <label>X axes</label>
         <form onsubmit="event.preventDefault()">
           <button
