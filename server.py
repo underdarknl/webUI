@@ -1,10 +1,12 @@
 #!/usr/bin/python
 
-from flask import Flask, request, jsonify
+import os
+from flask import Flask, request, jsonify, flash, redirect, url_for
 from flask_cors import CORS
 import json
 import linuxcnc
 from classes.machinekitController import MachinekitController
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 CORS(app)
@@ -90,8 +92,8 @@ def manual():
         })
 
 
-@app.route("file_upload", methods=["POST"])
-def upload:
+@app.route("/file_upload", methods=["POST"])
+def upload():
     return "test"
 
 
