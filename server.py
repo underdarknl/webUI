@@ -23,9 +23,6 @@ mysql = MySQL(app)
 UPLOAD_FOLDER = '/home/machinekit/devel/webUI/files'
 ALLOWED_EXTENSIONS = set(['nc'])
 
-s = linuxcnc.stat()
-c = linuxcnc.command()
-
 axes = {
     "x",
     "y",

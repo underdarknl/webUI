@@ -6,13 +6,35 @@ class MachinekitController():
     """The Machinekit python interface in a class"""
 
     def __init__(self):
-        """ Constructor. Basic controllers with X Y Z axes"""
-        self.axes = list(["x", "y", "z"])
-        self.axes_with_cords = {}
         self.s = linuxcnc.stat()
         self.c = linuxcnc.command()
         self.e = linuxcnc.error_channel()
+        self.axes = self.set_axes()
+        self.axes_with_cords = {}
+
     # Class is split up in getters and setters
+
+    def set_axes(self):
+        self.s.poll()
+        axesDict = {
+            0: "x",
+            1: "y",
+            2: "z",
+            3: "a",
+            4: "b",
+            5: "c",
+            6: "d",
+            7: "e",
+            8: "f",
+            9: "g"
+        }
+
+        i = 0
+        axesInMachine = []
+        while i < self.s.axes:
+            axesInMachine.append(axesDict[i])
+            i += 1
+        return axesInMachine
 
     def power_status(self):
         """ Returns bool from the current power status """
@@ -43,7 +65,7 @@ class MachinekitController():
         i = 0
         while i < len(self.axes):
             self.axes_with_cords[self.axes[i]] = round(
-                self.s.axis[i]['input'], 4)
+                self.s.axis[i]['input'], 3)
             i += 1
         return self.axes_with_cords
 

@@ -8,7 +8,13 @@ let state = {
     position: {
       x: 0,
       y: 0,
-      z: 0
+      z: 0,
+      a: 0,
+      b: 0,
+      c: 0,
+      d: 0,
+      e: 0,
+      f: 0
     }
   },
   errors: [],
@@ -37,9 +43,15 @@ let state = {
 
 const getMachineValues = async () => {
   const result = await request(api + "status", {}, "get");
+  if (state.errors) {
+    if (state.errors.length > 0) {
+      document.getElementById("error").innerHTML =
+        "<p class='error'>" + state.errors + "</p>";
+    } else {
+      document.getElementById("error").innerHTML = "";
+    }
 
-  state.errors ?
-    document.getElementById("error").innerHTML = "<p class='error'>" + state.errors + '</p>' : document.getElementById("error").innerHTML = "";
+  }
 
   if (result.error || result === "Server is down please start the server") {
     if (result.error == "emcStatusBuffer invalid err=3") {
