@@ -35,78 +35,50 @@ let state = {
   }
 };
 
-const request = (url, data, type) => {
-  if (type === "POST") {
-    return fetch(api + url, {
-      method: "POST",
-      mode: "cors",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(data)
-    })
-      .then(response => {
-        return response.json();
-      })
-      .then(data => {
-        return data;
-      });
-  } else {
-    return fetch(api + url, {
-      method: "GET"
-    })
-      .then(response => {
-        return response.json();
-      })
-      .then(data => {
-        return data;
-      })
-      .catch(error => {
-        if (error == "TypeError: Failed to fetch") {
-          return (state.errors = "Server is down please start the server");
-        }
-        return console.log(error);
-      });
-  }
-};
-
 const getMachineValues = async () => {
-  const result = await request("status", {}, "get");
+  const result = await request(api + "status", {}, "get");
 
-  state.errors
-    ? changeHtmlValues({
-        errors: state.errors
-      })
-    : "";
+  state.errors ?
+    document.getElementById("error").innerHTML = "<p class='error'>" + state.errors + '</p>' : document.getElementById("error").innerHTML = "";
 
-  if (result.error) {
+  if (result.error || result === "Server is down please start the server") {
     if (result.error == "emcStatusBuffer invalid err=3") {
       return (state.errors =
-        "Linuxcnc still offline. If you want to use the application start it with 'linuxcnc &'");
+        "Machinekit is offline. Start machinekit with 'linuxcnc &'");
     }
     return (state.errors = result.error);
   }
-
   //Set all data to the current state
-  const { machineStatus } = result;
+  const {
+    machineStatus
+  } = result;
 
   state = {
     ...state,
     machineStatus
   };
 
-  const { eStopEnabled, powerEnabled, position } = state.machineStatus;
+  const {
+    eStopEnabled,
+    powerEnabled,
+    position
+  } = state.machineStatus;
 
-  const { emergency, power } = state.buttons;
+  const {
+    emergency,
+    power
+  } = state.buttons;
 
   changeHtmlValues(position);
 
   eStopEnabled
-    ? changeHtmlValues(emergency.enabled)
-    : changeHtmlValues(emergency.disabled);
+    ?
+    changeHtmlValues(emergency.enabled) :
+    changeHtmlValues(emergency.disabled);
   powerEnabled
-    ? changeHtmlValues(power.enabled)
-    : changeHtmlValues(power.disabled);
+    ?
+    changeHtmlValues(power.enabled) :
+    changeHtmlValues(power.disabled);
 };
 
 const update = () => {
@@ -120,12 +92,13 @@ const changeHtmlValues = object => {
 };
 
 const eStopOnClick = async () => {
-  const { eStopEnabled } = state.machineStatus;
+  const {
+    eStopEnabled
+  } = state.machineStatus;
 
   if (eStopEnabled) {
     const result = await request(
-      "set_machine_status",
-      {
+      api + "set_machine_status", {
         command: "E_STOP_RESET"
       },
       "POST"
@@ -135,8 +108,7 @@ const eStopOnClick = async () => {
     }
   } else {
     const result = await request(
-      "set_machine_status",
-      {
+      api + "set_machine_status", {
         command: "E_STOP"
       },
       "POST"
@@ -151,12 +123,13 @@ const eStopOnClick = async () => {
 };
 
 const setPowerOnClick = async () => {
-  const { powerEnabled } = state.machineStatus;
+  const {
+    powerEnabled
+  } = state.machineStatus;
 
   if (powerEnabled) {
     const result = request(
-      "set_machine_status",
-      {
+      api + "set_machine_status", {
         command: "POWER_ON"
       },
       "POST"
@@ -166,8 +139,7 @@ const setPowerOnClick = async () => {
     }
   } else {
     const result = request(
-      "set_machine_status",
-      {
+      api + "set_machine_status", {
         command: "POWER_OFF"
       },
       "POST"
@@ -180,10 +152,8 @@ const setPowerOnClick = async () => {
 
 const manualControl = async element => {
   const data = JSON.parse(element.dataset.object);
-  console.log(state.speed);
   const result = await request(
-    "manual",
-    {
+    api + "manual", {
       axes: data.axes,
       speed: 10,
       increment: data.increment * state.speed,

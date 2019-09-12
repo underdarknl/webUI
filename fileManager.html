@@ -9,6 +9,7 @@
     <link href="//css.underdark.nl/0.2/layout.css" rel="stylesheet" />
     <link href="//css.underdark.nl/0.2/module.css" rel="stylesheet" />
     <link href="//css.underdark.nl/0.2/theme.css" rel="stylesheet" />
+    <script type="text/javascript" src="javascript/helpers.js"></script>
     <script type="text/javascript" src="javascript/manager.js"></script>
   </head>
   <body>
@@ -28,13 +29,20 @@
     </header>
     <main>
       <section>
-        <h2>Select file</h2>
+        <h2>Files on server</h2>
+        <div id="files"></div>
       </section>
+
+      <section>
+        <h2>Queue manager</h2>
+        <div id="files"></div>
+      </section>
+
       <section>
         <h2>Upload file</h2>
         <form onsubmit="event.preventDefault()">
           <input id="uploadFile" onchange="getAllFiles()" type="file" />
-          <button onclick="">upload</button>
+          <button onclick="test()">upload</button>
         </form>
       </section>
     </main>

@@ -1,15 +1,27 @@
 #!/usr/bin/python
 
 import os
-from flask import Flask, request, jsonify, flash, redirect, url_for
+from flask import Flask, request, jsonify, flash, redirect, url_for, send_from_directory
 from flask_cors import CORS
+from flask_mysqldb import MySQL
 import json
 import linuxcnc
 from classes.machinekitController import MachinekitController
 from werkzeug.utils import secure_filename
+from pprint import pprint
 
 app = Flask(__name__)
 CORS(app)
+
+app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_USER'] = 'root'
+app.config['MYSQL_PASSWORD'] = 'machinekit'
+app.config['MYSQL_DB'] = 'machinekit'
+
+mysql = MySQL(app)
+
+UPLOAD_FOLDER = '/home/machinekit/devel/webUI/files'
+ALLOWED_EXTENSIONS = set(['nc'])
 
 s = linuxcnc.stat()
 c = linuxcnc.command()
@@ -23,7 +35,7 @@ controller = MachinekitController()
 # controller.set_home(0)
 # controller.set_home(1)
 # controller.set_home(2)
-controller.home_all_axes()
+# controller.home_all_axes()
 # print("TEST", controller.mdi_command("G0 X1 Y2 Z-1"))
 # print(controller.set_home(0))
 
@@ -94,7 +106,49 @@ def manual():
 
 @app.route("/file_upload", methods=["POST"])
 def upload():
-    return "test"
+    try:
+        # pprint(vars(request))
+        if "file" not in request.files:
+            return "No file found"
+
+        print("test")
+        file = request.files["file"]
+        filename = secure_filename(file.filename)
+        cur = mysql.connection.cursor()
+        cur.execute(
+            """
+            SELECT * FROM files 
+            WHERE file_name = '%s' """ % filename)
+
+        result = cur.fetchall()
+
+        if len(result) > 0:
+            return jsonify({"error": "File with given name already on server"})
+
+        cur.execute("""
+            INSERT INTO files (file_name, file_location)
+            VALUES (%s, %s)
+             """, (filename, UPLOAD_FOLDER)
+        )
+        mysql.connection.commit()
+        file.save(os.path.join(UPLOAD_FOLDER, filename))
+        return jsonify("File added to database and saved to folder")
+
+    except Exception as e:
+        return jsonify({"errors": e})
+
+
+@app.route("/return_files", methods=["GET"])
+def return_files():
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("""
+        SELECT * FROM files
+        """)
+        result = cur.fetchall()
+        return jsonify({"result": result})
+    except Exception as e:
+        return e
 
 
 if __name__ == "__main__":
