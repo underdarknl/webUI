@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import os
 from flask import Flask, request, jsonify, flash, redirect, url_for, send_from_directory
@@ -28,32 +28,36 @@ axes = {
     "y",
     "z"
 }
-controller = MachinekitController()
-# controller.set_home(0)
-# controller.set_home(1)
-# controller.set_home(2)
-# controller.home_all_axes()
-# print("TEST", controller.mdi_command("G0 X1 Y2 Z-1"))
-# print(controller.set_home(0))
+
+try:
+    controller = MachinekitController()
+    # print("TEST", controller.mdi_command("G0 X1 Y2 Z-1"))
+    # print(controller.set_home(0))
+except Exception as e:
+    print(e)
 
 
 @app.route("/status", methods=["GET"])
 def get_axis():
     try:
-        return jsonify({
-            "machineStatus": {
-                "eStopEnabled": controller.emergency_status(),
-                "powerEnabled": controller.power_status(),
-                "homed": controller.homed_status(),
-                "position": controller.axes_position(),
-                "velocity": controller.velocity(),
-                "spindle_speed": controller.spindle_speed()
-            }
-        })
+        return jsonify(controller.get_all_vitals())
     except Exception as e:
         return jsonify({
             "error": str(e)
         })
+
+
+@app.route("/return_files", methods=["GET"])
+def return_files():
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("""
+        SELECT * FROM files
+        """)
+        result = cur.fetchall()
+        return jsonify({"result": result})
+    except Exception as e:
+        return e
 
 
 @app.route("/set_machine_status", methods=["POST"])
@@ -63,6 +67,28 @@ def set_status():
         command = data['command']
         return jsonify(controller.e_stop(command))
     except (KeyError, Exception) as e:
+        return jsonify({
+            "error": str(e)
+        })
+
+
+@app.route("/set_home", methods=["GET"])
+def set_home_axes():
+    try:
+        return jsonify(controller.home_all_axes())
+    except Exception as e:
+        return jsonify({
+            "error": str(e)
+        })
+
+
+@app.route("/control_program", methods=["POST"])
+def control_program():
+    try:
+        data = request.json
+        command = data['command']
+        return jsonify(controller.run_program(command))
+    except Exception as e:
         return jsonify({
             "error": str(e)
         })
@@ -108,13 +134,12 @@ def upload():
         if "file" not in request.files:
             return "No file found"
 
-        print("test")
         file = request.files["file"]
         filename = secure_filename(file.filename)
         cur = mysql.connection.cursor()
         cur.execute(
             """
-            SELECT * FROM files 
+            SELECT * FROM files
             WHERE file_name = '%s' """ % filename)
 
         result = cur.fetchall()
@@ -133,19 +158,6 @@ def upload():
 
     except Exception as e:
         return jsonify({"errors": e})
-
-
-@app.route("/return_files", methods=["GET"])
-def return_files():
-    try:
-        cur = mysql.connection.cursor()
-        cur.execute("""
-        SELECT * FROM files
-        """)
-        result = cur.fetchall()
-        return jsonify({"result": result})
-    except Exception as e:
-        return e
 
 
 if __name__ == "__main__":

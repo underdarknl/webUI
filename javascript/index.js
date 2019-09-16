@@ -5,112 +5,102 @@ let state = {
     powerEnabled: false,
     eStopEnabled: false,
     homed: false,
-    position: {
-      x: 0,
-      y: 0,
-      z: 0,
-      a: 0,
-      b: 0,
-      c: 0,
-      d: 0,
-      e: 0,
-      f: 0
-    }
+    position: {}
   },
+  generatedControls: false,
   errors: [],
-  speed: 1,
-  buttons: {
-    emergency: {
-      enabled: {
-        emergencyBtn: "DISABLE EMERGENCY STOP"
-      },
-      disabled: {
-        emergencyBtn: "ENABLE EMERGENCY STOP"
-      },
-      timedOut: false
-    },
-    power: {
-      enabled: {
-        powerBtn: "turn power off"
-      },
-      disabled: {
-        powerBtn: "turn power on"
-      },
-      timeOut: false
-    }
-  }
+  speed: 1
 };
 
 const getMachineValues = async () => {
   const result = await request(api + "status", {}, "get");
-  if (state.errors) {
-    if (state.errors.length > 0) {
-      document.getElementById("error").innerHTML =
-        "<p class='error'>" + state.errors + "</p>";
-    } else {
-      document.getElementById("error").innerHTML = "";
-    }
-
+  if (handleErrors(result) == undefined) {
+    return;
   }
-
-  if (result.error || result === "Server is down please start the server") {
-    if (result.error == "emcStatusBuffer invalid err=3") {
-      return (state.errors =
-        "Machinekit is offline. Start machinekit with 'linuxcnc &'");
-    }
-    return (state.errors = result.error);
-  }
-  //Set all data to the current state
-  const {
-    machineStatus
-  } = result;
-
+  const machineStatus = result.machineStatus;
   state = {
     ...state,
     machineStatus
   };
 
-  const {
-    eStopEnabled,
-    powerEnabled,
-    position
-  } = state.machineStatus;
+  const { eStopEnabled, powerEnabled, position } = state.machineStatus;
+  populateTable();
+  if (position !== {} && !state.generatedControls) {
+    generateControllers();
+  }
 
-  const {
-    emergency,
-    power
-  } = state.buttons;
+  if (eStopEnabled) {
+    document.getElementById("emergencyBtn").innerHTML =
+      "DISABLE EMERGENCY STOP";
+  } else {
+    document.getElementById("emergencyBtn").innerHTML = "ENABLE EMERGENCY STOP";
+  }
 
-  changeHtmlValues(position);
+  if (powerEnabled) {
+    document.getElementById("powerBtn").innerHTML = "turn power off";
+  } else {
+    document.getElementById("powerBtn").innerHTML = "turn power on";
+  }
+};
 
-  eStopEnabled
-    ?
-    changeHtmlValues(emergency.enabled) :
-    changeHtmlValues(emergency.disabled);
-  powerEnabled
-    ?
-    changeHtmlValues(power.enabled) :
-    changeHtmlValues(power.disabled);
+const handleErrors = result => {
+  if (result.error || result === "Server is down please start the server") {
+    state.errors = result;
+    if (result.error == "emcStatusBuffer invalid err=3") {
+      state.errors =
+        "Machinekit is offline. Start machinekit with 'linuxcnc &'";
+    }
+  }
+
+  if (state.errors) {
+    if (state.errors.length > 0) {
+      document.getElementById("error").innerHTML =
+        "<p class='error'>" + state.errors + "</p>";
+      state.errors = [];
+      return;
+    } else {
+      document.getElementById("error").innerHTML = "";
+      return false;
+    }
+  }
+  return false;
+};
+
+const populateTable = () => {
+  const position = state.machineStatus.position;
+  const head = document.getElementById("thead_axes");
+  const body = document.getElementById("tbody_axes");
+  head.innerHTML = "";
+  body.innerHTML = "";
+
+  for (const key in position) {
+    if (key == "x") {
+      head.insertCell(0).innerHTML = key;
+      body.insertCell(0).innerHTML = position[key];
+    } else if (key == "y") {
+      head.insertCell(1).innerHTML = key;
+      body.insertCell(1).innerHTML = position[key];
+    } else if (key == "z") {
+      head.insertCell(2).innerHTML = key;
+      body.insertCell(2).innerHTML = position[key];
+    } else {
+      head.insertCell(-1).innerHTML = key;
+      body.insertCell(-1).innerHTML = position[key];
+    }
+  }
 };
 
 const update = () => {
   getMachineValues();
 };
 
-const changeHtmlValues = object => {
-  for (const key in object) {
-    document.getElementById(key).innerHTML = object[key];
-  }
-};
-
 const eStopOnClick = async () => {
-  const {
-    eStopEnabled
-  } = state.machineStatus;
+  const { eStopEnabled } = state.machineStatus;
 
   if (eStopEnabled) {
     const result = await request(
-      api + "set_machine_status", {
+      api + "set_machine_status",
+      {
         command: "E_STOP_RESET"
       },
       "POST"
@@ -120,7 +110,8 @@ const eStopOnClick = async () => {
     }
   } else {
     const result = await request(
-      api + "set_machine_status", {
+      api + "set_machine_status",
+      {
         command: "E_STOP"
       },
       "POST"
@@ -135,13 +126,12 @@ const eStopOnClick = async () => {
 };
 
 const setPowerOnClick = async () => {
-  const {
-    powerEnabled
-  } = state.machineStatus;
+  const { powerEnabled } = state.machineStatus;
 
   if (powerEnabled) {
     const result = request(
-      api + "set_machine_status", {
+      api + "set_machine_status",
+      {
         command: "POWER_ON"
       },
       "POST"
@@ -151,7 +141,8 @@ const setPowerOnClick = async () => {
     }
   } else {
     const result = request(
-      api + "set_machine_status", {
+      api + "set_machine_status",
+      {
         command: "POWER_OFF"
       },
       "POST"
@@ -165,7 +156,8 @@ const setPowerOnClick = async () => {
 const manualControl = async element => {
   const data = JSON.parse(element.dataset.object);
   const result = await request(
-    api + "manual", {
+    api + "manual",
+    {
       axes: data.axes,
       speed: 10,
       increment: data.increment * state.speed,
@@ -183,7 +175,53 @@ const controlDistance = element => {
   state.speed = parseInt(element.options[element.selectedIndex].dataset.object);
 };
 
+const generateControllers = () => {
+  console.log(state.machineStatus.position);
+  const keyToInt = {
+    x: 0,
+    y: 1,
+    z: 2,
+    a: 3,
+    b: 4,
+    c: 5,
+    d: 6,
+    e: 7,
+    f: 8
+  };
+  const movementOptions = [10, 5, 1, -1, -5, -10];
+  for (const key in state.machineStatus.position) {
+    let html =
+      `
+    <label>` +
+      key +
+      `</labe>
+    <form onsubmit="event.preventDefault()">`;
+    movementOptions.map((value, index) => {
+      html +=
+        `
+      <button
+            onclick="manualControl(this)"
+            data-object='{"axes": ` +
+        keyToInt[key] +
+        `, "increment": ` +
+        value +
+        `}'
+          >
+            ` +
+        value +
+        `
+          </button>
+      `;
+    });
+    html += `</form>`;
+    document.getElementById("controllers").innerHTML += html;
+  }
+
+  state.generatedControls = true;
+  //document.getElementById("controllers").innerHTML = html;
+};
+
 getMachineValues();
 setInterval(() => {
   update();
-}, 1000);
+}, 3000);
