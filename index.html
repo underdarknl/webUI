@@ -4,55 +4,270 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Document</title>
+    <title>CNC webUI</title>
     <link href="//css.underdark.nl/0.2/base.css" rel="stylesheet" />
     <link href="//css.underdark.nl/0.2/layout.css" rel="stylesheet" />
     <link href="//css.underdark.nl/0.2/module.css" rel="stylesheet" />
     <link href="//css.underdark.nl/0.2/theme.css" rel="stylesheet" />
-    <!-- <script src="js.js"></script> -->
+    <script src="javascript/helpers.js"></script>
+    <script src="javascript/index.js"></script>
   </head>
   <body>
+    <header>
+      <div>
+        <div class="logo">
+          <a href="/">CNC Controller</a>
+          <p>Lorem ipsum dolor sit amet</p>
+        </div>
+        <nav>
+          <ul>
+            <li><a href="/index.html">Controller</a></li>
+            <li><a href="/fileManager.html">File manager</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
     <main>
       <section>
         <h2>Status</h2>
+        <div>
+          <label>ERRORS:</label>
+          <div id="error"></div>
+        </div>
         <table>
           <caption>
             Axes
           </caption>
           <thead>
+            <tr id="thead_axes">
+              <th>Axes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr id="tbody_axes"></tr>
+          </tbody>
+        </table>
+        <table>
+          <thead>
             <tr>
-              <th>X</th>
-              <th>Y</th>
-              <th>Z</th>
+              <th>Spindle speed</th>
+              <th>velocity</th>
+              <th>test</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <th id="x">X</th>
-              <th id="y">Y</th>
-              <th id="z">Z</th>
+              <td>1000</td>
+              <td>1000</td>
+              <td>1000</td>
             </tr>
           </tbody>
         </table>
       </section>
+
       <section>
-        <form>
+        <form onsubmit="event.preventDefault()">
           <h3>Actions</h3>
           <div>
-            <button class="button primary" id="emergency_button_status">
-              EMERGENCY STOP
+            <button
+              class="button error"
+              id="emergencyBtn"
+              onClick="eStopOnClick()"
+            >
+              ENABLE EMERGENCY STOP
             </button>
           </div>
           <div>
-            <!-- <label for="after_1"
-              >Power on: <label id="power_button_status">off</label></label
-            > -->
-            <button class="button primary" id="power_button_status">
-              power on
+            <button
+              class="button primary"
+              id="powerBtn"
+              onclick="setPowerOnClick()"
+            >
+              turn power on
+            </button>
+          </div>
+          <div>
+            <button class="button primary">
+              home all axes
             </button>
           </div>
         </form>
       </section>
+
+      <section id="controllers"></section>
+      <!-- 
+      <section>
+        <div>
+          <label>Multiply distance</label>
+          <select onchange="controlDistance(this)">
+            <option data-object="1">1</option>
+            <option data-object="2">2</option>
+            <option data-object="5">5</option>
+            <option data-object="10">10</option>
+          </select>
+        </div>
+        <label>X axes</label>
+        <form onsubmit="event.preventDefault()">
+          <button
+            onclick="manualControl(this)"
+            data-object='{"axes": 0, "increment": 5}'
+          >
+            5
+          </button>
+          <button
+            onclick="manualControl(this)"
+            data-object='{"axes": 0, "increment": 1}'
+          >
+            1
+          </button>
+          <button
+            onclick="manualControl(this)"
+            data-object='{"axes": 0, "increment": 0.5}'
+          >
+            0.5
+          </button>
+          <button
+            onclick="manualControl(this)"
+            data-object='{"axes": 0, "increment": 0.1}'
+          >
+            0.1
+          </button>
+
+          <br /><br />
+          <button
+            onclick="manualControl(this)"
+            data-object='{"axes": 0, "increment": -5}'
+          >
+            -5
+          </button>
+          <button
+            onclick="manualControl(this)"
+            data-object='{"axes": 0, "increment": -1}'
+          >
+            -1
+          </button>
+          <button
+            onclick="manualControl(this)"
+            data-object='{"axes": 0, "increment": -0.5}'
+          >
+            -0.5
+          </button>
+          <button
+            onclick="manualControl(this)"
+            data-object='{"axes": 0, "increment": -0.1}'
+          >
+            -0.1
+          </button>
+        </form>
+
+        <label>Y axes</label>
+        <form onsubmit="event.preventDefault()">
+          <button
+            onclick="manualControl(this)"
+            data-object='{"axes": 1, "increment": 5}'
+          >
+            5
+          </button>
+          <button
+            onclick="manualControl(this)"
+            data-object='{"axes": 1, "increment": 1}'
+          >
+            1
+          </button>
+          <button
+            onclick="manualControl(this)"
+            data-object='{"axes": 1, "increment": 0.5}'
+          >
+            0.5
+          </button>
+          <button
+            onclick="manualControl(this)"
+            data-object='{"axes": 1, "increment": 0.1}'
+          >
+            0.1
+          </button>
+
+          <br /><br />
+          <button
+            onclick="manualControl(this)"
+            data-object='{"axes": 1, "increment": -5}'
+          >
+            -5
+          </button>
+          <button
+            onclick="manualControl(this)"
+            data-object='{"axes": 1, "increment": -1}'
+          >
+            -1
+          </button>
+          <button
+            onclick="manualControl(this)"
+            data-object='{"axes": 1, "increment": -0.5}'
+          >
+            -0.5
+          </button>
+          <button
+            onclick="manualControl(this)"
+            data-object='{"axes": 1, "increment": -0.1}'
+          >
+            -0.1
+          </button>
+        </form>
+
+        <label>Z axes</label>
+        <form onsubmit="event.preventDefault()">
+          <button
+            onclick="manualControl(this)"
+            data-object='{"axes": 2, "increment": 5}'
+          >
+            5
+          </button>
+          <button
+            onclick="manualControl(this)"
+            data-object='{"axes": 2, "increment": 1}'
+          >
+            1
+          </button>
+          <button
+            onclick="manualControl(this)"
+            data-object='{"axes": 2, "increment": 0.5}'
+          >
+            0.5
+          </button>
+          <button
+            onclick="manualControl(this)"
+            data-object='{"axes": 2, "increment": 0.1}'
+          >
+            0.1
+          </button>
+
+          <br /><br />
+          <button
+            onclick="manualControl(this)"
+            data-object='{"axes": 2, "increment": -5}'
+          >
+            -5
+          </button>
+          <button
+            onclick="manualControl(this)"
+            data-object='{"axes": 2, "increment": -1}'
+          >
+            -1
+          </button>
+          <button
+            onclick="manualControl(this)"
+            data-object='{"axes": 2, "increment": -0.5}'
+          >
+            -0.5
+          </button>
+          <button
+            onclick="manualControl(this)"
+            data-object='{"axes": 2, "increment": -0.1}'
+          >
+            -0.1
+          </button>
+        </form>
+      </section> -->
     </main>
   </body>
 </html>
