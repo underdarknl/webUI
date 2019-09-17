@@ -176,7 +176,7 @@ class MachinekitController():
             else:
                 typus = "info"
                 typus, text
-        return error
+        return {"errors": error}
 
     def ready_for_mdi_commands(self):
         """ Returns bool that represents if the machine is ready for MDI commands """
@@ -236,18 +236,19 @@ class MachinekitController():
         else:
             return "Machine not ready to recieve commands"
 
-    def manual_control(self, axes, speed, increment, command):
+    def manual_control(self, axes, speed, increment):
         """ Manual control the CNC machine with continious transmission. axes=int speed=int in mm  increment=int in mm command=string"""
-        # Check mode 1=MDI 2=AUTO 3=MANUAL
+        if not self.power_status() and not self.emergency_status():
+            return {"errors": "Cannot execute command when machine is powered off or in E_STOP modus"}
+
         self.s.poll()
-        if self.s.task_mode is not 3:
-            self.c.mode(linuxcnc.MODE_MANUAL)
-            self.c.wait_complete()
+        if self.s.interp_state is not linuxcnc.INTERP_IDLE:
+            return {"errors": "Cannot execute command when machine interp state isn't idle"}
 
-        if command == "STOP":
-            return self.c.jog(linuxcnc.JOG_STOP, axes)
+        self.ensure_mode(linuxcnc.MODE_MANUAL)
+        self.c.jog(linuxcnc.JOG_INCREMENT, axes, speed, increment)
 
-        return self.c.jog(linuxcnc.JOG_INCREMENT, axes, speed, increment)
+        return {"success": "moving axes"}
 
     def set_home(self):
         """ Takes axe as int as parameter """
@@ -264,11 +265,14 @@ class MachinekitController():
         self.c.mode(linuxcnc.MODE_MANUAL)
         self.c.wait_complete()
         self.set_home()
+        errors = self.errors()
+        if errors['errors']:
+            return errors
         return {"success": "homing in progress"}
 
     def run_program(self, command):
         if not self.ensure_mode(linuxcnc.MODE_AUTO, linuxcnc.MODE_MDI):
-            return {"error": "machine is running"}
+            return {"error": "machine is running or in wrong mode"}
 
         if command == "start":
             return self.task_run(9)
@@ -282,26 +286,39 @@ class MachinekitController():
     def task_run(self, start_line):
         self.s.poll()
         if self.s.task_mode != linuxcnc.MODE_AUTO or self.s.interp_state in (linuxcnc.INTERP_READING, linuxcnc.INTERP_WAITING, linuxcnc.INTERP_PAUSED):
-            return {"error": "Can't start machine because it is in the middle of a project"}
+            return {"errors": "Can't start machine because it is currently running or paused in a project"}
         self.ensure_mode(linuxcnc.MODE_AUTO)
-        return self.c.auto(linuxcnc.AUTO_RUN, 9)
+        self.c.auto(linuxcnc.AUTO_RUN, 9)
+
+        errors = self.errors()
+        if errors['errors']:
+            return errors
+        return {"success": "resuming"}
 
     def task_pause(self, *event):
         self.s.poll()
-        if self.s.task_mode != linuxcnc.MODE_AUTO or self.s.interp_state not in (linuxcnc.INTERP_READING, linuxcnc.INTERP_WAITING):
-            return {"error": "Machine already paused"}
+        if self.s.interp_state is linuxcnc.INTERP_PAUSED:
+            return {"errors": "Machine is already paused."}
+        if self.s.task_mode is not linuxcnc.MODE_AUTO or self.s.interp_state not in (linuxcnc.INTERP_READING, linuxcnc.INTERP_WAITING):
+            return {"errors": "Machine not ready to recieve pause command. Probably because its currently not working on a program"}
         self.ensure_mode(linuxcnc.MODE_AUTO)
         self.c.auto(linuxcnc.AUTO_PAUSE)
+
+        errors = self.errors()
+        if errors['errors']:
+            return errors
         return {"success": "pausing"}
 
     def task_resume(self, *event):
         self.s.poll()
-        if not self.s.paused:
-            return {"error": "machine already running"}
-        if self.s.task_mode not in (linuxcnc.MODE_AUTO, linuxcnc.MODE_MDI):
-            return
-        self.ensure_mode(linuxcnc.MODE_AUTO, linuxcnc.MODE_MDI)
+        if self.s.task_mode is not linuxcnc.MODE_AUTO or self.s.interp_state is not linuxcnc.INTERP_PAUSED:
+            return {"errors": "Machine not ready to resume. Probably because the machine is not paused or not in auto modus"}
+        self.ensure_mode(linuxcnc.MODE_AUTO)
         self.c.auto(linuxcnc.AUTO_RESUME)
+
+        errors = self.errors()
+        if errors['errors']:
+            return errors
         return {"success": "resuming"}
 
     def ensure_mode(self, m, *p):
@@ -317,6 +334,10 @@ class MachinekitController():
     def task_stop(self):
         self.c.abort()
         self.c.wait_complete()
+
+        errors = self.errors()
+        if errors['errors']:
+            return errors
         return {"success": "stopped"}
 
     def running(self, do_poll=True):

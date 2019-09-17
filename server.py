@@ -1,14 +1,14 @@
 #!/usr/bin/python3
 
 import os
-from flask import Flask, request, jsonify, flash, redirect, url_for, send_from_directory
-from flask_cors import CORS
-from flask_mysqldb import MySQL
 import json
 import linuxcnc
-from classes.machinekitController import MachinekitController
-from werkzeug.utils import secure_filename
 from pprint import pprint
+from flask_cors import CORS
+from flask_mysqldb import MySQL
+from werkzeug.utils import secure_filename
+from classes.machinekitController import MachinekitController
+from flask import Flask, request, jsonify, flash, redirect, url_for, send_from_directory
 
 app = Flask(__name__)
 CORS(app)
@@ -23,16 +23,8 @@ mysql = MySQL(app)
 UPLOAD_FOLDER = '/home/machinekit/devel/webUI/files'
 ALLOWED_EXTENSIONS = set(['nc'])
 
-axes = {
-    "x",
-    "y",
-    "z"
-}
-
 try:
     controller = MachinekitController()
-    # print("TEST", controller.mdi_command("G0 X1 Y2 Z-1"))
-    # print(controller.set_home(0))
 except Exception as e:
     print(e)
 
@@ -117,10 +109,8 @@ def manual():
         axes = data['axes']
         speed = data['speed']
         increment = data['increment']
-        command = data['command']
 
-        controller.manual_control(axes, speed, increment, command)
-        return jsonify({"data": data, "errors": controller.errors()})
+        return jsonify(controller.manual_control(axes, speed, increment))
     except (KeyError, Exception) as e:
         return jsonify({
             "error": str(e)
