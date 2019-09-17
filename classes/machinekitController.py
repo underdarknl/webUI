@@ -36,125 +36,27 @@ class MachinekitController():
             i += 1
         return axesInMachine
 
-    def power_status(self):
-        """ Returns bool from the current power status """
+    def interp_state(self):
         self.s.poll()
-        return bool(self.s.enabled)
+        modes = ["INTERP_IDLE", "INTERP_READING", "INTERP_PAUSED", "INTERP_WAITING"]
+        state = self.s.interp_state
+        return modes[state - 1]
+        
+        if state is 1:
+            return "INTERP_IDLE"
+        elif state is 2:
+            return "INTERP_READING"
+        elif state is 3:
+            return "INTERP_PAUSED"
+        elif state is 4:
+            return "INTERP_WAITING"
 
-    def emergency_status(self):
-        """ Returns bool that represents if the emergency button is pressed """
+    def task_mode(self):
         self.s.poll()
-        return bool(self.s.estop)
-
-    def homed_status(self):
-        """ Checks if all axes are homed """
-        self.s.poll()
-        return bool(self.s.homed)
-
-    def velocity(self):
-        self.s.poll()
-        return self.s.velocity
-
-    def spindle_speed(self):
-        self.s.poll()
-        return self.s.spindle_speed
-
-    def acceleration(self):
-        """ returns float - default acceleration, reflects the ini entry [TRAJ] DEFAULT_ACCELERATION. """
-        self.s.poll()
-        return self.s.acceleration
-
-    def active_queue(self):
-        """ returns int - number of motions blending.  """
-        self.s.poll()
-        return self.s.active_queue
-
-    def queue(self):
-        self.s.poll()
-        return self.s.queue
-
-    def queue_full(self):
-        return self.s.queue_full
-
-    def adaptive_feed_enabled(self):
-        """ returns True/False - status of adaptive feedrate override (0/1). """
-        self.s.poll()
-        return self.s.adaptive_feed_enabled
-
-    def ain(self):
-        """ returns tuple of floats - current value of the analog input pins """
-        self.s.poll()
-        return self.s.ain
-
-    def angular_units(self):
-        """ returns string - reflects [TRAJ] ANGULAR_UNITS ini value. """
-        self.s.poll()
-        return self.s.angular_units
-
-    def aout(self):
-        """ returns tuple of floats - current value of the analog output pins. """
-        self.s.poll()
-        return self.s.aout
-
-    def axes_ini(self):
-        """ returns string - reflects [TRAJ] AXES ini value. """
-        self.s.poll()
-        return self.s.axes
-
-    def axis(self):
-        """ returns tuple of dicts - reflecting current axis values. See The axis dictionary. """
-        self.s.poll()
-        return self.s.axis
-
-    def command(self):
-        """ returns string - currently executing command. """
-        self.s.poll()
-        return self.s.command
-
-    def current_line(self):
-        """ returns integer - currently executing line, int. """
-        self.s.poll()
-        return self.s.current_line
-
-    def get_active_file(self):
-        """ returns string - currently executing gcode file. """
-        self.s.poll()
-        return self.s.file
-
-    def joint_actual_position(self):
-        """ returns tuple of floats - actual joint positions. """
-        self.s.spoll()
-        return self.s.joint_actual_position
-
-    def joint_position(self):
-        """ returns tuple of floats - Desired joint positions. """
-        self.s.poll()
-        return self.s.joint_position
-
-    def max_acceleration(self):
-        """ returns float - maximum acceleration. reflects [TRAJ] MAX_ACCELERATION. """
-        self.s.poll()
-        return self.s.max_acceleration
-
-    def max_velocity(self):
-        """ returns float - maximum velocity. reflects [TRAJ] MAX_VELOCITY. """
-        self.s.poll()
-        return self.s.max_velocity
-
-    def spindle_brake(self):
-        """ returns integer - value of the spindle brake flag. """
-        self.s.poll()
-        return self.s.spindle_brake
-
-    def spindle_direction(self):
-        """ returns integer - rotational direction of the spindle. forward=1, reverse=-1. """
-        self.s.poll()
-        return self.s.spindle_direction
-
-    def spindle_enabled(self):
-        """ returns integer - value of the spindle enabled flag. """
-        self.s.poll()
-        return self.s.spindle_enabled
+        #Only god knows why this isnt in line with the docs
+        modes = ["MODE_MANUAL","MODE_AUTO", "MODE_MDI"]
+        state = self.s.task_mode
+        return modes[state - 1]
 
     def axes_position(self):
         """ Loop over axes and return position in { x: 0, y: 0, z: 0 } format """
@@ -184,43 +86,60 @@ class MachinekitController():
         return not self.s.estop and self.s.enabled and self.s.homed and (self.s.interp_state == linuxcnc.INTERP_IDLE)
 
     def get_all_vitals(self):
-        return {"machineStatus": {
-            "eStopEnabled": self.emergency_status(),
-                "powerEnabled": self.power_status(),
-                "homed": self.homed_status(),
-                "position": self.axes_position(),
-                "velocity": self.velocity(),
-                "spindle_speed": self.spindle_speed()
-                }}
+        self.s.poll()
+        return {"status": {
+            "power": {
+                "enabled": self.s.enabled,
+                "estop": bool(self.s.estop)
+            },
+            "homed": self.s.homed,
+            "position": self.axes_position(),
+            "spindle": {
+               "spindle_speed": self.s.spindle_speed,
+               "spindle_enabled": self.s.spindle_enabled,
+               "spindle_brake": self.s.spindle_brake,
+               "spindle_direction": self.s.spindle_direction,
+               "spindle_increasing": self.s.spindle_increasing,
+               "spindle_override_enabled": self.s.spindle_override_enabled,
+               "spindlerate": self.s.spindlerate,
+               "tool_in_spindle": self.s.tool_in_spindle
+            },
+            "program": {
+                "interp_state": self.interp_state(),
+                "task_mode": self.task_mode()
+            },
+            "velocity": self.s.velocity
+        }}
 
     # SETTERS
     def e_stop(self, command):
         """Send a command to the machine. E_STOP, E_STOP_RESET, POWER_ON, POWER_OFF"""
+        self.s.poll()
         if command == "E_STOP":
             self.c.state(1)
             self.c.wait_complete()
-            if self.emergency_status():
+            if self.s.estop:
                 return {"success": "completed"}
             else:
                 return {"errors": "Command executed but machine still not in E_STOP modus"}
         if command == "E_STOP_RESET":
             self.c.state(2)
             self.c.wait_complete()
-            if not self.emergency_status():
+            if not self.s.estop:
                 return {"success": "completed"}
             else:
                 return {"errors": "Command executed but machine still in E_STOP modus"}
         if command == "POWER_ON":
             self.c.state(4)
             self.c.wait_complete()
-            if self.power_status():
+            if self.s.enabled:
                 return {"success": "200"}
             else:
                 return {"errors": "Command executed but machine still not powered on"}
         if command == "POWER_OFF":
             self.c.state(3)
             self.c.wait_complete()
-            if not self.power_status():
+            if not self.s.enabled():
                 return {"succes": "200"}
             else:
                 return {"errors": "Command executed but power is still on"}
