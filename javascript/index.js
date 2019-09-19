@@ -1,227 +1,149 @@
-const api = "http://192.168.1.224:5000/";
+const api = "http://192.168.1.224:5000";
+let machinekit_state = {
+  power: {
+    enabled: true,
+    estop: false
+  }
+};
+let errors = [];
+let displayedErrors = [];
 
-let state = {
-  machineStatus: {
-    powerEnabled: false,
-    eStopEnabled: false,
-    homed: false,
-    position: {}
-  },
-  generatedControls: false,
-  errors: [],
-  speed: 1
+const request = (url, data, type) => {
+  if (type === "POST") {
+    return fetch(url, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => {
+        return response.json();
+      })
+      .then(data => {
+        return data;
+      });
+  } else {
+    return fetch(url, {
+        method: "GET"
+      })
+      .then(response => {
+        return response.json();
+      })
+      .then(data => {
+        if (data.errors == "Machinekit is not running please restart machinekit and then the server") {
+          document.body.className = "error_machinekit";
+          return;
+        } else {
+          return data;
+        }
+      })
+      .catch(error => {
+        if (error == "TypeError: Failed to fetch") {
+          document.body.className = "error_server_down";
+          return;
+        }
+      });
+  }
 };
 
-const getMachineValues = async () => {
-  const result = await request(api + "status", {}, "get");
-  if (handleErrors(result) == undefined) {
+const getMachineStatus = async () => {
+  const status = await request("http://192.168.1.224:5000/status", {}, "GET");
+  if (status == undefined) {
     return;
   }
-  const machineStatus = result.machineStatus;
-  state = {
-    ...state,
-    machineStatus
-  };
+  machinekit_state = status;
+  render();
+}
 
-  const { eStopEnabled, powerEnabled, position } = state.machineStatus;
-  populateTable();
-  if (position !== {} && !state.generatedControls) {
-    generateControllers();
+const render = () => {
+  document.body.className = "success_no_errors";
+  if (errors.length > 0) {
+    document.body.classList.add("error_executing");
+    errors.map((value, index) => {
+      if (!displayedErrors.includes(value)) {
+        document.getElementById("error_executing").innerHTML += value + "<br>";
+        displayedErrors.push(value);
+      }
+    });
   }
 
-  if (eStopEnabled) {
-    document.getElementById("emergencyBtn").innerHTML =
-      "DISABLE EMERGENCY STOP";
+  if (machinekit_state.power.enabled) {
+    document.body.classList.remove("power_off");
+    document.body.classList.add("power_on");
   } else {
-    document.getElementById("emergencyBtn").innerHTML = "ENABLE EMERGENCY STOP";
+    document.body.classList.remove("power_on");
+    document.body.classList.add("power_off");
+
   }
 
-  if (powerEnabled) {
-    document.getElementById("powerBtn").innerHTML = "turn power off";
+  if (!machinekit_state.power.estop) {
+    document.body.classList.remove("estop");
+    document.body.classList.add("no_estop");
+
+    document.getElementById("machine_power").classList.add("enabled");
   } else {
-    document.getElementById("powerBtn").innerHTML = "turn power on";
-  }
-};
-
-const handleErrors = result => {
-  if (result.error || result === "Server is down please start the server") {
-    state.errors = result;
-    if (result.error == "emcStatusBuffer invalid err=3") {
-      state.errors =
-        "Machinekit is offline. Start machinekit with 'linuxcnc &'";
-    }
+    document.body.classList.remove("no_estop");
+    document.body.classList.add("estop");
+    document.getElementById("machine_power").classList.remove("enabled");
   }
 
-  if (state.errors) {
-    if (state.errors.length > 0) {
-      document.getElementById("error").innerHTML =
-        "<p class='error'>" + state.errors + "</p>";
-      state.errors = [];
-      return;
-    } else {
-      document.getElementById("error").innerHTML = "";
-      return false;
-    }
-  }
-  return false;
+  // switch (machinekit_state.program.interp_state) {
+  //   case "INTERP_IDLE":
+  //     document.body.classList.add("INTERP_IDLE");
+  //     console.log("idle");
+  //     break;
+  //   case "INTERP_READING":
+  //     console.log("reading");
+  //     break;
+  //   case "INTERP_PAUSED":
+  //     console.log("paused");
+  //     break;
+  //   case "INTERP_WAITING":
+  //     console.log("waiting");
+  //     break;
+  // }
+
+  // let myRe = /\INTERP_IDLE|\INTERP_WAITING|\INTERP_PAUSED|\INTERP_READING/;
+  // let test = document.body.classList;
+  // var result = myRe.exec(test.value);
+  // console.log(test.value);
 };
 
-const populateTable = () => {
-  const position = state.machineStatus.position;
-  const head = document.getElementById("thead_axes");
-  const body = document.getElementById("tbody_axes");
-  head.innerHTML = "";
-  body.innerHTML = "";
+const toggleEstop = async () => {
+  await request(api + "/set_machine_status", {
+    command: "estop"
+  }, "POST");
+  getMachineStatus();
 
-  for (const key in position) {
-    if (key == "x") {
-      head.insertCell(0).innerHTML = key;
-      body.insertCell(0).innerHTML = position[key];
-    } else if (key == "y") {
-      head.insertCell(1).innerHTML = key;
-      body.insertCell(1).innerHTML = position[key];
-    } else if (key == "z") {
-      head.insertCell(2).innerHTML = key;
-      body.insertCell(2).innerHTML = position[key];
-    } else {
-      head.insertCell(-1).innerHTML = key;
-      body.insertCell(-1).innerHTML = position[key];
-    }
-  }
+  document.getElementById("toggleEstopBtn").disabled = true;
+  setTimeout(function () {
+    document.getElementById("toggleEstopBtn").disabled = false;
+  }, 750);
 };
 
-const update = () => {
-  getMachineValues();
-};
-
-const eStopOnClick = async () => {
-  const { eStopEnabled } = state.machineStatus;
-
-  if (eStopEnabled) {
-    const result = await request(
-      api + "set_machine_status",
-      {
-        command: "E_STOP_RESET"
-      },
-      "POST"
-    );
-    if (result === 200) {
-      getMachineValues();
-    }
-  } else {
-    const result = await request(
-      api + "set_machine_status",
-      {
-        command: "E_STOP"
-      },
-      "POST"
-    );
-    if (result === 200) {
-      getMachineValues();
-    } else {
-      state.errors.push(result);
-      console.log(state.errors);
-    }
-  }
-};
-
-const setPowerOnClick = async () => {
-  const { powerEnabled } = state.machineStatus;
-
-  if (powerEnabled) {
-    const result = request(
-      api + "set_machine_status",
-      {
-        command: "POWER_ON"
-      },
-      "POST"
-    );
-    if ((await result) === 200) {
-      getMachineValues();
-    }
-  } else {
-    const result = request(
-      api + "set_machine_status",
-      {
-        command: "POWER_OFF"
-      },
-      "POST"
-    );
-    if ((await result) === 200) {
-      getMachineValues();
-    }
-  }
-};
-
-const manualControl = async element => {
-  const data = JSON.parse(element.dataset.object);
+const togglePower = async () => {
   const result = await request(
-    api + "manual",
-    {
-      axes: data.axes,
-      speed: 10,
-      increment: data.increment * state.speed,
-      command: ""
+    api + "/set_machine_status", {
+      command: "power"
     },
     "POST"
   );
-
   if (result.errors) {
-    state.errors.push(result.errors);
+    errors.push(result.errors);
   }
+  getMachineStatus();
+
+  document.getElementById("togglePowerBtn").disabled = true;
+  setTimeout(function () {
+    document.getElementById("togglePowerBtn").disabled = false;
+  }, 1000);
 };
 
-const controlDistance = element => {
-  state.speed = parseInt(element.options[element.selectedIndex].dataset.object);
+window.onload = () => {
+  setInterval(() => {
+    getMachineStatus();
+  }, 4000);
+  getMachineStatus();
 };
-
-const generateControllers = () => {
-  console.log(state.machineStatus.position);
-  const keyToInt = {
-    x: 0,
-    y: 1,
-    z: 2,
-    a: 3,
-    b: 4,
-    c: 5,
-    d: 6,
-    e: 7,
-    f: 8
-  };
-  const movementOptions = [10, 5, 1, -1, -5, -10];
-  for (const key in state.machineStatus.position) {
-    let html =
-      `
-    <label>` +
-      key +
-      `</labe>
-    <form onsubmit="event.preventDefault()">`;
-    movementOptions.map((value, index) => {
-      html +=
-        `
-      <button
-            onclick="manualControl(this)"
-            data-object='{"axes": ` +
-        keyToInt[key] +
-        `, "increment": ` +
-        value +
-        `}'
-          >
-            ` +
-        value +
-        `
-          </button>
-      `;
-    });
-    html += `</form>`;
-    document.getElementById("controllers").innerHTML += html;
-  }
-
-  state.generatedControls = true;
-  //document.getElementById("controllers").innerHTML = html;
-};
-
-getMachineValues();
-setInterval(() => {
-  update();
-}, 3000);

@@ -88,7 +88,7 @@ class MachinekitController():
 
     def get_all_vitals(self):
         self.s.poll()
-        return {"status": {
+        return {
             "power": {
                 "enabled": self.s.enabled,
                 "estop": bool(self.s.estop)
@@ -114,42 +114,32 @@ class MachinekitController():
                 "max_velocity": self.s.max_velocity * 60,
                 "max_acceleration": self.s.max_acceleration
             }
-        }}
+        }
 
     # SETTERS
     def machine_status(self, command):
-        """Send a command to the machine. E_STOP, E_STOP_RESET, POWER_ON, POWER_OFF"""
+        """Toggle estop and power with command estop || power"""
         self.s.poll()
-        if command == "E_STOP":
-            self.c.state(1)
+        if command == "estop":
+            if self.s.estop == linuxcnc.STATE_ESTOP:
+                self.c.state(linuxcnc.STATE_ESTOP_RESET)
+            else: 
+                self.c.state(linuxcnc.STATE_ESTOP)
+                
             self.c.wait_complete()
-            self.s.poll()
-            print(self.s.estop)
-            if self.s.estop:
-                return {"success": "completed"}
-            else:
-                return {"errors": "Command executed but machine still not in E_STOP modus"}
-        if command == "E_STOP_RESET":
-            self.c.state(2)
-            self.c.wait_complete()
-            if not self.s.estop:
-                return {"success": "completed"}
-            else:
-                return {"errors": "Command executed but machine still in E_STOP modus"}
-        if command == "POWER_ON":
-            self.c.state(4)
-            self.c.wait_complete()
+            return {"success": "Command executed"}
+      
+        if command == "power":
+            if self.s.estop == linuxcnc.STATE_ESTOP:
+                return {"errors": "Can't turn on machine while it is in E_STOP modus"}
             if self.s.enabled:
-                return {"success": "200"}
+                self.c.state(linuxcnc.STATE_OFF)
             else:
-                return {"errors": "Command executed but machine still not powered on"}
-        if command == "POWER_OFF":
-            self.c.state(3)
+                self.c.state(linuxcnc.STATE_ON)
+
             self.c.wait_complete()
-            if not self.s.enabled():
-                return {"succes": "200"}
-            else:
-                return {"errors": "Command executed but power is still on"}
+            return {"success": "Command executed"}
+
 
     def mdi_command(self, command):
         """Send a MDI movement command to the machine, example "G0 Y1 X1 Z-1" """

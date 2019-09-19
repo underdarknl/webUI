@@ -1,160 +1,192 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>CNC Webinterface</title>
-    <link href="//css.underdark.nl/0.2/base.css" rel="stylesheet" />
-    <link href="//css.underdark.nl/0.2/layout.css" rel="stylesheet" />
-    <link href="//css.underdark.nl/0.2/module.css" rel="stylesheet" />
-    <link href="//css.underdark.nl/0.2/theme.css" rel="stylesheet" />
-    <script src="./javascript/test.js"></script>
-  </head>
 
-  <body id="form" class="module">
-    <header>
-      <div>
-        <div class="logo">
-          <a href="/">CNC Controller</a>
-          <p>Webinterface voor CNC frees</p>
-        </div>
-        <nav>
-          <ul>
-            <li><a href="/index.html">Controller</a></li>
-            <li><a href="/fileManager.html">File manager</a></li>
-          </ul>
-        </nav>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>CNC Webinterface</title>
+  <link href="//css.underdark.nl/0.2/base.css" rel="stylesheet" />
+  <link href="//css.underdark.nl/0.2/layout.css" rel="stylesheet" />
+  <link href="//css.underdark.nl/0.2/module.css" rel="stylesheet" />
+  <link href="//css.underdark.nl/0.2/theme.css" rel="stylesheet" />
+  <link rel="stylesheet" href="css/index.css" />
+  <script src="./javascript/index.js"></script>
+</head>
+
+<body>
+  <header>
+    <div>
+      <div class="logo">
+        <a href="/">CNC Controller</a>
+        <p>Webinterface voor CNC frees</p>
       </div>
-    </header>
-    <main>
-      <section>
-        <h2>Status</h2>
-        <div id="status">
-          <label>ERRORS:</label>
-          <div id="error">
-            <p class="success">No errors found</p>
-          </div>
-          <div id="power"><label>POWER: </label> ON</div>
-          <div id="estop"><label>ESTOP: </label>DISABLED</div>
+      <nav>
+        <ul>
+          <li><a href="/index.html">Controller</a></li>
+          <li><a href="/fileManager.html">File manager</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section id="status">
+      <h2>Status</h2>
+      <div id="status">
+        <label>ERRORS:</label>
+        <div id="error">
+          <p class="success" id="success_no_errors">No critical errors found</p>
+          <p class="error" id="error_executing"></p>
+          <p class="error" id="error_machinekit">Machinekit is not running</p>
+          <p class="error" id="error_server_down">Server is down please restart the server</p>
         </div>
-      </section>
+      </div>
+      <div id="machine_vitals">
+        <div id="estop"><label id="tag">ESTOP: </label>
+          <p class="error" id="estop_on"> ENABLED</p>
+          <p class="success" id="estop_off"> DISABLED</p>
+        </div>
+        <div id="power">
+          <label id="tag">POWER: </label>
+          <p class="error" id="power_off"> OFF</p>
+          <p class="success" id="power_on"> ON</p>
+        </div>
+      </div>
+    </section>
 
-      <section>
-        <form onsubmit="event.preventDefault()">
-          <div>
-            <label>ESTOP</label>
-            <button class="button error" onClick="toggleEstop()">
-              TOGGLE ESTOP
-            </button>
-          </div>
-          <div>
-            <label>power</label>
-            <button class="button primary">
-              toggle power
-            </button>
-          </div>
-          <div>
-            <label>Axes</label>
-            <button class="button primary">
-              home all axes
-            </button>
-          </div>
-          <div>
-            <label>Select axe for manual control</label>
-            <ol>
-              <li>
-                <input type="radio" name="radio" id="form1_radio1" />
-                <label for="form1_radio1">X</label>
-              </li>
-              <li>
-                <input type="radio" name="radio" id="form1_radio2" />
-                <label for="form1_radio2">Y</label>
-              </li>
-              <li>
-                <input type="radio" name="radio" id="form1_radio3" />
-                <label for="form1_radio3">Z</label>
-              </li>
-            </ol>
-          </div>
-          <div>
-            <label>Manual control</label>
-            <button class="button primary">+</button>
-            <button class="button primary">-</button>
-          </div>
-          <div>
-            <label>Program</label>
-            <button class="button primary">
-              start
-            </button>
-            <button class="button primary">
-              pause
-            </button>
-            <button class="button primary">
-              resume
-            </button>
-            <button class="button error">
-              stop
-            </button>
-          </div>
-          <div>
-            <label>Spindle</label>
-            <button class="button primary">
-              left
-            </button>
-            <button class="button primary">
-              brake
-            </button>
-            <button class="button primary">
-              right
-            </button>
-            <button class="button error">
-              off
-            </button>
-          </div>
-          <div>
-            <label>Spindle speed</label>
-            <button class="button primary">
-              +
-            </button>
-            <button class="button primary">
-              -
-            </button>
-          </div>
-          <div>
-            <label>Feed override</label>
-            <input type="range" min="0" max="120" id="feed_override" />
-            <span><output for="feed_override">120</output>%</span>
-          </div>
+    <section id="axes">
+      <table>
+        <caption>
+          Axes
+        </caption>
+        <thead>
+          <tr id="thead_axes">
+            <th>X</th>
+            <th>Y</th>
+            <th>Z</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr id="tbody_axes">
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
 
-          <div>
-            <label>Spindle override</label>
-            <input type="range" min="0" max="100" id="spindle_override" />
-            <span><output for="spindle_override">100</output>%</span>
-          </div>
-          <div>
-            <label>Max velocity</label>
-            <input type="range" min="0" max="100" id="max_velocity" />
-            <span><output for="max_velocity">100</output>%</span>
-          </div>
-        </form>
-      </section>
+    <section id="controls">
+      <form onsubmit="event.preventDefault()">
+        <div id="machine_estop">
+          <label>ESTOP</label>
+          <button class="button error" id="toggleEstopBtn" onClick="toggleEstop()">
+            TOGGLE ESTOP
+          </button>
+        </div>
 
-      <section>
-        <table>
-          <caption>
-            Axes
-          </caption>
-          <thead>
-            <tr id="thead_axes">
-              <th>Axes</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr id="tbody_axes"></tr>
-          </tbody>
-        </table>
-      </section>
-    </main>
-  </body>
+        <div id="machine_power">
+          <label>Power</label>
+          <button class="button primary" id="togglePowerBtn" onClick="togglePower()">
+            Toggle power
+          </button>
+        </div>
+
+        <div id="machine_home_axes">
+          <label>Axes</label>
+          <button class="button primary" onClick="homeAxes()">
+            home all axes
+          </button>
+        </div>
+
+        <div id="manual_control_select">
+          <label>Select axe for manual control</label>
+          <ol id="manual_control_radio">
+            <li>
+              <input type="radio" name="radio" id="radiox" data="x" />
+              <label for="radiox">x</label>
+            </li>
+            <li>
+              <input type="radio" name="radio" id="radioy" data="y" />
+              <label for="radiox">y</label>
+            </li>
+
+            <li>
+              <input type="radio" name="radio" id="radioz" data="z" />
+              <label for="radioz">z</label>
+            </li>
+          </ol>
+        </div>
+
+        <div id="manual_control">
+          <label>Manual control</label>
+          <button class="button primary">+</button>
+          <button class="button primary">-</button>
+        </div>
+
+        <div id="program_control">
+          <label>Program</label>
+          <button class="button primary">
+            start
+          </button>
+          <button class="button primary">
+            pause
+          </button>
+          <button class="button primary">
+            resume
+          </button>
+          <button class="button error">
+            stop
+          </button>
+        </div>
+
+        <div id="spindle_control">
+          <label>Spindle</label>
+          <button class="button primary">
+            left
+          </button>
+          <button class="button primary">
+            brake
+          </button>
+          <button class="button primary">
+            right
+          </button>
+          <button class="button error">
+            off
+          </button>
+        </div>
+
+        <div id="spindle_control_speed">
+          <label>Spindle speed</label>
+          <button class="button primary">
+            +
+          </button>
+          <button class="button primary">
+            -
+          </button>
+        </div>
+
+        <div id="feed_override">
+          <label>Feed override</label>
+          <input type="range" min="0" max="120" id="feed_override" />
+          <span><output for="feed_override">120</output>%</span>
+        </div>
+
+        <div id="spindle_override">
+          <label>Spindle override</label>
+          <input type="range" min="0" max="100" id="spindle_override" />
+          <span><output for="spindle_override">100</output>%</span>
+        </div>
+
+        <div id="max_velocity">
+          <label>Max velocity</label>
+          <input type="range" min="0" max="100" id="max_velocity" />
+          <span><output for="max_velocity">100</output>%</span>
+        </div>
+      </form>
+
+    </section>
+  </main>
+</body>
+
 </html>

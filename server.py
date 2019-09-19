@@ -33,7 +33,9 @@ except Exception as e:
 def get_axis():
     try:
         return jsonify(controller.get_all_vitals())
-    except Exception as e:
+    except NameError:
+        return jsonify({"errors": "Machinekit is not running please restart machinekit and then the server"})
+    except (Exception) as e:
         return jsonify({
             "errors": str(e)
         })

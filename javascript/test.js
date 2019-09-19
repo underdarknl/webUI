@@ -36,8 +36,11 @@ let state = {
     },
     velocity: 0.0
   },
-  errors: ""
+  firstRender: true
 };
+
+let applicationErrors = [];
+let frontEndState = {};
 
 const request = (url, data, type) => {
   if (type === "POST") {
@@ -79,26 +82,30 @@ const request = (url, data, type) => {
 const getMachineVitals = async () => {
   const result = await request("http://192.168.1.224:5000/status", {}, "GET");
   if (result.errors) {
-    handleErrors(result);
-
-    state = {
-      ...state,
-      errors: result.errors
-    };
-    return;
+    if (!applicationErrors.includes(result.errors)) {
+      applicationErrors.push(result.errors);
+    }
   } else {
     let status = result.status;
     state = {
       ...state,
       status
     };
+    applicationErrors = [];
   }
   generateHtml();
+  handleErrors();
 };
 
 const handleErrors = result => {
-  document.getElementById("error").innerHTML =
-    "<p class='error'>" + result.errors + "</p>";
+  const e = document.getElementById("error");
+  if (applicationErrors.length == 0) {
+    return (e.innerHTML = `<p class="success">No errors found</p>`);
+  }
+  e.innerHTML = "";
+  applicationErrors.map((value, index) => {
+    e.innerHTML += `<p class='error'>${value}</p>`;
+  });
 };
 
 const generateHtml = () => {
@@ -133,36 +140,57 @@ const generateHtml = () => {
   for (const key in position) {
     const { pos, homed } = position[key];
     !homed
-      ? (thead.innerHTML = thead.innerHTML += `<th>` + key + `</th>`)
-      : (thead.innerHTML += `<th>` + key + ` (H) </th>`);
+      ? (thead.innerHTML = thead.innerHTML += `<th> ${key} </th>`)
+      : (thead.innerHTML += `<th>${key} (H)</th>`);
 
     tbody.innerHTML += `<tr><td>` + pos + `</td></tr>`;
+    if (state.firstRender) {
+      document.getElementById("manual_control_radio").innerHTML += ` <li>
+      <input
+        type="radio"
+        name="radio"
+        id="radio${key}"
+        data="${key}"
+        checked="if()"
+        onclick="setAxesForControl(this)"
+      />
+      <label for="radio${key}">${key}</label>
+    </li>`;
+    }
   }
+  state.firstRender = false;
 };
 
 window.onload = function() {
   getMachineVitals();
   setInterval(() => {
     getMachineVitals();
-  }, 5000);
+  }, 3000);
 };
 
 const toggleEstop = async () => {
-  const current_status_estop = state.status.power.estop;
-  if (current_status_estop) {
-    console.log("RESET");
-    const result = await request(
-      api + "/set_machine_status",
-      { command: "E_STOP_RESET" },
-      "POST"
-    );
-  } else {
-    console.log("ESTOP");
-    const result = await request(
-      api + "/set_machine_status",
-      { command: "E_STOP" },
-      "POST"
-    );
+  await request(api + "/set_machine_status", { command: "estop" }, "POST");
+  getMachineVitals();
+};
+
+const togglePower = async () => {
+  const result = await request(
+    api + "/set_machine_status",
+    { command: "power" },
+    "POST"
+  );
+  if (result.errors) {
+    state.errors = result.errors;
+    applicationErrors.push(result.errors);
   }
   getMachineVitals();
+};
+
+const homeAxes = async () => {
+  const result = await request(api + "/set_home", {}, "GET");
+  console.log(result);
+};
+
+const setAxesForControl = element => {
+  console.log(element.getAttribute("data"));
 };
