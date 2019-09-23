@@ -33,9 +33,9 @@ except Exception as e:
 def get_axis():
     try:
         return jsonify(controller.get_all_vitals())
-    except NameError:
-        return jsonify({"errors": "Machinekit is not running please restart machinekit and then the server"})
     except (Exception) as e:
+        if str(e) == "emcStatusBuffer invalid err=3":
+            return jsonify({"errors": "Machinekit is not running please restart machinekit and then the server"})
         return jsonify({
             "errors": str(e)
         })
@@ -66,10 +66,15 @@ def set_status():
         })
 
 
-@app.route("/set_home", methods=["GET"])
+@app.route("/set_home", methods=["POST"])
 def set_home_axes():
     try:
-        return jsonify(controller.home_all_axes())
+        data = request.json
+        command = data['command']
+        if command == "home":
+            return jsonify(controller.home_all_axes())
+        else:
+            return jsonify(controller.unhome_all_axes())
     except Exception as e:
         return jsonify({
             "errors": str(e)

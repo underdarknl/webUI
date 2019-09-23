@@ -15,11 +15,17 @@
 #manual_control_select,
 #manual_control,
 #program_control,
+#program_control button,
 #spindle_control,
 #spindle_control_speed,
-#feed_override,
-#spindle_override,
-#max_velocity {
+#feed_override_control,
+#spindle_override_control,
+#max_velocity_control,
+#interp,
+#interp p,
+#task_mode,
+#task_mode p,
+#mdi_command {
     display: none;
 }
 
@@ -35,20 +41,37 @@ body.success_no_errors.no_estop #estop_off,
 body.success_no_errors.estop #estop_on,
 body.success_no_errors #estop label,
 body.success_no_errors #axes,
-body.success_no_errors #controls {
+body.success_no_errors #controls,
+body.success_no_errors #interp,
+body.success_no_errors.INTERP_IDLE #idle,
+body.success_no_errors.INTERP_PAUSED #paused,
+body.success_no_errors.INTERP_READING #reading,
+body.success_no_errors.INTERP_WAITING #waiting,
+body.success_no_errors #task_mode,
+body.success_no_errors.MODE_MANUAL #manual,
+body.success_no_errors.MODE_MDI #mdi,
+body.success_no_errors.MODE_AUTO #auto,
+body.success_no_errors.power_on.no_estop.INTERP_PAUSED #program_resume,
+body.success_no_errors.power_on.no_estop.INTERP_READING #program_stop,
+body.success_no_errors.power_on.no_estop.INTERP_READING #program_pause,
+body.success_no_errors.power_on.no_estop.INTERP_PAUSED #program_stop,
+body.success_no_errors.power_on.no_estop.INTERP_WAITING #program_pause,
+body.success_no_errors.power_on.no_estop.INTERP_WAITING #program_stop,
+body.success_no_errors.power_on.no_estop.INTERP_IDLE #program_start {
     display: block;
 }
 
-body.success_no_errors #controls form #machine_power.enabled,
+body.success_no_errors.no_estop #machine_power,
 body.success_no_errors.power_on.no_estop #machine_home_axes,
 body.success_no_errors.power_on.no_estop #manual_control_select,
 body.success_no_errors.power_on.no_estop #manual_control,
-body.success_no_errors.power_on.no_estop #program_control,
+body.success_no_errors.power_on.no_estop.all_homed #program_control,
+body.success_no_errors.power_on.no_estop.all_homed #mdi_command,
 body.success_no_errors.power_on.no_estop #spindle_control,
 body.success_no_errors.power_on.no_estop #spindle_control_speed,
-body.success_no_errors.power_on.no_estop #feed_override,
-body.success_no_errors.power_on.no_estop #spindle_override,
-body.success_no_errors.power_on.no_estop #max_velocity {
+body.success_no_errors.power_on.no_estop #feed_override_control,
+body.success_no_errors.power_on.no_estop #spindle_override_control,
+body.success_no_errors.power_on.no_estop #max_velocity_control {
     display: flex;
 }
 

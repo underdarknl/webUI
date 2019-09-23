@@ -6,11 +6,14 @@ class MachinekitController():
     """The Machinekit python interface in a class"""
 
     def __init__(self):
-        self.s = linuxcnc.stat()
-        self.c = linuxcnc.command()
-        self.e = linuxcnc.error_channel()
-        self.axes = self.set_axes()
-        self.axes_with_cords = {}
+        try: 
+            self.s = linuxcnc.stat()
+            self.c = linuxcnc.command()
+            self.e = linuxcnc.error_channel()
+            self.axes = self.set_axes()
+            self.axes_with_cords = {}
+        except linuxcnc.error, detail:
+            print "[error]: ", detail
 
     # Class is split up in getters and setters
 
@@ -79,7 +82,13 @@ class MachinekitController():
             else:
                 typus = "info"
                 typus, text
-        return {"errors": error}
+
+        if error is not None:
+            return {"errors": error[1]}
+        else:
+            return {}
+
+        
 
     def ready_for_mdi_commands(self):
         """ Returns bool that represents if the machine is ready for MDI commands """
@@ -107,7 +116,8 @@ class MachinekitController():
             "program": {
                 "file": self.s.file,
                 "interp_state": self.interp_state(),
-                "task_mode": self.task_mode()
+                "task_mode": self.task_mode(),
+                "feedrate": self.s.feedrate
             },
             "values": {
                 "velocity": self.s.velocity,
@@ -127,7 +137,11 @@ class MachinekitController():
                 self.c.state(linuxcnc.STATE_ESTOP)
                 
             self.c.wait_complete()
-            return {"success": "Command executed"}
+            errors = self.errors()
+            if 'errors' in errors:
+                return errors
+            else: 
+                return {"success": "Command executed"}
       
         if command == "power":
             if self.s.estop == linuxcnc.STATE_ESTOP:
@@ -136,9 +150,12 @@ class MachinekitController():
                 self.c.state(linuxcnc.STATE_OFF)
             else:
                 self.c.state(linuxcnc.STATE_ON)
-
             self.c.wait_complete()
-            return {"success": "Command executed"}
+            errors = self.errors()
+            if 'errors' in errors:
+                return errors
+            else: 
+                return {"success": "Command executed"}
 
 
     def mdi_command(self, command):
@@ -161,7 +178,12 @@ class MachinekitController():
 
         self.ensure_mode(linuxcnc.MODE_MDI)
         self.c.mdi(command)
-        return {"success": "Command executed"}
+
+        errors = self.errors()
+        if 'errors' in errors:
+            return errors
+        else: 
+            return {"success": "Command executed"}
 
     def manual_control(self, axes, speed, increment):
         """ Manual control the CNC machine with continious transmission. axes=int speed=int in mm  increment=int in mm command=string"""
@@ -175,27 +197,32 @@ class MachinekitController():
         self.ensure_mode(linuxcnc.MODE_MANUAL)
         self.c.jog(linuxcnc.JOG_INCREMENT, axes, speed, increment)
 
-        return {"success": "moving axes"}
-
-    def set_home(self):
-        """ Takes axe as int as parameter """
-        i = 0
-        for axe in self.axes:
-            self.c.home(i)
-            self.c.set_home_parameters(i, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-            self.c.wait_complete()
-            i = i + 1
-        return
+        errors = self.errors()
+        if 'errors' in errors:
+            return errors
+        else: 
+            return {"success": "Command executed"}
 
     def home_all_axes(self):
         """ Return all axes to their given home position """
-        self.c.mode(linuxcnc.MODE_MANUAL)
+        self.ensure_mode(linuxcnc.MODE_MANUAL)
+        self.c.home(-1)
         self.c.wait_complete()
-        self.set_home()
         errors = self.errors()
-        if errors['errors']:
+        if 'errors' in errors:
             return errors
-        return {"success": "homing in progress"}
+        else: 
+            return {"success": "Command executed"}
+
+    def unhome_all_axes(self):
+        self.ensure_mode(linuxcnc.MODE_MANUAL)
+        self.c.unhome(-1)
+        self.c.wait_complete()
+        errors = self.errors()
+        if 'errors' in errors:
+            return errors
+        else: 
+            return {"success": "Command executed"}
 
     def run_program(self, command):
         if not self.ensure_mode(linuxcnc.MODE_AUTO, linuxcnc.MODE_MDI):
@@ -212,41 +239,54 @@ class MachinekitController():
 
     def task_run(self, start_line):
         self.s.poll()
-        if self.s.task_mode != linuxcnc.MODE_AUTO or self.s.interp_state in (linuxcnc.INTERP_READING, linuxcnc.INTERP_WAITING, linuxcnc.INTERP_PAUSED):
+        if self.s.task_mode not in (linuxcnc.MODE_AUTO, linuxcnc.MODE_MDI) or self.s.interp_state in (linuxcnc.INTERP_READING, linuxcnc.INTERP_WAITING, linuxcnc.INTERP_PAUSED):
             return {"errors": "Can't start machine because it is currently running or paused in a project"}
         self.ensure_mode(linuxcnc.MODE_AUTO)
         self.c.auto(linuxcnc.AUTO_RUN, 9)
-
+    
         errors = self.errors()
-        if errors['errors']:
+        if 'errors' in errors:
             return errors
-        return {"success": "resuming"}
+        else: 
+            return {"success": "starting"}
 
     def task_pause(self):
         self.s.poll()
         if self.s.interp_state is linuxcnc.INTERP_PAUSED:
             return {"errors": "Machine is already paused."}
-        if self.s.task_mode is not linuxcnc.MODE_AUTO or self.s.interp_state not in (linuxcnc.INTERP_READING, linuxcnc.INTERP_WAITING):
+        if self.s.task_mode not in (linuxcnc.MODE_AUTO, linuxcnc.MODE_MDI) or self.s.interp_state not in (linuxcnc.INTERP_READING, linuxcnc.INTERP_WAITING):
             return {"errors": "Machine not ready to recieve pause command. Probably because its currently not working on a program"}
         self.ensure_mode(linuxcnc.MODE_AUTO)
         self.c.auto(linuxcnc.AUTO_PAUSE)
 
         errors = self.errors()
-        if errors['errors']:
+        if 'errors' in errors:
             return errors
-        return {"success": "pausing"}
+        else: 
+            return {"success": "pausing"}
 
     def task_resume(self):
         self.s.poll()
-        if self.s.task_mode is not linuxcnc.MODE_AUTO or self.s.interp_state is not linuxcnc.INTERP_PAUSED:
+        if self.s.task_mode not in (linuxcnc.MODE_AUTO, linuxcnc.MODE_MDI) or self.s.interp_state is not linuxcnc.INTERP_PAUSED:
             return {"errors": "Machine not ready to resume. Probably because the machine is not paused or not in auto modus"}
         self.ensure_mode(linuxcnc.MODE_AUTO)
         self.c.auto(linuxcnc.AUTO_RESUME)
 
         errors = self.errors()
-        if errors['errors']:
+        if 'errors' in errors:
             return errors
-        return {"success": "resuming"}
+        else: 
+            return {"success": "resuming"}
+
+    def task_stop(self):
+        self.c.abort()
+        self.c.wait_complete()
+
+        errors = self.errors()
+        if 'errors' in errors:
+            return errors
+        else: 
+            return {"success": "stopped"}
 
     def ensure_mode(self, m, *p):
         self.s.poll()
@@ -258,19 +298,11 @@ class MachinekitController():
         self.c.wait_complete()
         return True
 
-    def task_stop(self):
-        self.c.abort()
-        self.c.wait_complete()
-
-        errors = self.errors()
-        if errors['errors']:
-            return errors
-        return {"success": "stopped"}
 
     def running(self, do_poll=True):
         if do_poll:
             self.s.poll()
-        return self.s.task_mode == linuxcnc.MODE_AUTO and self.s.interp_state != linuxcnc.INTERP_IDLE
+        return self.s.task_mode == linuxcnc.MODE_AUTO and self.s.interp_state is not linuxcnc.INTERP_IDLE
 
     def spindle_brake(self, command):
         self.s.poll()
@@ -285,32 +317,52 @@ class MachinekitController():
 
         self.ensure_mode(linuxcnc.MODE_MANUAL)
         self.c.brake(command)
-        return {"sucess": "Command executed"}
+
+        errors = self.errors()
+        if 'errors' in errors:
+            return errors
+        else:   
+            return {"sucess": "Command executed"}
 
     def spindle_direction(self, command):
         """command takes parameters: spindle_forward, spindle_reverse, spindle_off, spindle_increase, spindle_decrease, spindle_constant"""
-        commands = {"spindle_forward": linuxcnc.SPINDLE_FORWARD, "spindle_reverse": linuxcnc.SPINDLE_REVERSE, "spindle_off": linuxcnc.SPINDLE_OFF, 
-        "spindle_increase": linuxcnc.SPINDLE_INCREASE, "spindle_decrease": linuxcnc.SPINDLE_DECREASE, "spindle_constant": linuxcnc.SPINDLE_CONSTANT }
+        commands = {
+            "spindle_forward": linuxcnc.SPINDLE_FORWARD, 
+            "spindle_reverse": linuxcnc.SPINDLE_REVERSE, 
+            "spindle_off": linuxcnc.SPINDLE_OFF, 
+            "spindle_increase": linuxcnc.SPINDLE_INCREASE, 
+            "spindle_decrease": linuxcnc.SPINDLE_DECREASE, 
+            "spindle_constant": linuxcnc.SPINDLE_CONSTANT }
 
         self.s.poll()
-        if self.s.spindle_direction == commands[command]:
-            return {"errors": "Command could not be executed because the spindle_direction is already in this state"}
-
         if not self.s.enabled and not self.s.estop:
             return {"errors": "Cannot execute command when machine is powered off or in E_STOP modus"}
-        
+       
         if self.s.interp_state is not linuxcnc.INTERP_IDLE:
             return {"errors": "Cannot execute command when machine interp state isn't idle"}
 
+        if self.s.spindle_direction == commands[command]:
+            return {"errors": "Command could not be executed because the spindle_direction is already in this state"}
+
         self.ensure_mode(linuxcnc.MODE_MANUAL)
         self.c.spindle(commands[command])
-        return {"success": "Command executed"}
+
+        errors = self.errors()
+        if 'errors' in errors:
+            return errors
+        else:
+            return {"success": "Command executed"}
 
     def maxvel(self, maxvel):
         """Takes int of maxvel min"""
         self.c.maxvel(maxvel / 60.)
         self.c.wait_complete()
-        return {"success": "Command executed"}
+
+        errors = self.errors()
+        if 'errors' in errors:
+            return errors
+        else:
+            return {"success": "Command executed"}
         
     def spindleoverride(self, value):
         """test"""  
@@ -319,7 +371,12 @@ class MachinekitController():
 
         self.c.spindleoverride(value)
         self.c.wait_complete()
-        return {"success": "Command executed"}
+
+        errors = self.errors()
+        if 'errors' in errors:
+            return errors
+        else:
+            return {"success": "Command executed"}
 
     def feedoverride(self, value):
         if value > 1.2 or value < 0:
@@ -328,6 +385,11 @@ class MachinekitController():
 
         self.c.feedrate(value)
         self.c.wait_complete()
-        return {"success": "Command executed"}
+
+        errors = self.errors()
+        if 'errors' in errors:
+            return errors
+        else:
+            return {"success": "Command executed"}
 
 
