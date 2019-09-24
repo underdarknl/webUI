@@ -99,10 +99,9 @@ def control_program():
 def send_command():
     try:
         data = request.json
-        x = data['X']
-        y = data['Y']
-        z = data['Z']
-        return jsonify(controller.mdi_command("G0" + "X" + x + "Y" + y + "Z" + z))
+        command = data["mdi_command"]
+
+        return jsonify(controller.mdi_command(command))
     except (KeyError, Exception) as e:
         return jsonify({
             "errors": str(e)

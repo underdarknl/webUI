@@ -2,7 +2,7 @@ window.onload = async () => {
   getMachineStatus();
   setInterval(() => {
     getMachineStatus();
-  }, 4000);
+  }, 1000);
 
 };
 
@@ -15,9 +15,9 @@ let machinekit_state = {
 };
 
 let firstRender = true;
-let errors = [];
-let displayedErrors = [];
+let errors, displayedErrors = [];
 let selectedAxe = "x";
+let distanceMultiplier = 1;
 
 const request = (url, type, data = {}) => {
   if (type === "POST") {
@@ -291,6 +291,13 @@ const manualControlSelector = (element) => {
   selectedAxe = element.getAttribute("data");
 }
 
+const manualControlDistance = (element) => {
+  const value = element.value;
+  const target = element.id;
+  distanceMultiplier = value;
+  document.getElementById(target + "_output").innerHTML = value;
+}
+
 const manualControl = async (input, increment) => {
   const axeWithNumber = {
     x: 0,
@@ -299,9 +306,9 @@ const manualControl = async (input, increment) => {
     a: 3,
     b: 4,
     c: 5,
-    d: 6,
-    e: 7,
-    f: 8
+    u: 6,
+    v: 7,
+    w: 8
   }
   const axeNumber = axeWithNumber[selectedAxe];
 
@@ -312,9 +319,9 @@ const manualControl = async (input, increment) => {
   }
 
   if (input == "increment") {
-    command.increment = increment;
+    command.increment = increment * distanceMultiplier;
   } else {
-    command.increment = increment;
+    command.increment = increment * distanceMultiplier;
   }
 
   const result = await request(api + "/manual", "POST", command);
@@ -440,6 +447,22 @@ const controlFeedOverride = async (element) => {
   }
 
   getMachineStatus();
+}
+
+const sendMdiCommand = async () => {
+  const command = document.getElementById("mdi_command_input").value.toUpperCase();
+
+  const result = await request(api + "/send_command", "POST", {
+    "mdi_command": command
+  });
+
+  if (result.errors) {
+    errors.push(result.errors);
+  }
+
+  setTimeout(() => {
+    getMachineStatus();
+  }, 750);
 }
 
 const render = () => {

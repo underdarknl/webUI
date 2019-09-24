@@ -138,7 +138,7 @@
 
         <div id="manual_control_select">
           <label>Select axe for manual control</label>
-          <ol id="manual_control_radio_xyz">
+          <ol id="manual_control_radio_xyz" style="margin-left: 15px">
             <li>
               <input type="radio" name="radio" id="radiox" data="x" checked="true"
                 onclick="manualControlSelector(this)" />
@@ -160,12 +160,19 @@
           </ol>
         </div>
 
+        <div id="manual_control_distance">
+          <label>Manual control distance multiplier</label>
+          <input type="range" min="1" max="20" value="1" onchange="manualControlDistance(this)"
+            id="manual_control_distance_range" />
+          <span><output id="manual_control_distance_range_output">1</output></span>
+        </div>
+
         <div id="manual_control">
           <label>Manual control</label>
-          <button class="button primary" onclick="manualControl('increment', 20)">++</button>
-          <button class="button primary" onclick="manualControl('increment', 10)">+</button>
-          <button class="button primary" onclick="manualControl('decrement', -10)">-</button>
-          <button class="button primary" onclick="manualControl('decrement', -20)">--</button>
+          <button class="button primary" onclick="manualControl('increment', 2)">++</button>
+          <button class="button primary" onclick="manualControl('increment', 1)">+</button>
+          <button class="button primary" onclick="manualControl('decrement', -1)">-</button>
+          <button class="button primary" onclick="manualControl('decrement', -2)">--</button>
         </div>
 
         <div id="program_control">
@@ -230,11 +237,14 @@
 
         <div id="mdi_command">
           <label>MDI command</label>
-          <input type="text" placeholder="G0 X1 Y1 Z1">
-          <button>send</button>
+          <input type="text" id="mdi_command_input" placeholder="X1 Y1 Z1" value="X1 Z1">
+          <button onclick="sendMdiCommand()">send</button>
         </div>
       </form>
+    </section>
 
+    <section id="file_manager">
+      test
     </section>
   </main>
 </body>

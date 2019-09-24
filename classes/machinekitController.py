@@ -1,13 +1,14 @@
 #!/usr/bin/python
 import linuxcnc
 
+
 def checkerrors(f):
     """Decorator that checks if the user requesting the page is logged in."""
     def wrapper(*args, **kwargs):
         errors = f(*args, **kwargs)
         if 'errors' in errors:
             return errors
-        else: 
+        else:
             return {"success": "Command executed"}
     return wrapper
 
@@ -16,7 +17,7 @@ class MachinekitController():
     """The Machinekit python interface in a class"""
 
     def __init__(self):
-        try: 
+        try:
             self.s = linuxcnc.stat()
             self.c = linuxcnc.command()
             self.e = linuxcnc.error_channel()
@@ -30,16 +31,15 @@ class MachinekitController():
     def set_axes(self):
         self.s.poll()
         axesDict = {
-            0: "x",
+            0: "x", 
             1: "y",
             2: "z",
             3: "a",
             4: "b",
             5: "c",
-            6: "d",
-            7: "e",
-            8: "f",
-            9: "g"
+            6: "u",
+            7: "v",
+            8: "w",
         }
         i = 0
         axesInMachine = []
@@ -50,10 +50,11 @@ class MachinekitController():
 
     def interp_state(self):
         self.s.poll()
-        modes = ["INTERP_IDLE", "INTERP_READING", "INTERP_PAUSED", "INTERP_WAITING"]
+        modes = ["INTERP_IDLE", "INTERP_READING",
+            "INTERP_PAUSED", "INTERP_WAITING"]
         state = self.s.interp_state
         return modes[state - 1]
-        
+
         if state is 1:
             return "INTERP_IDLE"
         elif state is 2:
@@ -65,7 +66,7 @@ class MachinekitController():
 
     def task_mode(self):
         self.s.poll()
-        modes = ["MODE_MANUAL","MODE_AUTO", "MODE_MDI"]
+        modes = ["MODE_MANUAL", "MODE_AUTO", "MODE_MDI"]
         state = self.s.task_mode
         return modes[state - 1]
 
@@ -78,7 +79,7 @@ class MachinekitController():
             pos = round(self.s.axis[i]['input'], 3)
             self.axes_with_cords[self.axes[i]] = {"pos": pos, "homed": homed}
             i += 1
-    
+
         return self.axes_with_cords
 
     def errors(self):
@@ -96,8 +97,6 @@ class MachinekitController():
             return {"errors": error[1]}
         else:
             return {}
-
-        
 
     def ready_for_mdi_commands(self):
         """ Returns bool that represents if the machine is ready for MDI commands """
@@ -143,13 +142,12 @@ class MachinekitController():
         if command == "estop":
             if self.s.estop == linuxcnc.STATE_ESTOP:
                 self.c.state(linuxcnc.STATE_ESTOP_RESET)
-            else: 
+            else:
                 self.c.state(linuxcnc.STATE_ESTOP)
-                
+
             self.c.wait_complete()
             return self.errors()
-            
-      
+
         if command == "power":
             if self.s.estop == linuxcnc.STATE_ESTOP:
                 return {"errors": "Can't turn on machine while it is in E_STOP modus"}
@@ -159,30 +157,27 @@ class MachinekitController():
                 self.c.state(linuxcnc.STATE_ON)
             self.c.wait_complete()
             return self.errors()
-        
 
     @checkerrors
     def mdi_command(self, command):
         """Send a MDI movement command to the machine, example "G0 Y1 X1 Z-1" """
         # Check if the machine is ready for mdi commands
         self.s.poll()
-
         if not self.s.enabled and not self.s.estop:
             return {"errors": "Cannot execute command when machine is powered off or in E_STOP modus"}
-    
+
         if self.s.interp_state is not linuxcnc.INTERP_IDLE:
             return {"errors": "Cannot execute command when machine interp state isn't idle"}
-        #HOMED CHECK DOEN
+
+        # HOMED CHECK DOEN
         for axe in self.axes_with_cords:
             if not self.axes_with_cords[axe]["homed"]:
                 return {"errors": "Cannot execute command when axes are not homed"}
 
-        if not self.s.homed:
-            return {"errors": "Cannot execute command while not homed"}
+        mdi_command = "G0 " + command
 
         self.ensure_mode(linuxcnc.MODE_MDI)
-        self.c.mdi(command)
-
+        self.c.mdi(str(mdi_command))
         return self.errors()
 
     def manual_control(self, axes, speed, increment):
@@ -193,10 +188,9 @@ class MachinekitController():
 
         if self.s.interp_state is not linuxcnc.INTERP_IDLE:
             return {"errors": "Cannot execute command when machine interp state isn't idle"}
-
         self.ensure_mode(linuxcnc.MODE_MANUAL)
-        self.c.jog(linuxcnc.JOG_INCREMENT, axes, speed, increment)
 
+        self.c.jog(linuxcnc.JOG_INCREMENT, axes, speed, increment)
         return self.errors()
 
     def home_all_axes(self):
