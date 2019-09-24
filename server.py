@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import os
+import sys
 import json
 import linuxcnc
 from pprint import pprint
@@ -35,7 +36,8 @@ def get_axis():
         return jsonify(controller.get_all_vitals())
     except (Exception) as e:
         if str(e) == "emcStatusBuffer invalid err=3":
-            return jsonify({"errors": "Machinekit is not running please restart machinekit and then the server"})
+            return jsonify(
+                {"errors": "Machinekit is not running please restart machinekit and then the server"})
         return jsonify({
             "errors": str(e)
         })

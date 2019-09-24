@@ -4,6 +4,7 @@
 #error_executing,
 #machine_vitals,
 #axes,
+#standard_xyz_table,
 #power p,
 #power label,
 #estop p,
@@ -13,10 +14,12 @@
 #machine_power,
 #machine_home_axes,
 #manual_control_select,
+#manual_control_radio_xyz,
 #manual_control,
 #program_control,
 #program_control button,
 #spindle_control,
+#spindle_control button,
 #spindle_control_speed,
 #feed_override_control,
 #spindle_override_control,
@@ -57,7 +60,15 @@ body.success_no_errors.power_on.no_estop.INTERP_READING #program_pause,
 body.success_no_errors.power_on.no_estop.INTERP_PAUSED #program_stop,
 body.success_no_errors.power_on.no_estop.INTERP_WAITING #program_pause,
 body.success_no_errors.power_on.no_estop.INTERP_WAITING #program_stop,
-body.success_no_errors.power_on.no_estop.INTERP_IDLE #program_start {
+body.success_no_errors.power_on.no_estop.INTERP_IDLE #program_start,
+body.success_no_errors.power_on.no_estop.SPINDLE_BRAKE_ON #reverse,
+body.success_no_errors.power_on.no_estop.SPINDLE_BRAKE_ON #forward,
+body.success_no_errors.power_on.no_estop.SPINDLE_FORWARD #reverse,
+body.success_no_errors.power_on.no_estop.SPINDLE_BACKWARD #forward,
+body.success_no_errors.power_on.no_estop #brake,
+body.success_no_errors.power_on.no_estop #off,
+body.success_no_errors.standard_xyz_table #manual_control_radio_xyz,
+body.success_no_errors.custom_table #manual_control_radio_custom {
     display: block;
 }
 
@@ -68,11 +79,15 @@ body.success_no_errors.power_on.no_estop #manual_control,
 body.success_no_errors.power_on.no_estop.all_homed #program_control,
 body.success_no_errors.power_on.no_estop.all_homed #mdi_command,
 body.success_no_errors.power_on.no_estop #spindle_control,
-body.success_no_errors.power_on.no_estop #spindle_control_speed,
 body.success_no_errors.power_on.no_estop #feed_override_control,
 body.success_no_errors.power_on.no_estop #spindle_override_control,
+body.success_no_errors.power_on.no_estop.SPINDLE_ENABLED #spindle_control_speed,
 body.success_no_errors.power_on.no_estop #max_velocity_control {
     display: flex;
+}
+
+body.standard_xyz_table #standard_xyz_table {
+    display: table;
 }
 
 body.error_executing #error_executing {

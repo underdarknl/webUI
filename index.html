@@ -67,6 +67,10 @@
           <p id="auto">auto</p>
           <p id="manual">manual</p>
         </div>
+        <div id="file_path">
+          <label>Current file: </label>
+          <p id="file"></p>
+        </div>
       </div>
     </section>
 
@@ -91,7 +95,19 @@
         </tbody>
       </table>
 
-
+      <table id="custom_table">
+        <caption>
+          Axes
+        </caption>
+        <thead>
+          <tr id="c_thead_axes">
+          </tr>
+        </thead>
+        <tbody>
+          <tr id="c_tbody_axes">
+          </tr>
+        </tbody>
+      </table>
     </section>
 
     <section id="controls">
@@ -122,7 +138,7 @@
 
         <div id="manual_control_select">
           <label>Select axe for manual control</label>
-          <ol id="manual_control_radio">
+          <ol id="manual_control_radio_xyz">
             <li>
               <input type="radio" name="radio" id="radiox" data="x" checked="true"
                 onclick="manualControlSelector(this)" />
@@ -138,14 +154,18 @@
               <label for="radioz">z</label>
             </li>
           </ol>
+
+          <ol id="manual_control_radio_custom">
+
+          </ol>
         </div>
 
         <div id="manual_control">
           <label>Manual control</label>
           <button class="button primary" onclick="manualControl('increment', 20)">++</button>
           <button class="button primary" onclick="manualControl('increment', 10)">+</button>
-          <button class="button primary" onclick="manualControl('decrement', 10)">-</button>
-          <button class="button primary" onclick="manualControl('decrement', 20)">--</button>
+          <button class="button primary" onclick="manualControl('decrement', -10)">-</button>
+          <button class="button primary" onclick="manualControl('decrement', -20)">--</button>
         </div>
 
         <div id="program_control">
@@ -166,16 +186,16 @@
 
         <div id="spindle_control">
           <label>Spindle</label>
-          <button class="button primary" onclick="spindleControl('reverse')">
+          <button class="button primary" id="reverse" onclick="spindleControl('reverse')">
             reverse
           </button>
-          <button class="button primary" onclick="spindleControl('brake')">
-            brake
-          </button>
-          <button class="button primary" onclick="spindleControl('forward')">
+          <button class="button primary" id="forward" onclick="spindleControl('forward')">
             forward
           </button>
-          <button class="button error" onclick="spindleControl('off')">
+          <button class="button primary" id="brake" onclick="spindleControl('brake')">
+            brake
+          </button>
+          <button class="button error" id="off" onclick="spindleControl('off')">
             off
           </button>
         </div>

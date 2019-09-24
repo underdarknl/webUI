@@ -14,6 +14,7 @@ let machinekit_state = {
   }
 };
 
+let firstRender = true;
 let errors = [];
 let displayedErrors = [];
 let selectedAxe = "x";
@@ -104,6 +105,7 @@ const checkIfAxesAreHomedAndRenderTable = () => {
   }
 
   if (totalAxes == 3) {
+    document.body.classList.add("standard_xyz_table");
     document.getElementById("tbody_axes").innerHTML = "";
     for (const key in position) {
       let isHomed = "";
@@ -112,11 +114,50 @@ const checkIfAxesAreHomedAndRenderTable = () => {
       }
       document.getElementById("tbody_axes").innerHTML += `<td>${position[key].pos}${isHomed}</td>`;
     }
+  } else {
+    document.body.classList.add("custom_table");
+    const thead = document.getElementById("c_thead_axes");
+    const tbody = document.getElementById("c_tbody_axes");
+    const radio = document.getElementById("manual_control_radio_custom");
+
+    thead.innerHTML = "";
+    tbody.innerHTML = "";
+
+    for (const key in position) {
+      let isHomed = "";
+      if (position[key].homed) {
+        isHomed = "(H)";
+      }
+      if (key == "x") {
+        thead.insertCell(0).innerHTML = key;
+        tbody.insertCell(0).innerHTML = position[key].pos + isHomed;
+      } else if (key == "y") {
+        thead.insertCell(1).innerHTML = key;
+        tbody.insertCell(1).innerHTML = position[key].pos + isHomed;
+      } else if (key == "z") {
+        thead.insertCell(2).innerHTML = key;
+        tbody.insertCell(2).innerHTML = position[key].pos + isHomed;
+      } else {
+        thead.innerHTML += `<th>${key}</th>`;
+        tbody.innerHTML += `<td>${position[key].pos}${isHomed}</td>`;
+      }
+      if (firstRender) {
+        radio.innerHTML += `
+        <li>
+          <input type="radio" name="radio" id="radiox" data="${key}"
+            onclick="manualControlSelector(this)" />
+          <label for="radiox">${key}</label>
+        </li>`;
+      }
+    }
+
   }
   checkAndAddClass(totalAxes === axesHomed, {
     true: "all_homed",
     false: "not_homed"
   });
+
+  firstRender = false;
 }
 
 const setBodyClasses = () => {
@@ -181,7 +222,7 @@ const setBodyClasses = () => {
     document.body.classList.add("SPINDLE_FORWARD");
   }
 
-  checkAndAddClass(spindle.enabled, {
+  checkAndAddClass(spindle.spindle_enabled, {
     true: "SPINDLE_ENABLED",
     false: "SPINDLE_DISABLED"
   });
@@ -194,6 +235,7 @@ const setBodyClasses = () => {
 
   document.getElementById("max_velocity").value = (machinekit_state.values.max_velocity);
   document.getElementById("max_velocity_output").innerHTML = (machinekit_state.values.max_velocity);
+  document.getElementById("file").innerHTML = machinekit_state.program.file;
 }
 
 const toggleEstop = async () => {

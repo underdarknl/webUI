@@ -1,6 +1,16 @@
 #!/usr/bin/python
 import linuxcnc
 
+def checkerrors(f):
+    """Decorator that checks if the user requesting the page is logged in."""
+    def wrapper(*args, **kwargs):
+        errors = f(*args, **kwargs)
+        if 'errors' in errors:
+            return errors
+        else: 
+            return {"success": "Command executed"}
+    return wrapper
+
 
 class MachinekitController():
     """The Machinekit python interface in a class"""
@@ -304,6 +314,7 @@ class MachinekitController():
             self.s.poll()
         return self.s.task_mode == linuxcnc.MODE_AUTO and self.s.interp_state is not linuxcnc.INTERP_IDLE
 
+    @checkerrors
     def spindle_brake(self, command):
         self.s.poll()
         if self.s.spindle_brake == command:
@@ -318,12 +329,9 @@ class MachinekitController():
         self.ensure_mode(linuxcnc.MODE_MANUAL)
         self.c.brake(command)
 
-        errors = self.errors()
-        if 'errors' in errors:
-            return errors
-        else:   
-            return {"sucess": "Command executed"}
+        return self.errors()
 
+    @checkerrors
     def spindle_direction(self, command):
         """command takes parameters: spindle_forward, spindle_reverse, spindle_off, spindle_increase, spindle_decrease, spindle_constant"""
         commands = {
@@ -347,23 +355,17 @@ class MachinekitController():
         self.ensure_mode(linuxcnc.MODE_MANUAL)
         self.c.spindle(commands[command])
 
-        errors = self.errors()
-        if 'errors' in errors:
-            return errors
-        else:
-            return {"success": "Command executed"}
+        return self.errors()
 
+    @checkerrors
     def maxvel(self, maxvel):
         """Takes int of maxvel min"""
         self.c.maxvel(maxvel / 60.)
         self.c.wait_complete()
 
-        errors = self.errors()
-        if 'errors' in errors:
-            return errors
-        else:
-            return {"success": "Command executed"}
-        
+        return self.errors()
+    
+    @checkerrors
     def spindleoverride(self, value):
         """test"""  
         if value > 1 or value < 0:
@@ -372,12 +374,9 @@ class MachinekitController():
         self.c.spindleoverride(value)
         self.c.wait_complete()
 
-        errors = self.errors()
-        if 'errors' in errors:
-            return errors
-        else:
-            return {"success": "Command executed"}
+        return self.errors()
 
+    @checkerrors
     def feedoverride(self, value):
         if value > 1.2 or value < 0:
             return {"errors": "Value outside of limits"}
@@ -386,10 +385,6 @@ class MachinekitController():
         self.c.feedrate(value)
         self.c.wait_complete()
 
-        errors = self.errors()
-        if 'errors' in errors:
-            return errors
-        else:
-            return {"success": "Command executed"}
+        return self.errors()
 
 
