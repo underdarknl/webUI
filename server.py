@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import os
+import sys
 import json
 import linuxcnc
 from pprint import pprint
@@ -33,9 +34,12 @@ except Exception as e:
 def get_axis():
     try:
         return jsonify(controller.get_all_vitals())
-    except Exception as e:
+    except (Exception) as e:
+        if str(e) == "emcStatusBuffer invalid err=3":
+            return jsonify(
+                {"errors": "Machinekit is not running please restart machinekit and then the server"})
         return jsonify({
-            "error": str(e)
+            "errors": str(e)
         })
 
 
@@ -49,7 +53,7 @@ def return_files():
         result = cur.fetchall()
         return jsonify({"result": result})
     except Exception as e:
-        return e
+        return jsonify({"errors": str(e)})
 
 
 @app.route("/set_machine_status", methods=["POST"])
@@ -57,20 +61,25 @@ def set_status():
     try:
         data = request.json
         command = data['command']
-        return jsonify(controller.e_stop(command))
+        return jsonify(controller.machine_status(command))
     except (KeyError, Exception) as e:
         return jsonify({
-            "error": str(e)
+            "errors": str(e)
         })
 
 
-@app.route("/set_home", methods=["GET"])
+@app.route("/set_home", methods=["POST"])
 def set_home_axes():
     try:
-        return jsonify(controller.home_all_axes())
+        data = request.json
+        command = data['command']
+        if command == "home":
+            return jsonify(controller.home_all_axes())
+        else:
+            return jsonify(controller.unhome_all_axes())
     except Exception as e:
         return jsonify({
-            "error": str(e)
+            "errors": str(e)
         })
 
 
@@ -82,7 +91,7 @@ def control_program():
         return jsonify(controller.run_program(command))
     except Exception as e:
         return jsonify({
-            "error": str(e)
+            "errors": str(e)
         })
 
 
@@ -90,15 +99,12 @@ def control_program():
 def send_command():
     try:
         data = request.json
-        x = data['X']
-        y = data['Y']
-        z = data['Z']
-        controller.mdi_command("G0" + "X" + x + "Y" + y + "Z" + z)
+        command = data["mdi_command"]
 
-        return jsonify(data)
+        return jsonify(controller.mdi_command(command))
     except (KeyError, Exception) as e:
         return jsonify({
-            "error": str(e)
+            "errors": str(e)
         })
 
 
@@ -113,7 +119,52 @@ def manual():
         return jsonify(controller.manual_control(axes, speed, increment))
     except (KeyError, Exception) as e:
         return jsonify({
-            "error": str(e)
+            "errors": str(e)
+        })
+
+
+@app.route("/spindle", methods=["POST"])
+def spindle():
+    try:
+        data = request.json
+        command = data["command"]
+        if "spindle_brake" in command:
+            return jsonify(controller.spindle_brake(command["spindle_brake"]))
+        elif "spindle_direction" in command:
+            return jsonify(controller.spindle_direction(command["spindle_direction"]))
+        elif "spindle_override" in command:
+            return jsonify(controller.spindleoverride(command["spindle_override"]))
+        else:
+            return jsonify({"error": "Unknown command"})
+
+    except(KeyError, Exception) as e:
+        return jsonify({
+            "errors": str(e)
+        })
+
+
+@app.route("/feed", methods=["POST"])
+def feed():
+    try:
+        data = request.json
+        command = data["feedrate"]
+        return jsonify(controller.feedoverride(command))
+
+    except(KeyError, Exception) as e:
+        return jsonify({
+            "errors": str(e)
+        })
+
+
+@app.route("/maxvel", methods=["POST"])
+def maxvel():
+    try:
+        data = request.json
+        command = data["velocity"]
+        return jsonify(controller.maxvel(command))
+    except(KeyError, Exception) as e:
+        return jsonify({
+            "errors": str(e)
         })
 
 
@@ -135,7 +186,7 @@ def upload():
         result = cur.fetchall()
 
         if len(result) > 0:
-            return jsonify({"error": "File with given name already on server"})
+            return jsonify({"errors": "File with given name already on server"})
 
         cur.execute("""
             INSERT INTO files (file_name, file_location)
