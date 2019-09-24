@@ -171,7 +171,6 @@ def maxvel():
 @app.route("/file_upload", methods=["POST"])
 def upload():
     try:
-        # pprint(vars(request))
         if "file" not in request.files:
             return "No file found"
 

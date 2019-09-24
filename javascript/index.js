@@ -3,7 +3,6 @@ window.onload = async () => {
   setInterval(() => {
     getMachineStatus();
   }, 3000);
-
 };
 
 const api = "http://192.168.1.224:5000";
@@ -466,9 +465,15 @@ const sendMdiCommand = async () => {
   }, 750);
 }
 
+const nav = (ipage) => {
+  page = ipage;
+  getMachineStatus();
+}
+
 const render = () => {
-  document.body.className = "success_no_errors";
+  document.body.className = `success_no_errors`;
   handleErrors();
   setBodyClasses();
   checkIfAxesAreHomedAndRenderTable();
+
 };

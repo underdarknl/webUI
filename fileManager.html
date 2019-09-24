@@ -1,50 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>CNC webUI</title>
-    <link href="//css.underdark.nl/0.2/base.css" rel="stylesheet" />
-    <link href="//css.underdark.nl/0.2/layout.css" rel="stylesheet" />
-    <link href="//css.underdark.nl/0.2/module.css" rel="stylesheet" />
-    <link href="//css.underdark.nl/0.2/theme.css" rel="stylesheet" />
-    <script type="text/javascript" src="javascript/helpers.js"></script>
-    <script type="text/javascript" src="javascript/manager.js"></script>
-  </head>
-  <body>
-    <header>
-      <div>
-        <div class="logo">
-          <a href="/">CNC Controller</a>
-          <p>Lorem ipsum dolor sit amet</p>
-        </div>
-        <nav>
-          <ul>
-            <li><a href="/index.html">Controller</a></li>
-            <li><a href="/fileManager.html">File manager</a></li>
-          </ul>
-        </nav>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>CNC webUI</title>
+  <link href="//css.underdark.nl/0.2/base.css" rel="stylesheet" />
+  <link href="//css.underdark.nl/0.2/layout.css" rel="stylesheet" />
+  <link href="//css.underdark.nl/0.2/module.css" rel="stylesheet" />
+  <link href="//css.underdark.nl/0.2/theme.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@shopify/draggable@1.0.0-beta.8/lib/draggable.bundle.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@shopify/draggable@1.0.0-beta.8/lib/sortable.js"></script>
+  <script type="text/javascript" src="javascript/manager.js"></script>
+</head>
+
+<body>
+  <header>
+    <div>
+      <div class="logo">
+        <a href="/">CNC Controller</a>
+        <p>Lorem ipsum dolor sit amet</p>
       </div>
-    </header>
-    <main>
-      <section>
-        <h2>Files on server</h2>
-        <div id="files"></div>
-      </section>
+      <nav>
+        <ul>
+          <li><a href="/index.html">Controller</a></li>
+          <li><a href="/fileManager.html">File manager</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section>
+      <h2>Upload file</h2>
+      <form onsubmit="event.preventDefault()">
+        <input id="uploadFile" onchange="getFile()" type="file" />
+        <button onclick="fUpload()">upload</button>
+      </form>
+    </section>
 
-      <section>
-        <h2>Queue manager</h2>
-        <div id="files"></div>
-      </section>
+    <section>
+      <h2>Files on server</h2>
+      <table id="files">
+        <caption>
+          Files
+        </caption>
+        <thead id="thead_files">
+          <tr>
+            <th>Name</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody_files">
+        </tbody>
+      </table>
 
-      <section>
-        <h2>Upload file</h2>
-        <form onsubmit="event.preventDefault()">
-          <input id="uploadFile" onchange="getAllFiles()" type="file" />
-          <button onclick="test()">upload</button>
-        </form>
-      </section>
-    </main>
-  </body>
+    </section>
+
+    <section>
+      <h2>Queue manager</h2>
+      <div id="files"></div>
+    </section>
+  </main>
+
+
+</body>
+
 </html>
