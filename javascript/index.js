@@ -2,7 +2,7 @@ window.onload = async () => {
   getMachineStatus();
   setInterval(() => {
     getMachineStatus();
-  }, 1000);
+  }, 3000);
 
 };
 
@@ -15,7 +15,8 @@ let machinekit_state = {
 };
 
 let firstRender = true;
-let errors, displayedErrors = [];
+let errors = [];
+let = displayedErrors = [];
 let selectedAxe = "x";
 let distanceMultiplier = 1;
 
