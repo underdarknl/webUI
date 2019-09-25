@@ -1,8 +1,6 @@
 window.onload = async () => {
-  localStorage.getItem("page");
   //Set a timer that handles requests to the server
   timer();
-
   //Handle window load for filemanager.js
   listFilesFromServer();
   new Sortable.default(document.querySelectorAll('tbody'), {
@@ -24,7 +22,8 @@ let appState = {
   errors: [],
   displayedErrors: [],
   selectedAxe: "x",
-  distanceMultiplier: 1
+  distanceMultiplier: 1,
+  speed: 1
 }
 
 const timer = () => {
@@ -108,7 +107,6 @@ const navigationHanlder = () => {
     localStorage.setItem("page", "file_manager");
     document.body.classList.add(`file_manager`);
     document.body.classList.remove(`controller`);
-
     handleErrors();
   }
 }
@@ -119,13 +117,16 @@ const getMachineStatus = async () => {
     return;
   }
   machinekit_state = status;
-  render();
+  document.body.className = `success_no_errors controller`;
+  handleErrors();
+  setBodyClasses();
+  checkIfAxesAreHomedAndRenderTable();
 }
 
 const handleErrors = () => {
   if (appState.errors.length > 0) {
     document.body.classList.add("error_executing");
-    errors.map((value, index) => {
+    appState.errors.map((value, index) => {
       if (!appState.displayedErrors.includes(value)) {
         document.getElementById("custom_errors").innerHTML += `<p class="error" id="error_executing">${value}</p>`
         appState.displayedErrors.push(value);
@@ -344,11 +345,17 @@ const manualControlSelector = (element) => {
   appState.selectedAxe = element.getAttribute("data");
 }
 
-const manualControlDistance = (element) => {
+const manualControlDistance = (element, option) => {
   const value = element.value;
   const target = element.id;
-  appState.distanceMultiplier = value;
-  document.getElementById(target + "_output").innerHTML = value;
+  if (option === "distance") {
+    appState.distanceMultiplier = value;
+    document.getElementById(target + "_output").innerHTML = value;
+  } else {
+    appState.speed = value;
+    document.getElementById(target + "_output").innerHTML = value;
+  }
+
 }
 
 const manualControl = async (input, increment) => {
@@ -367,7 +374,7 @@ const manualControl = async (input, increment) => {
 
   let command = {
     "axes": axeNumber,
-    "speed": 10,
+    "speed": parseFloat(appState.speed),
     "increment": 0
   }
 
@@ -522,10 +529,3 @@ const nav = (ipage) => {
   page = ipage;
   getMachineStatus();
 }
-
-const render = () => {
-  document.body.className = `success_no_errors controller`;
-  handleErrors();
-  setBodyClasses();
-  checkIfAxesAreHomedAndRenderTable();
-};

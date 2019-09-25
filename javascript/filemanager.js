@@ -11,7 +11,6 @@ let state = {
 const listFilesFromServer = async () => {
     document.getElementById("tbody_files").innerHTML = "";
     const result = await request(api + "/return_files", "GET");
-    console.log(result);
     if (result === undefined) {
         return;
     }
@@ -22,8 +21,6 @@ const listFilesFromServer = async () => {
         <td><button class="primary">Select</button></td>`;
     });
 }
-
-
 
 const getFile = () => {
     const fileList = document.getElementById(state.buttons.upload.id);

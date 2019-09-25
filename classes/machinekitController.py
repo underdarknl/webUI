@@ -1,7 +1,6 @@
 #!/usr/bin/python
 import linuxcnc
 
-
 def checkerrors(f):
     """Decorator that checks if the user requesting the page is logged in."""
     def wrapper(*args, **kwargs):
@@ -17,16 +16,14 @@ class MachinekitController():
     """The Machinekit python interface in a class"""
 
     def __init__(self):
-        try:
             self.s = linuxcnc.stat()
             self.c = linuxcnc.command()
             self.e = linuxcnc.error_channel()
             self.axes = self.set_axes()
             self.axes_with_cords = {}
-        except linuxcnc.error, detail:
-            print "[error]: ", detail
 
-    # Class is split up in getters and setters
+
+    # Class is split up in getters and setters 
 
     def set_axes(self):
         self.s.poll()
@@ -55,20 +52,19 @@ class MachinekitController():
         state = self.s.interp_state
         return modes[state - 1]
 
-        if state is 1:
+        if state is linuxcnc.INTERP_IDLE:
             return "INTERP_IDLE"
-        elif state is 2:
+        elif state is linuxcnc.INTERP_READING:
             return "INTERP_READING"
-        elif state is 3:
+        elif state is linuxcnc.INTERP_PAUSED:
             return "INTERP_PAUSED"
-        elif state is 4:
+        elif state is linuxcnc.INTERP_WAITING:
             return "INTERP_WAITING"
 
     def task_mode(self):
         self.s.poll()
         modes = ["MODE_MANUAL", "MODE_AUTO", "MODE_MDI"]
-        state = self.s.task_mode
-        return modes[state - 1]
+        return modes[self.s.task_mode - 1]
 
     def axes_position(self):
         """ Loop over axes and return position in { x: 0, y: 0, z: 0 } format """
@@ -160,7 +156,7 @@ class MachinekitController():
 
     @checkerrors
     def mdi_command(self, command):
-        """Send a MDI movement command to the machine, example "G0 Y1 X1 Z-1" """
+        """Send a MDI movement command to the machine, example "Y1 X1 Z-1" """
         # Check if the machine is ready for mdi commands
         self.s.poll()
         if not self.s.enabled and not self.s.estop:
@@ -169,7 +165,6 @@ class MachinekitController():
         if self.s.interp_state is not linuxcnc.INTERP_IDLE:
             return {"errors": "Cannot execute command when machine interp state isn't idle"}
 
-        # HOMED CHECK DOEN
         for axe in self.axes_with_cords:
             if not self.axes_with_cords[axe]["homed"]:
                 return {"errors": "Cannot execute command when axes are not homed"}
@@ -181,7 +176,7 @@ class MachinekitController():
         return self.errors()
 
     def manual_control(self, axes, speed, increment):
-        """ Manual control the CNC machine with continious transmission. axes=int speed=int in mm  increment=int in mm command=string"""
+        """ Manual continious transmission. axes=int speed=int in mm increment=int in mm"""
         self.s.poll()
         if not self.s.enabled and not self.s.estop:
             return {"errors": "Cannot execute command when machine is powered off or in E_STOP modus"}
@@ -208,6 +203,7 @@ class MachinekitController():
         return self.errors()
 
     def run_program(self, command):
+        """command = start || pause || stop"""
         if not self.ensure_mode(linuxcnc.MODE_AUTO, linuxcnc.MODE_MDI):
             return {"error": "machine is running or in wrong mode"}
 
@@ -222,6 +218,7 @@ class MachinekitController():
 
     @checkerrors
     def task_run(self, start_line):
+        """ Run program from line """
         self.s.poll()
         if self.s.task_mode not in (linuxcnc.MODE_AUTO, linuxcnc.MODE_MDI) or self.s.interp_state in (linuxcnc.INTERP_READING, linuxcnc.INTERP_WAITING, linuxcnc.INTERP_PAUSED):
             return {"errors": "Can't start machine because it is currently running or paused in a project"}
@@ -329,7 +326,7 @@ class MachinekitController():
     
     @checkerrors
     def spindleoverride(self, value):
-        """test"""  
+        """spindle override floatyboii betweem 0 and 1"""  
         if value > 1 or value < 0:
             return {"errors": "Value outside of limits"}
 
@@ -340,11 +337,19 @@ class MachinekitController():
 
     @checkerrors
     def feedoverride(self, value):
+        """feed override float between 0 and 1.2"""  
         if value > 1.2 or value < 0:
             return {"errors": "Value outside of limits"}
         self.s.poll()
 
         self.c.feedrate(value)
+        self.c.wait_complete()
+
+        return self.errors()
+
+    @checkerrors
+    def openFile(self, path):
+        self.c.program_open(path)
         self.c.wait_complete()
 
         return self.errors()
