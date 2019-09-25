@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>CNC Webinterface</title>
+    <link href="//css.underdark.nl/0.2/base.css" rel="stylesheet" />
+    <link href="//css.underdark.nl/0.2/layout.css" rel="stylesheet" />
+    <link href="//css.underdark.nl/0.2/module.css" rel="stylesheet" />
+    <link href="//css.underdark.nl/0.2/theme.css" rel="stylesheet" />
+</head>
+
+<body>
+    <header>
+        <div>
+            <div class="logo">
+                <a href="/">CNC Controller</a>
+                <p>Webinterface voor CNC frees</p>
+            </div>
+            <nav>
+                <ul>
+                    <li><a onclick="setPage('controller')">Controller</a></li>
+                    <li><a onclick="setPage('file_manager')">File manager</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+</body>
+
+</html>
+
+<script>
+    let page = "controller";
+    let isTimerRunning = true;
+
+    const fakeQuery = () => {
+        console.log('REQUEST TO SERVER');
+    }
+    const setPage = (input) => {
+        page = input;
+        pageHandler();
+    }
+    const pageHandler = () => {
+        if (page === "controller") {
+            isTimerRunning = true;
+        } else {
+            isTimerRunning = false;
+        }
+    }
+
+    function timer() {
+        if (!isTimerRunning) {
+            return setTimeout(timer, 1000);
+        }
+        setTimeout(timer, 1000);
+        fakeQuery();
+    }
+    timer();
+</script>
