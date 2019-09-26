@@ -141,11 +141,16 @@ const handleErrors = () => {
     document.body.classList.add("error_executing");
     appState.errors.map((value, index) => {
       if (!appState.displayedErrors.includes(value)) {
-        document.getElementById("custom_errors").innerHTML += `<p class="error" id="error_executing">${value}</p>`
+        document.getElementById("custom_errors").innerHTML += `<p class="error" id="error_executing">${value} <button class="error" id="${index}" onclick="deleteError(${index})">close</button></p>`
         appState.displayedErrors.push(value);
       }
     });
   }
+}
+
+const deleteError = (element) => {
+  let elem = document.getElementById(element);
+  elem.parentNode.remove(elem);
 }
 
 const checkAndAddClass = (condition, value) => {
