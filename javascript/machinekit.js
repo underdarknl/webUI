@@ -1,8 +1,8 @@
 window.onload = async () => {
-  //Set a timer that handles requests to the server
   timer();
-  //Handle window load for filemanager.js
-  listFilesFromServer();
+  setInterval(() => {
+    timer();
+  }, 3000);
   new Sortable.default(document.querySelectorAll('tbody'), {
     draggable: 'tr'
   });
@@ -18,7 +18,9 @@ let machinekit_state = {
 
 let appState = {
   isTimerRunning: true,
+  test: true,
   firstRender: true,
+  isFileManagerFirstRender: true,
   errors: [],
   displayedErrors: [],
   selectedAxe: "x",
@@ -27,11 +29,23 @@ let appState = {
 }
 
 const timer = () => {
-  if (!appState.isTimerRunning) {
-    return setTimeout(timer, 3000);
+  if (localStorage.getItem("page") === "file_manager") {
+    appState.isTimerRunning = false;
+    document.body.classList.add(`file_manager`);
+    document.body.classList.remove(`controller`);
+    if (appState.isFileManagerFirstRender) {
+      listFilesFromServer();
+      appState.isFileManagerFirstRender = false;
+      handleErrors();
+    }
+  } else {
+    appState.isTimerRunning = true;
   }
+  if (!appState.isTimerRunning) {
+    return;
+  }
+
   getMachineStatus();
-  setTimeout(timer, 3000);
 }
 
 const request = (url, type, data = {}) => {
@@ -93,21 +107,20 @@ const request = (url, type, data = {}) => {
 };
 
 const setPage = (input) => {
+  if (localStorage.getItem("page") === input) {
+    return;
+  }
   localStorage.setItem("page", input);
   navigationHanlder();
 }
 
 const navigationHanlder = () => {
   if (localStorage.getItem("page") === "controller") {
-    getMachineStatus();
-    appState.isTimerRunning = true;
     localStorage.setItem("page", "controller");
+    timer();
   } else {
-    appState.isTimerRunning = false;
     localStorage.setItem("page", "file_manager");
-    document.body.classList.add(`file_manager`);
-    document.body.classList.remove(`controller`);
-    handleErrors();
+    timer();
   }
 }
 

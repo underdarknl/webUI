@@ -175,6 +175,7 @@ class MachinekitController():
         self.c.mdi(str(mdi_command))
         return self.errors()
 
+    @checkerrors
     def manual_control(self, axes, speed, increment):
         """ Manual continious transmission. axes=int speed=int in mm increment=int in mm"""
         self.s.poll()
@@ -188,6 +189,7 @@ class MachinekitController():
         self.c.jog(linuxcnc.JOG_INCREMENT, axes, speed, increment)
         return self.errors()
 
+    @checkerrors
     def home_all_axes(self):
         """ Return all axes to their given home position """
         self.ensure_mode(linuxcnc.MODE_MANUAL)
@@ -349,6 +351,14 @@ class MachinekitController():
 
     @checkerrors
     def openFile(self, path):
+        self.s.poll()
+
+        if self.s.task_mode is not linuxcnc.INTERP_IDLE:
+            return {"errors": "Cannot execute command when interp is not idle"}
+
+        self.ensure_mode(linuxcnc.MODE_MDI)
+        self.c.reset_interpreter()
+        self.c.wait_complete()
         self.c.program_open(path)
         self.c.wait_complete()
 
