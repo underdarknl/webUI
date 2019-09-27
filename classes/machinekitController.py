@@ -8,19 +8,8 @@ def checkerrors(f):
         if 'errors' in errors:
             return errors
         else:
-            print("SUCCESS")
             return {"success": "Command executed"}
     return wrapper
-
-def check_if_machine_power_on_and_no_estop(f):
-    def decorated_function(*args, **kwargs):
-        """"""
-        args[0].s.poll()
-        if not args[0].s.enabled and not args[0].s.estop:
-            return {"errors": "Cannot execute command when machine is powered off or in E_STOP modus"}
-        f(*args, **kwargs)
-    return decorated_function
-
 
 class MachinekitController():
     """The Machinekit python interface in a class"""
