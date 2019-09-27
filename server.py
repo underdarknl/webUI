@@ -3,6 +3,7 @@
 import os
 import sys
 import json
+import logging
 import linuxcnc
 from pprint import pprint
 from flask_cors import CORS
@@ -19,25 +20,45 @@ app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = 'machinekit'
 app.config['MYSQL_DB'] = 'machinekit'
 
+api_token = "test_secret"
+
 mysql = MySQL(app)
 
 UPLOAD_FOLDER = '/home/machinekit/devel/webUI/files'
 ALLOWED_EXTENSIONS = set(['nc'])
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
+file_handler = logging.FileHandler('logfile.log')
+formatter = logging.Formatter(
+    '%(asctime)s : %(levelname)s : %(name)s : %(message)s')
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+
+
 try:
     controller = MachinekitController()
 except Exception as e:
-    print(e)
+    print("Machinekit is not running")
+    logger.critical(e)
+    sys.exit(1)
 
 
 @app.route("/status", methods=["GET"])
 def get_axis():
     try:
-        return jsonify(controller.get_all_vitals())
+        headers = request.headers
+        auth = headers.get("API_KEY")
+        if auth == api_token:
+            return jsonify(controller.get_all_vitals())
+        else:
+            return jsonify({"errors": "Not authorized"})
     except (Exception) as e:
         if str(e) == "emcStatusBuffer invalid err=3":
+            logger.critical(e)
             return jsonify(
                 {"errors": "Machinekit is not running please restart machinekit and then the server"})
+        logger.critical(e)
         return jsonify({
             "errors": str(e)
         })
@@ -168,10 +189,19 @@ def maxvel():
         })
 
 
+@app.route("/open_file", methods=["POST"])
+def open_file():
+    try:
+        data = request.json
+        path = data["path"]
+        return jsonify(controller.openFile(path))
+    except Exception as e:
+        return jsonify({"errors": e})
+
+
 @app.route("/file_upload", methods=["POST"])
 def upload():
     try:
-        # pprint(vars(request))
         if "file" not in request.files:
             return "No file found"
 

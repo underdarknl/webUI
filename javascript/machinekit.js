@@ -1,9 +1,11 @@
 window.onload = async () => {
-  getMachineStatus();
+  timer();
   setInterval(() => {
-    getMachineStatus();
+    timer();
   }, 3000);
-
+  new Sortable.default(document.querySelectorAll('tbody'), {
+    draggable: 'tr'
+  });
 };
 
 const api = "http://192.168.1.224:5000";
@@ -14,11 +16,38 @@ let machinekit_state = {
   }
 };
 
-let firstRender = true;
-let errors = [];
-let = displayedErrors = [];
-let selectedAxe = "x";
-let distanceMultiplier = 1;
+let appState = {
+  isTimerRunning: true,
+  test: true,
+  firstRender: true,
+  isFileManagerFirstRender: true,
+  errors: [],
+  displayedErrors: [],
+  selectedAxe: "x",
+  distanceMultiplier: 1,
+  speed: 1,
+  api_key: "test_secret"
+}
+
+const timer = () => {
+  if (localStorage.getItem("page") === "file_manager") {
+    appState.isTimerRunning = false;
+    document.body.classList.add(`file_manager`);
+    document.body.classList.remove(`controller`);
+    if (appState.isFileManagerFirstRender) {
+      listFilesFromServer();
+      appState.isFileManagerFirstRender = false;
+      handleErrors();
+    }
+  } else {
+    appState.isTimerRunning = true;
+  }
+  if (!appState.isTimerRunning) {
+    return;
+  }
+
+  getMachineStatus();
+}
 
 const request = (url, type, data = {}) => {
   if (type === "POST") {
@@ -26,7 +55,8 @@ const request = (url, type, data = {}) => {
         method: "POST",
         mode: "cors",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "API_KEY": appState.api_key
         },
         body: JSON.stringify(data)
       })
@@ -36,16 +66,42 @@ const request = (url, type, data = {}) => {
       .then(data => {
         return data;
       });
+  } else if (type === "UPLOAD") {
+    return fetch(url, {
+        method: "POST",
+        mode: "cors",
+        body: data,
+        headers: {
+          "API_KEY": appState.api_key
+        }
+      })
+      .then(response => {
+        return response.json();
+      })
+      .then(data => {
+        return data;
+      })
+      .catch(error => {
+        if (error == "TypeError: Failed to fetch") {
+          document.body.className = `error_server_down ${localStorage.getItem("page")}`;
+          appState.errors = [];
+          return;
+        }
+      });
   } else {
     return fetch(url, {
-        method: "GET"
+        method: "GET",
+        headers: {
+          "API_KEY": appState.api_key
+        },
       })
       .then(response => {
         return response.json();
       })
       .then(data => {
         if (data.errors == "Machinekit is not running please restart machinekit and then the server") {
-          document.body.className = "error_machinekit";
+          document.body.className = `error_machinekit ${localStorage.getItem("page")}`;
+          appState.errors = [];
           return;
         } else {
           return data;
@@ -53,12 +109,31 @@ const request = (url, type, data = {}) => {
       })
       .catch(error => {
         if (error == "TypeError: Failed to fetch") {
-          document.body.className = "error_server_down";
+          document.body.className = `error_server_down ${localStorage.getItem("page")}`;
+          appState.errors = [];
           return;
         }
       });
   }
 };
+
+const setPage = (input) => {
+  if (localStorage.getItem("page") === input) {
+    return;
+  }
+  localStorage.setItem("page", input);
+  navigationHanlder();
+}
+
+const navigationHanlder = () => {
+  if (localStorage.getItem("page") === "controller") {
+    localStorage.setItem("page", "controller");
+    timer();
+  } else {
+    localStorage.setItem("page", "file_manager");
+    timer();
+  }
+}
 
 const getMachineStatus = async () => {
   const status = await request("http://192.168.1.224:5000/status", "GET");
@@ -66,20 +141,27 @@ const getMachineStatus = async () => {
     return;
   }
   machinekit_state = status;
-  render();
+  document.body.className = `success_no_errors controller`;
+  handleErrors();
+  setBodyClasses();
+  checkIfAxesAreHomedAndRenderTable();
 }
 
 const handleErrors = () => {
-  if (errors.length > 0) {
+  if (appState.errors.length > 0) {
     document.body.classList.add("error_executing");
-    errors.map((value, index) => {
-      if (!displayedErrors.includes(value)) {
-        document.getElementById("custom_errors").innerHTML += `<p class="error" id="error_executing">${value}</p>`
-        //document.getElementById("error_executing").innerHTML += value + "<br>";
-        displayedErrors.push(value);
+    appState.errors.map((value, index) => {
+      if (!appState.displayedErrors.includes(value)) {
+        document.getElementById("custom_errors").innerHTML += `<p class="error" id="error_executing">${value} <button class="error" id="${index}" onclick="deleteError(${index})">close</button></p>`
+        appState.displayedErrors.push(value);
       }
     });
   }
+}
+
+const deleteError = (element) => {
+  let elem = document.getElementById(element);
+  elem.parentNode.remove(elem);
 }
 
 const checkAndAddClass = (condition, value) => {
@@ -142,7 +224,7 @@ const checkIfAxesAreHomedAndRenderTable = () => {
         thead.innerHTML += `<th>${key}</th>`;
         tbody.innerHTML += `<td>${position[key].pos}${isHomed}</td>`;
       }
-      if (firstRender) {
+      if (appState.firstRender) {
         radio.innerHTML += `
         <li>
           <input type="radio" name="radio" id="radiox" data="${key}"
@@ -158,7 +240,7 @@ const checkIfAxesAreHomedAndRenderTable = () => {
     false: "not_homed"
   });
 
-  firstRender = false;
+  appState.firstRender = false;
 }
 
 const setBodyClasses = () => {
@@ -267,7 +349,7 @@ const togglePower = async () => {
     },
   );
   if (result.errors) {
-    errors.push(result.errors);
+    appState.errors.push(result.errors);
   }
   getMachineStatus();
 };
@@ -283,20 +365,26 @@ const homeAllAxes = async (data) => {
   }
   const result = await request(api + "/set_home", "POST", command);
   if (result.errors) {
-    errors.push(result.errors);
+    appState.errors.push(result.errors);
   }
   getMachineStatus();
 }
 
 const manualControlSelector = (element) => {
-  selectedAxe = element.getAttribute("data");
+  appState.selectedAxe = element.getAttribute("data");
 }
 
-const manualControlDistance = (element) => {
+const manualControlDistance = (element, option) => {
   const value = element.value;
   const target = element.id;
-  distanceMultiplier = value;
-  document.getElementById(target + "_output").innerHTML = value;
+  if (option === "distance") {
+    appState.distanceMultiplier = value;
+    document.getElementById(target + "_output").innerHTML = value;
+  } else {
+    appState.speed = value;
+    document.getElementById(target + "_output").innerHTML = value;
+  }
+
 }
 
 const manualControl = async (input, increment) => {
@@ -311,23 +399,23 @@ const manualControl = async (input, increment) => {
     v: 7,
     w: 8
   }
-  const axeNumber = axeWithNumber[selectedAxe];
+  const axeNumber = axeWithNumber[appState.selectedAxe];
 
   let command = {
     "axes": axeNumber,
-    "speed": 10,
+    "speed": parseFloat(appState.speed),
     "increment": 0
   }
 
   if (input == "increment") {
-    command.increment = increment * distanceMultiplier;
+    command.increment = increment * appState.distanceMultiplier;
   } else {
-    command.increment = increment * distanceMultiplier;
+    command.increment = increment * appState.distanceMultiplier;
   }
 
   const result = await request(api + "/manual", "POST", command);
   if (result.errors) {
-    errors.push(result.errors);
+    appState.errors.push(result.errors);
   }
   setTimeout(() => {
     getMachineStatus();
@@ -357,7 +445,7 @@ const programControl = async (input) => {
 
   const result = await request(api + "/control_program", "POST", command);
   if (result.errors) {
-    errors.push(result.errors);
+    appState.errors.push(result.errors);
   }
   getMachineStatus();
 }
@@ -395,7 +483,7 @@ const spindleControl = async (input) => {
   }
   const result = await request(api + "/spindle", "POST", command);
   if (result.errors) {
-    errors.push(result.errors);
+    appState.errors.push(result.errors);
   }
   getMachineStatus();
 }
@@ -413,7 +501,7 @@ const spindleSpeedControl = async (input) => {
   }
   const result = await request(api + "/spindle", "POST", command);
   if (result.errors) {
-    errors.push(result.errors);
+    appState.errors.push(result.errors);
   }
   getMachineStatus();
 }
@@ -427,7 +515,7 @@ const controlFeedOverride = async (element) => {
       "feedrate": value
     });
     if (result.errors) {
-      errors.push(result.errors);
+      appState.errors.push(result.errors);
     }
   } else if (target == "spindle_override") {
     const result = await request(api + "/spindle", "POST", {
@@ -436,14 +524,14 @@ const controlFeedOverride = async (element) => {
       }
     });
     if (result.errors) {
-      errors.push(result.errors);
+      appState.errors.push(result.errors);
     }
   } else {
     const result = await request(api + "/maxvel", "POST", {
       "velocity": value * 100
     });
     if (result.errors) {
-      errors.push(result.errors);
+      appState.errors.push(result.errors);
     }
   }
 
@@ -458,7 +546,7 @@ const sendMdiCommand = async () => {
   });
 
   if (result.errors) {
-    errors.push(result.errors);
+    appState.errors.push(result.errors);
   }
 
   setTimeout(() => {
@@ -466,9 +554,7 @@ const sendMdiCommand = async () => {
   }, 750);
 }
 
-const render = () => {
-  document.body.className = "success_no_errors";
-  handleErrors();
-  setBodyClasses();
-  checkIfAxesAreHomedAndRenderTable();
-};
+const nav = (ipage) => {
+  page = ipage;
+  getMachineStatus();
+}
