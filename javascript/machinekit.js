@@ -84,6 +84,7 @@ const request = (url, type, data = {}) => {
       .catch(error => {
         if (error == "TypeError: Failed to fetch") {
           document.body.className = `error_server_down ${localStorage.getItem("page")}`;
+          appState.errors = [];
           return;
         }
       });
@@ -100,6 +101,7 @@ const request = (url, type, data = {}) => {
       .then(data => {
         if (data.errors == "Machinekit is not running please restart machinekit and then the server") {
           document.body.className = `error_machinekit ${localStorage.getItem("page")}`;
+          appState.errors = [];
           return;
         } else {
           return data;
@@ -108,6 +110,7 @@ const request = (url, type, data = {}) => {
       .catch(error => {
         if (error == "TypeError: Failed to fetch") {
           document.body.className = `error_server_down ${localStorage.getItem("page")}`;
+          appState.errors = [];
           return;
         }
       });
