@@ -20,6 +20,8 @@ app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = 'machinekit'
 app.config['MYSQL_DB'] = 'machinekit'
 
+api_token = "test_secret"
+
 mysql = MySQL(app)
 
 UPLOAD_FOLDER = '/home/machinekit/devel/webUI/files'
@@ -45,7 +47,12 @@ except Exception as e:
 @app.route("/status", methods=["GET"])
 def get_axis():
     try:
-        return jsonify(controller.get_all_vitals())
+        headers = request.headers
+        auth = headers.get("API_KEY")
+        if auth == api_token:
+            return jsonify(controller.get_all_vitals())
+        else:
+            return jsonify({"errors": "Not authorized"})
     except (Exception) as e:
         if str(e) == "emcStatusBuffer invalid err=3":
             logger.critical(e)

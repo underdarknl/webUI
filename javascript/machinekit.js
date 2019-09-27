@@ -25,7 +25,8 @@ let appState = {
   displayedErrors: [],
   selectedAxe: "x",
   distanceMultiplier: 1,
-  speed: 1
+  speed: 1,
+  api_key: "test_secret"
 }
 
 const timer = () => {
@@ -54,7 +55,8 @@ const request = (url, type, data = {}) => {
         method: "POST",
         mode: "cors",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "API_KEY": appState.api_key
         },
         body: JSON.stringify(data)
       })
@@ -68,7 +70,10 @@ const request = (url, type, data = {}) => {
     return fetch(url, {
         method: "POST",
         mode: "cors",
-        body: data
+        body: data,
+        headers: {
+          "API_KEY": appState.api_key
+        }
       })
       .then(response => {
         return response.json();
@@ -84,7 +89,10 @@ const request = (url, type, data = {}) => {
       });
   } else {
     return fetch(url, {
-        method: "GET"
+        method: "GET",
+        headers: {
+          "API_KEY": appState.api_key
+        },
       })
       .then(response => {
         return response.json();

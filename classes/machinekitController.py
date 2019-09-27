@@ -2,14 +2,24 @@
 import linuxcnc
 
 def checkerrors(f):
-    """Decorator that checks if the user requesting the page is logged in."""
+    """Decorator that checks if the machine returned any errors."""
     def wrapper(*args, **kwargs):
         errors = f(*args, **kwargs)
         if 'errors' in errors:
             return errors
         else:
+            print("SUCCESS")
             return {"success": "Command executed"}
     return wrapper
+
+def check_if_machine_power_on_and_no_estop(f):
+    def decorated_function(*args, **kwargs):
+        """"""
+        args[0].s.poll()
+        if not args[0].s.enabled and not args[0].s.estop:
+            return {"errors": "Cannot execute command when machine is powered off or in E_STOP modus"}
+        f(*args, **kwargs)
+    return decorated_function
 
 
 class MachinekitController():
@@ -52,22 +62,13 @@ class MachinekitController():
         state = self.s.interp_state
         return modes[state - 1]
 
-        if state is linuxcnc.INTERP_IDLE:
-            return "INTERP_IDLE"
-        elif state is linuxcnc.INTERP_READING:
-            return "INTERP_READING"
-        elif state is linuxcnc.INTERP_PAUSED:
-            return "INTERP_PAUSED"
-        elif state is linuxcnc.INTERP_WAITING:
-            return "INTERP_WAITING"
-
     def task_mode(self):
         self.s.poll()
         modes = ["MODE_MANUAL", "MODE_AUTO", "MODE_MDI"]
         return modes[self.s.task_mode - 1]
 
     def axes_position(self):
-        """ Loop over axes and return position in { x: 0, y: 0, z: 0 } format """
+        """ Loop over axes and return position: {"[axe]": {"homed": bool, "pos": float}} """
         self.s.poll()
         i = 0
         while i < len(self.axes):
@@ -129,6 +130,12 @@ class MachinekitController():
                 "max_acceleration": self.s.max_acceleration
             }
         }
+    
+    def machine_enabled_no_estop(self):
+        if  self.s.enabled and not self.s.estop:
+            return {}
+        else: 
+            return {"errors": "Cannot execute command when machine is powered off or in E_STOP modus"}
 
     # SETTERS
     @checkerrors
@@ -159,8 +166,9 @@ class MachinekitController():
         """Send a MDI movement command to the machine, example "Y1 X1 Z-1" """
         # Check if the machine is ready for mdi commands
         self.s.poll()
-        if not self.s.enabled and not self.s.estop:
-            return {"errors": "Cannot execute command when machine is powered off or in E_STOP modus"}
+        machine_ready = self.machine_enabled_no_estop()
+        if 'errors' in machine_ready:
+            return machine_ready 
 
         if self.s.interp_state is not linuxcnc.INTERP_IDLE:
             return {"errors": "Cannot execute command when machine interp state isn't idle"}
@@ -179,8 +187,10 @@ class MachinekitController():
     def manual_control(self, axes, speed, increment):
         """ Manual continious transmission. axes=int speed=int in mm increment=int in mm"""
         self.s.poll()
-        if not self.s.enabled and not self.s.estop:
-            return {"errors": "Cannot execute command when machine is powered off or in E_STOP modus"}
+
+        machine_ready = self.machine_enabled_no_estop()
+        if 'errors' in machine_ready:
+            return machine_ready 
 
         if self.s.interp_state is not linuxcnc.INTERP_IDLE:
             return {"errors": "Cannot execute command when machine interp state isn't idle"}
@@ -189,9 +199,13 @@ class MachinekitController():
         self.c.jog(linuxcnc.JOG_INCREMENT, axes, speed, increment)
         return self.errors()
 
+
     @checkerrors
     def home_all_axes(self):
         """ Return all axes to their given home position """
+        machine_ready = self.machine_enabled_no_estop()
+        if 'errors' in machine_ready:
+            return machine_ready 
         self.ensure_mode(linuxcnc.MODE_MANUAL)
         self.c.home(-1)
         self.c.wait_complete()
@@ -199,6 +213,10 @@ class MachinekitController():
 
     @checkerrors
     def unhome_all_axes(self):
+        machine_ready = self.machine_enabled_no_estop()
+        if 'errors' in machine_ready:
+            return machine_ready 
+
         self.ensure_mode(linuxcnc.MODE_MANUAL)
         self.c.unhome(-1)
         self.c.wait_complete()
@@ -206,8 +224,11 @@ class MachinekitController():
 
     def run_program(self, command):
         """command = start || pause || stop"""
-        if not self.ensure_mode(linuxcnc.MODE_AUTO, linuxcnc.MODE_MDI):
-            return {"error": "machine is running or in wrong mode"}
+        machine_ready = self.machine_enabled_no_estop()
+        if 'errors' in machine_ready:
+            return machine_ready 
+
+        self.ensure_mode(linuxcnc.MODE_AUTO, linuxcnc.MODE_MDI)
 
         if command == "start":
             return self.task_run(9)
@@ -278,11 +299,13 @@ class MachinekitController():
     @checkerrors
     def spindle_brake(self, command):
         self.s.poll()
+
+        machine_ready = self.machine_enabled_no_estop()
+        if 'errors' in machine_ready:
+            return machine_ready 
+
         if self.s.spindle_brake == command:
             return {"errors": "Command could not be executed because the spindle_brake is already in this state"}
-
-        if not self.s.enabled and not self.s.estop:
-            return {"errors": "Cannot execute command when machine is powered off or in E_STOP modus"}
         
         if self.s.interp_state is not linuxcnc.INTERP_IDLE:
             return {"errors": "Cannot execute command when machine interp state isn't idle"}
@@ -304,8 +327,9 @@ class MachinekitController():
             "spindle_constant": linuxcnc.SPINDLE_CONSTANT }
 
         self.s.poll()
-        if not self.s.enabled and not self.s.estop:
-            return {"errors": "Cannot execute command when machine is powered off or in E_STOP modus"}
+        machine_ready = self.machine_enabled_no_estop()
+        if 'errors' in machine_ready:
+            return machine_ready 
        
         if self.s.interp_state is not linuxcnc.INTERP_IDLE:
             return {"errors": "Cannot execute command when machine interp state isn't idle"}
