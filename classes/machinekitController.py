@@ -89,6 +89,11 @@ class MachinekitController():
         self.s.poll()
         return not self.s.estop and self.s.enabled and self.s.homed and (self.s.interp_state == linuxcnc.INTERP_IDLE)
 
+    def rcs_state(self):
+        self.s.poll()
+        modes = ["RCS_DONE", "RCS_EXEC", "RCS_ERROR"]
+        return modes[self.s.state -1]
+
     def get_all_vitals(self):
         self.s.poll()
         return {
@@ -111,7 +116,8 @@ class MachinekitController():
                 "file": self.s.file,
                 "interp_state": self.interp_state(),
                 "task_mode": self.task_mode(),
-                "feedrate": self.s.feedrate
+                "feedrate": self.s.feedrate,
+                "rcs_state": self.rcs_state()
             },
             "values": {
                 "velocity": self.s.velocity,

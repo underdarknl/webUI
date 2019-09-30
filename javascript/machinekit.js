@@ -40,6 +40,9 @@ const timer = () => {
       appState.isFileManagerFirstRender = false;
       handleErrors();
     }
+    if (state.queue.length > 0) {
+      document.body.classList.add("files_in_queue");
+    }
   } else {
     appState.isTimerRunning = true;
   }

@@ -10,17 +10,19 @@ const listFilesFromServer = async () => {
     }
     document.body.className = `success_no_errors file_manager`;
     state.queue = result.file_queue
+
     if (state.queue.length > 0) {
         document.body.classList.add("files_in_queue");
+        selectFile(state.queue[0]);
     }
     renderQueue();
 
     document.getElementById("tbody_files").innerHTML = "";
     result.result.map((item, index) => {
+        // <td><button class="primary" onclick="selectFile('${item[2] + "/" + item[1]}')">Select</button></td>
         document.getElementById("tbody_files").innerHTML += `
         <tr><td>${item[1]}</td>
-        <td><button class="primary" onclick="selectFile('${item[2] + "/" + item[1]}')">Select</button></td>
-        <td><button class="primary" onclick="addToQueue('${item[1]}')">Add to queue</button></td></tr>`;
+        <td><button class="warning" onclick="addToQueue('${item[1]}')">Add to queue</button></td></tr>`;
     });
 }
 

@@ -256,7 +256,7 @@
     <section id="filemanager">
       <h2>File manager</h2>
       <div id="filemanager_upload">
-        <h2>Upload file</h2>
+        <h3>Upload file</h3>
         <form onsubmit="event.preventDefault()">
           <input id="uploadFile" onchange="getFile()" type="file" />
           <button onclick="fUpload()">upload</button>
@@ -264,7 +264,7 @@
       </div>
 
       <div id="filemanager_files_on_server">
-        <h2>Files on server</h2>
+        <h3>Files on server</h3>
         <table id="files">
           <caption>
             Files
@@ -272,7 +272,6 @@
           <thead id="thead_files">
             <tr>
               <th>Name</th>
-              <th>Set active</th>
               <th>Add to queue</th>
             </tr>
           </thead>
@@ -282,7 +281,7 @@
       </div>
 
       <div id="filemanager_files_in_queue">
-        <h2>File queue</h2>
+        <h3>File queue</h3>
         <table id="queue">
           <caption>
             Queue

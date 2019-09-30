@@ -34,7 +34,7 @@ formatter = logging.Formatter(
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
-file_queue = ["smile.nc", "test.nc"]
+file_queue = []
 
 try:
     controller = MachinekitController()
@@ -206,7 +206,7 @@ def open_file():
     try:
         data = request.json
         path = data["path"]
-        return jsonify(controller.open_file(path))
+        return jsonify(controller.open_file("/home/machinekit/devel/webUI/files/" + path))
     except Exception as e:
         return jsonify({"errors": e})
 
