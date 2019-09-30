@@ -91,7 +91,6 @@ class MachinekitController():
 
     def get_all_vitals(self):
         self.s.poll()
-        print(self.s.pocket_prepped)
         return {
             "power": {
                 "enabled": self.s.enabled,

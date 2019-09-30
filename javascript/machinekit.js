@@ -66,6 +66,13 @@ const request = (url, type, data = {}) => {
       })
       .then(data => {
         return data;
+      })
+      .catch(error => {
+        if (error == "TypeError: Failed to fetch") {
+          document.body.className = `error_server_down ${localStorage.getItem("page")}`;
+          appState.errors = [];
+          return;
+        }
       });
   } else if (type === "UPLOAD") {
     return fetch(url, {

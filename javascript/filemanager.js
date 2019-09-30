@@ -4,16 +4,18 @@ let state = {
 }
 
 const listFilesFromServer = async () => {
-    document.getElementById("tbody_files").innerHTML = "";
     const result = await request(api + "/return_files", "GET");
     if (result === undefined) {
         return;
     }
-
-    state.queue = result.file_queue
-    renderQueue();
     document.body.className = `success_no_errors file_manager`;
+    state.queue = result.file_queue
+    if (state.queue.length > 0) {
+        document.body.classList.add("files_in_queue");
+    }
+    renderQueue();
 
+    document.getElementById("tbody_files").innerHTML = "";
     result.result.map((item, index) => {
         document.getElementById("tbody_files").innerHTML += `
         <tr><td>${item[1]}</td>
@@ -82,6 +84,7 @@ const selectFile = async (path) => {
 }
 
 const addToQueue = (file) => {
+    document.body.classList.add("files_in_queue");
     state.queue.push(file);
     renderQueue();
 }
@@ -104,9 +107,9 @@ const getNewQueue = async () => {
     for (let i = 0; i < elements.length; i++) {
         state.queue.push(elements.item(i).id);
     }
-
-    const result = await request(api + "/update_file_queue", "POST", {
+    await request(api + "/update_file_queue", "POST", {
         "new_queue": state.queue
     });
+
     listFilesFromServer();
 }
