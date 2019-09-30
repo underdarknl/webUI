@@ -91,6 +91,7 @@ class MachinekitController():
 
     def get_all_vitals(self):
         self.s.poll()
+        print(self.s.pocket_prepped)
         return {
             "power": {
                 "enabled": self.s.enabled,
@@ -372,7 +373,7 @@ class MachinekitController():
     def open_file(self, path):
         """ Open file in the /files dir on the beagleboi """ 
         self.s.poll()
-        
+
         if self.s.interp_state is not linuxcnc.INTERP_IDLE:
             return {"errors": "Cannot execute command when interp is not idle"}
 

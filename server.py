@@ -5,7 +5,6 @@ import sys
 import json
 import logging
 import linuxcnc
-from pprint import pprint
 from flask_cors import CORS
 from flask_mysqldb import MySQL
 from werkzeug.utils import secure_filename
@@ -35,6 +34,7 @@ formatter = logging.Formatter(
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
+file_queue = ["smile.nc", "test.nc"]
 
 try:
     controller = MachinekitController()
@@ -72,7 +72,7 @@ def return_files():
         SELECT * FROM files
         """)
         result = cur.fetchall()
-        return jsonify({"result": result})
+        return jsonify({"result": result, "file_queue": file_queue})
     except Exception as e:
         return jsonify({"errors": str(e)})
 
@@ -187,6 +187,18 @@ def maxvel():
         return jsonify({
             "errors": str(e)
         })
+
+
+@app.route("/update_file_queue", methods=["POST"])
+def update_file_queue():
+    try:
+        global file_queue
+        data = request.json
+        new_queue = data["new_queue"]
+        file_queue = new_queue
+        return jsonify({"success": "Queue updated"})
+    except Exception as e:
+        return jsonify({"errors": e})
 
 
 @app.route("/open_file", methods=["POST"])

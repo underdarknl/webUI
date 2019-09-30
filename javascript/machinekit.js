@@ -3,9 +3,10 @@ window.onload = async () => {
   setInterval(() => {
     timer();
   }, 5000);
-  new Sortable.default(document.querySelectorAll('tbody'), {
+  const sortable = new Sortable.default(document.querySelectorAll('tbody'), {
     draggable: 'tr'
   });
+  sortable.on('sortable:stop', () => {});
 };
 
 const api = "http://192.168.1.224:5000";

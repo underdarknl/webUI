@@ -272,7 +272,8 @@
           <thead id="thead_files">
             <tr>
               <th>Name</th>
-              <th></th>
+              <th>Set active</th>
+              <th>Add to queue</th>
             </tr>
           </thead>
           <tbody id="tbody_files">
@@ -282,19 +283,21 @@
 
       <div id="filemanager_files_in_queue">
         <h2>File queue</h2>
-        <table id="files">
+        <table id="queue">
           <caption>
             Queue
           </caption>
-          <thead id="thead_files">
+          <thead id="thead_queue">
             <tr>
               <th>Name</th>
-              <th></th>
+              <th>Remove from queue</th>
+
             </tr>
           </thead>
-          <tbody id="tbody_files">
+          <tbody id="tbody_queue">
           </tbody>
         </table>
+        <button onclick="getNewQueue()">update</button>
       </div>
     </section>
   </main>
