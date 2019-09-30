@@ -2,7 +2,7 @@ window.onload = async () => {
   timer();
   setInterval(() => {
     timer();
-  }, 3000);
+  }, 5000);
   new Sortable.default(document.querySelectorAll('tbody'), {
     draggable: 'tr'
   });

@@ -369,11 +369,11 @@ class MachinekitController():
         return self.errors()
 
     @checkerrors
-    def openFile(self, path):
+    def open_file(self, path):
         """ Open file in the /files dir on the beagleboi """ 
         self.s.poll()
-
-        if self.s.task_mode is not linuxcnc.INTERP_IDLE:
+        
+        if self.s.interp_state is not linuxcnc.INTERP_IDLE:
             return {"errors": "Cannot execute command when interp is not idle"}
 
         self.ensure_mode(linuxcnc.MODE_MDI)

@@ -194,7 +194,7 @@ def open_file():
     try:
         data = request.json
         path = data["path"]
-        return jsonify(controller.openFile(path))
+        return jsonify(controller.open_file(path))
     except Exception as e:
         return jsonify({"errors": e})
 
