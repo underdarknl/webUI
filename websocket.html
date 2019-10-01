@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Test</title>
+    <script src="https://code.jquery.com/jquery-3.4.1.js"
+        integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script>
+    <script>
+        const socket = io.connect("http://192.168.1.224:5000");
+        socket.on('connect', function (data) {
+            console.log("connected");
+        });
+
+        // socket.on("vitals", function (data) {
+        //     console.log(data.success);
+        // });
+
+        // const vitals = () => {
+        //     socket.emit("vitals");
+        // }
+
+        // setInterval(() => {
+        //     vitals();
+        // }, 1000);
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>

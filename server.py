@@ -1,15 +1,19 @@
 #!/usr/bin/python3
 
+import socket
 import os
 import sys
 import json
 import logging
 import linuxcnc
+import time
 from flask_cors import CORS
 from flask_mysqldb import MySQL
 from werkzeug.utils import secure_filename
 from classes.machinekitController import MachinekitController
 from flask import Flask, request, jsonify, flash, redirect, url_for, send_from_directory
+
+# halcmd setp hal_manualtoolchange.change_button true
 
 app = Flask(__name__)
 CORS(app)
@@ -25,6 +29,13 @@ mysql = MySQL(app)
 
 UPLOAD_FOLDER = '/home/machinekit/devel/webUI/files'
 ALLOWED_EXTENSIONS = set(['nc'])
+
+s = socket.socket()
+port = 12345
+s.connect(('192.168.1.224', port))
+# receive data from the server
+print s.recv(1024)
+s.close()
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
@@ -197,6 +208,18 @@ def update_file_queue():
         new_queue = data["new_queue"]
         file_queue = new_queue
         return jsonify({"success": "Queue updated"})
+    except Exception as e:
+        return jsonify({"errors": e})
+
+
+@app.route("/tool_change", methods=["GET"])
+def test():
+    try:
+        #Dirty fix to bypass toolchange prompt
+        os.system("halcmd setp hal_manualtoolchange.change_button true")
+        time.sleep(1)
+        os.system("halcmd setp hal_manualtoolchange.change_button false")
+        return jsonify({"success": "Command executed"})
     except Exception as e:
         return jsonify({"errors": e})
 
