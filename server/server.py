@@ -24,7 +24,7 @@ def test():
             "enabled": True,
             "estop": False,
         },
-        "position": {"x": random.randint(0, 100), "y": random.randint(0, 100), "z": random.randint(0, 100)},
+        "position": {"x": {"pos": random.randint(0, 100), "homed": True}, "y": {"pos": random.randint(0, 100), "homed": True}, "z": {"pos": random.randint(0, 100), "homed": True}},
         "spindle": {
             "spindle_speed": random.randint(0, 100),
             "spindle_enabled": random.randint(0, 1),
