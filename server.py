@@ -72,12 +72,17 @@ def get_axis():
 @app.route("/return_files", methods=["GET"])
 def return_files():
     try:
-        cur = mysql.connection.cursor()
-        cur.execute("""
-        SELECT * FROM files
-        """)
-        result = cur.fetchall()
-        return jsonify({"result": result, "file_queue": file_queue})
+        headers = request.headers
+        auth = headers.get("API_KEY")
+        if auth == api_token:
+            cur = mysql.connection.cursor()
+            cur.execute("""
+            SELECT * FROM files
+            """)
+            result = cur.fetchall()
+            return jsonify({"result": result, "file_queue": file_queue})
+        else:
+            return jsonify({"errors": "Not authorized"})
     except Exception as e:
         return jsonify({"errors": str(e)})
 
@@ -85,9 +90,14 @@ def return_files():
 @app.route("/set_machine_status", methods=["POST"])
 def set_status():
     try:
-        data = request.json
-        command = data['command']
-        return jsonify(controller.machine_status(command))
+        headers = request.headers
+        auth = headers.get("API_KEY")
+        if auth == api_token:
+            data = request.json
+            command = data['command']
+            return jsonify(controller.machine_status(command))
+        else:
+            return jsonify({"errors": "Not authorized"})
     except (KeyError, Exception) as e:
         return jsonify({
             "errors": str(e)
@@ -97,12 +107,17 @@ def set_status():
 @app.route("/set_home", methods=["POST"])
 def set_home_axes():
     try:
-        data = request.json
-        command = data['command']
-        if command == "home":
-            return jsonify(controller.home_all_axes())
+        headers = request.headers
+        auth = headers.get("API_KEY")
+        if auth == api_token:
+            data = request.json
+            command = data['command']
+            if command == "home":
+                return jsonify(controller.home_all_axes())
+            else:
+                return jsonify(controller.unhome_all_axes())
         else:
-            return jsonify(controller.unhome_all_axes())
+            return jsonify({"errors": "Not authorized"})
     except Exception as e:
         return jsonify({
             "errors": str(e)
@@ -112,9 +127,14 @@ def set_home_axes():
 @app.route("/control_program", methods=["POST"])
 def control_program():
     try:
-        data = request.json
-        command = data['command']
-        return jsonify(controller.run_program(command))
+        headers = request.headers
+        auth = headers.get("API_KEY")
+        if auth == api_token:
+            data = request.json
+            command = data['command']
+            return jsonify(controller.run_program(command))
+        else:
+            return jsonify({"errors": "Not authorized"})
     except Exception as e:
         return jsonify({
             "errors": str(e)
@@ -124,10 +144,14 @@ def control_program():
 @app.route("/send_command", methods=["POST"])
 def send_command():
     try:
-        data = request.json
-        command = data["mdi_command"]
-
-        return jsonify(controller.mdi_command(command))
+        headers = request.headers
+        auth = headers.get("API_KEY")
+        if auth == api_token:
+            data = request.json
+            command = data["mdi_command"]
+            return jsonify(controller.mdi_command(command))
+        else:
+            return jsonify({"errors": "Not authorized"})
     except (KeyError, Exception) as e:
         return jsonify({
             "errors": str(e)
@@ -137,12 +161,16 @@ def send_command():
 @app.route("/manual", methods=["POST"])
 def manual():
     try:
-        data = request.json
-        axes = data['axes']
-        speed = data['speed']
-        increment = data['increment']
-
-        return jsonify(controller.manual_control(axes, speed, increment))
+        headers = request.headers
+        auth = headers.get("API_KEY")
+        if auth == api_token:
+            data = request.json
+            axes = data['axes']
+            speed = data['speed']
+            increment = data['increment']
+            return jsonify(controller.manual_control(axes, speed, increment))
+        else:
+            return jsonify({"errors": "Not authorized"})
     except (KeyError, Exception) as e:
         return jsonify({
             "errors": str(e)
@@ -152,16 +180,21 @@ def manual():
 @app.route("/spindle", methods=["POST"])
 def spindle():
     try:
-        data = request.json
-        command = data["command"]
-        if "spindle_brake" in command:
-            return jsonify(controller.spindle_brake(command["spindle_brake"]))
-        elif "spindle_direction" in command:
-            return jsonify(controller.spindle_direction(command["spindle_direction"]))
-        elif "spindle_override" in command:
-            return jsonify(controller.spindleoverride(command["spindle_override"]))
+        headers = request.headers
+        auth = headers.get("API_KEY")
+        if auth == api_token:
+            data = request.json
+            command = data["command"]
+            if "spindle_brake" in command:
+                return jsonify(controller.spindle_brake(command["spindle_brake"]))
+            elif "spindle_direction" in command:
+                return jsonify(controller.spindle_direction(command["spindle_direction"]))
+            elif "spindle_override" in command:
+                return jsonify(controller.spindleoverride(command["spindle_override"]))
+            else:
+                return jsonify({"error": "Unknown command"})
         else:
-            return jsonify({"error": "Unknown command"})
+            return jsonify({"errors": "Not authorized"})
 
     except(KeyError, Exception) as e:
         return jsonify({
@@ -172,9 +205,14 @@ def spindle():
 @app.route("/feed", methods=["POST"])
 def feed():
     try:
-        data = request.json
-        command = data["feedrate"]
-        return jsonify(controller.feedoverride(command))
+        headers = request.headers
+        auth = headers.get("API_KEY")
+        if auth == api_token:
+            data = request.json
+            command = data["feedrate"]
+            return jsonify(controller.feedoverride(command))
+        else:
+            return jsonify({"errors": "Not authorized"})
 
     except(KeyError, Exception) as e:
         return jsonify({
@@ -185,9 +223,14 @@ def feed():
 @app.route("/maxvel", methods=["POST"])
 def maxvel():
     try:
-        data = request.json
-        command = data["velocity"]
-        return jsonify(controller.maxvel(command))
+        headers = request.headers
+        auth = headers.get("API_KEY")
+        if auth == api_token:
+            data = request.json
+            command = data["velocity"]
+            return jsonify(controller.maxvel(command))
+        else:
+            return jsonify({"errors": "Not authorized"})
     except(KeyError, Exception) as e:
         return jsonify({
             "errors": str(e)
@@ -197,11 +240,16 @@ def maxvel():
 @app.route("/update_file_queue", methods=["POST"])
 def update_file_queue():
     try:
-        global file_queue
-        data = request.json
-        new_queue = data["new_queue"]
-        file_queue = new_queue
-        return jsonify({"success": "Queue updated"})
+        headers = request.headers
+        auth = headers.get("API_KEY")
+        if auth == api_token:
+            global file_queue
+            data = request.json
+            new_queue = data["new_queue"]
+            file_queue = new_queue
+            return jsonify({"success": "Queue updated"})
+        else:
+            return jsonify({"errors": "Not authorized"})
     except Exception as e:
         return jsonify({"errors": e})
 
@@ -209,11 +257,16 @@ def update_file_queue():
 @app.route("/tool_change", methods=["GET"])
 def test():
     try:
-        # Dirty fix to bypass toolchange prompt
-        os.system("halcmd setp hal_manualtoolchange.change_button true")
-        time.sleep(1)
-        os.system("halcmd setp hal_manualtoolchange.change_button false")
-        return jsonify({"success": "Command executed"})
+        headers = request.headers
+        auth = headers.get("API_KEY")
+        if auth == api_token:
+            # Dirty fix to bypass toolchange prompt
+            os.system("halcmd setp hal_manualtoolchange.change_button true")
+            time.sleep(1)
+            os.system("halcmd setp hal_manualtoolchange.change_button false")
+            return jsonify({"success": "Command executed"})
+        else:
+            return jsonify({"errors": "Not authorized"})
     except Exception as e:
         return jsonify({"errors": e})
 
@@ -221,9 +274,14 @@ def test():
 @app.route("/open_file", methods=["POST"])
 def open_file():
     try:
-        data = request.json
-        path = data["path"]
-        return jsonify(controller.open_file("/home/machinekit/devel/webUI/files/" + path))
+        headers = request.headers
+        auth = headers.get("API_KEY")
+        if auth == api_token:
+            data = request.json
+            path = data["path"]
+            return jsonify(controller.open_file("/home/machinekit/devel/webUI/files/" + path))
+        else:
+            return jsonify({"errors": "Not authorized"})
     except Exception as e:
         return jsonify({"errors": e})
 
@@ -231,30 +289,35 @@ def open_file():
 @app.route("/file_upload", methods=["POST"])
 def upload():
     try:
-        if "file" not in request.files:
-            return "No file found"
+        headers = request.headers
+        auth = headers.get("API_KEY")
+        if auth == api_token:
+            if "file" not in request.files:
+                return "No file found"
 
-        file = request.files["file"]
-        filename = secure_filename(file.filename)
-        cur = mysql.connection.cursor()
-        cur.execute(
-            """
-            SELECT * FROM files
-            WHERE file_name = '%s' """ % filename)
+            file = request.files["file"]
+            filename = secure_filename(file.filename)
+            cur = mysql.connection.cursor()
+            cur.execute(
+                """
+                SELECT * FROM files
+                WHERE file_name = '%s' """ % filename)
 
-        result = cur.fetchall()
+            result = cur.fetchall()
 
-        if len(result) > 0:
-            return jsonify({"errors": "File with given name already on server"})
+            if len(result) > 0:
+                return jsonify({"errors": "File with given name already on server"})
 
-        cur.execute("""
-            INSERT INTO files (file_name, file_location)
-            VALUES (%s, %s)
-             """, (filename, UPLOAD_FOLDER)
-        )
-        mysql.connection.commit()
-        file.save(os.path.join(UPLOAD_FOLDER, filename))
-        return jsonify("File added to database and saved to folder")
+            cur.execute("""
+                INSERT INTO files (file_name, file_location)
+                VALUES (%s, %s)
+                """, (filename, UPLOAD_FOLDER)
+            )
+            mysql.connection.commit()
+            file.save(os.path.join(UPLOAD_FOLDER, filename))
+            return jsonify("File added to database and saved to folder")
+        else:
+            return jsonify({"errors": "Not authorized"})
 
     except Exception as e:
         return jsonify({"errors": e})
