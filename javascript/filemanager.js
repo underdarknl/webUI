@@ -68,9 +68,11 @@ const fUpload = async () => {
     let formData = new FormData();
     formData.append("file", state.file);
     const result = await request(api + "/file_upload", "UPLOAD", formData);
+
     if (result.errors) {
-        errors.push(result.errors);
+        appState.errors.push(result.errors);
         handleErrors();
+        return;
     }
     listFilesFromServer();
 }

@@ -9,7 +9,6 @@ from flask_mysqldb import MySQL
 from werkzeug.utils import secure_filename
 from classes.machinekitController import MachinekitController
 from flask import Flask, request, jsonify, flash, redirect, url_for, send_from_directory
-
 # halcmd setp hal_manualtoolchange.change_button true
 
 app = Flask(__name__)
@@ -75,14 +74,30 @@ def get_axis():
         })
 
 
+@app.route("/position", methods=["GET"])
+@auth
+def get_position():
+    try:
+        return jsonify(controller.axes_position())
+    except (Exception) as e:
+        if str(e) == "emcStatusBuffer invalid err=3":
+            logger.critical(e)
+            return jsonify(
+                {"errors": "Machinekit is not running please restart machinekit and then the server"})
+        logger.critical(e)
+        return jsonify({
+            "errors": str(e)
+        })
+
+
 @app.route("/return_files", methods=["GET"])
 @auth
 def return_files():
     try:
         cur = mysql.connection.cursor()
         cur.execute("""
-        SELECT * FROM files
-        """)
+                    SELECT * FROM files
+                    """)
         result = cur.fetchall()
         return jsonify({"result": result, "file_queue": file_queue})
 

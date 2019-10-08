@@ -388,4 +388,19 @@ class MachinekitController():
 
         return self.errors()
 
+    @checkerrors
+    def set_offset(self):
+        self.s.poll()
+
+        if self.s.interp_state is not linuxcnc.INTERP_IDLE:
+            return {"errors": "Cannot execute command when interp is not idle"}
+
+        machine_ready = self.machine_enabled_no_estop()
+        if 'errors' in machine_ready:
+            return machine_ready 
+        
+        #toolno, z_offset,  x_offset, diameter, frontangle, backangle, orientation
+        #self.s.tool_offset(int, float, float, float, float, float, int)
+        return self.errors()
+
 
