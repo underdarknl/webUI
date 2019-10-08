@@ -3,6 +3,7 @@ window.onload = async () => {
   setInterval(() => {
     timer();
   }, 5000);
+  
   const sortable = new Sortable.default(document.querySelectorAll('tbody'), {
     draggable: 'tr'
   });
@@ -10,6 +11,7 @@ window.onload = async () => {
 };
 
 const api = "http://192.168.1.116:5000";
+
 let machinekit_state = {
   power: {
     enabled: true,
@@ -290,6 +292,7 @@ const setBodyClasses = () => {
     default:
       break;
   }
+
   document.body.classList.add(value);
 
 
