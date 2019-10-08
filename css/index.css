@@ -1,0 +1,107 @@
+#server-down,
+#server-up,
+#machinekit-down,
+#machine-status,
+#estop-enabled,
+#estop-disabled,
+#power-on,
+#power-off,
+#interp-idle,
+#interp-paused,
+#interp-waiting,
+#interp-reading,
+#task-mdi,
+#task-auto,
+#task-manual,
+#xyz,
+#custom-table,
+#controls,
+#machine-estop,
+#machine-power,
+#machine-home-axes,
+#manual-control-select,
+#manual-control-distance,
+#manual-control-speed,
+#manual-control-radio-xyz,
+#manual-control,
+#program-control,
+#program-control button,
+#spindle-control,
+#spindle-control button,
+#spindle-control-speed,
+#feed-override-control,
+#spindle-override-control,
+#max-velocity-control,
+#mdi-command {
+  display: none;
+}
+
+body.server-running #server-up,
+body.server-running.controller #machine-status,
+body.server-running.controller #controls,
+body.server-running.controller.estop-disabled.power-on.interp-paused.homed
+  #program-resume,
+body.server-running.controller.estop-disabled.power-on.interp-reading.homed
+  #program-stop,
+body.server-running.controller.estop-disabled.power-on.interp-reading.homed
+  #program-pause,
+body.server-running.controller.estop-disabled.power-on.interp-idle.homed
+  #program-start,
+body.server-running.controller.estop-disabled.power-on.spindle-brake-on
+  #reverse,
+body.server-running.controller.estop-disabled.power-on.spindle-brake-on
+  #forward,
+body.server-running.controller.estop-disabled.power-on.spindle-forward #reverse,
+body.server-running.controller.estop-disabled.power-on.spindle-reverse #forward,
+body.server-running.controller.estop-disabled.power-on #brake,
+body.server-running.controller.estop-disabled.power-on #off {
+  display: block;
+}
+
+body.server-running.controller #machine-estop,
+body.server-running.controller.estop-disabled #machine-power,
+body.server-running.controller.estop-disabled.power-on #machine-home-axes,
+body.server-running.controller.estop-disabled.power-on #manual-control-select,
+body.server-running.controller.estop-disabled.power-on #manual-control,
+body.server-running.controller.estop-disabled.power-on #manual-control-distance,
+body.server-running.controller.estop-disabled.power-on #manual-control-speed,
+body.server-running.controller.estop-disabled.power-on #spindle-control,
+body.server-running.controller.estop-disabled.power-on #feed-override-control,
+body.server-running.controller.estop-disabled.power-on
+  #spindle-override-control,
+body.server-running.controller.estop-disabled.power-on.spindle-enabled
+  #spindl-control-speed,
+body.server-running.controller.estop-disabled.power-on #max-velocity-control,
+body.server-running.controller.estop-disabled.power-on.homed #program-control,
+body.server-running.controller.estop-disabled.power-on.homed #mdi-command {
+  display: flex;
+}
+
+body.server-running.machinekit-running.xyz #xyz,
+body.server-running.machinekit-running.custom-table #custom-table {
+  display: table;
+}
+body.server-running.machinekit-running.controller.power-on #power-on,
+body.server-running.machinekit-running.controller.power-off #power-off,
+body.server-running.machinekit-running.controller.estop-enabled #estop-enabled,
+body.server-running.machinekit-running.controller.estop-disabled
+  #estop-disabled,
+body.server-running.machinekit-running.controller.interp-idle #interp-idle,
+body.server-running.machinekit-running.controller.interp-paused #interp-paused,
+body.server-running.machinekit-running.controller.interp-waiting
+  #interp-waiting,
+body.server-running.machinekit-running.controller.interp-reading
+  #interp-reading,
+body.server-running.machinekit-running.controller.task-mdi #task-mdi,
+body.server-running.machinekit-running.controller.task-auto #task-auto,
+body.server-running.machinekit-running.controller.task-manual #task-manual {
+  display: table-cell;
+}
+
+body.server-down #server-down {
+  display: block;
+}
+
+body.machinekit-down #machinekit-down {
+  display: block;
+}
