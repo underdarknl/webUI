@@ -6,5 +6,6 @@ def auth(f):
         if auth != api_token:
             return jsonify({"errors": "Not authorized"})
         else:
-            f(*args, **kwargs)
+            return f(*args, **kwargs)
+    wrapper.__name__ = f.__name__
     return wrapper
