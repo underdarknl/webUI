@@ -9,7 +9,7 @@ window.onload = async () => {
   sortable.on('sortable:stop', () => {});
 };
 
-const api = "http://192.168.1.224:5000";
+const api = "http://192.168.1.116:5000";
 let machinekit_state = {
   power: {
     enabled: true,
@@ -147,7 +147,7 @@ const navigationHanlder = () => {
 }
 
 const getMachineStatus = async () => {
-  const status = await request("http://192.168.1.224:5000/status", "GET");
+  const status = await request(api + "/status", "GET");
   if (status == undefined) {
     return;
   }

@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import socket
 import os
 import sys
 import json
@@ -30,12 +29,7 @@ mysql = MySQL(app)
 UPLOAD_FOLDER = '/home/machinekit/devel/webUI/files'
 ALLOWED_EXTENSIONS = set(['nc'])
 
-s = socket.socket()
 port = 12345
-s.connect(('192.168.1.224', port))
-# receive data from the server
-print s.recv(1024)
-s.close()
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
@@ -215,7 +209,7 @@ def update_file_queue():
 @app.route("/tool_change", methods=["GET"])
 def test():
     try:
-        #Dirty fix to bypass toolchange prompt
+        # Dirty fix to bypass toolchange prompt
         os.system("halcmd setp hal_manualtoolchange.change_button true")
         time.sleep(1)
         os.system("halcmd setp hal_manualtoolchange.change_button false")
@@ -267,4 +261,4 @@ def upload():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host='192.168.1.224', port=5000)
+    app.run(debug=True, host='192.168.1.116', port=5000)
