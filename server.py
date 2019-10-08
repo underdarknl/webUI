@@ -1,16 +1,19 @@
 #!/usr/bin/python3
 
+import socket
 import os
 import sys
 import json
 import logging
 import linuxcnc
-from pprint import pprint
+import time
 from flask_cors import CORS
 from flask_mysqldb import MySQL
 from werkzeug.utils import secure_filename
 from classes.machinekitController import MachinekitController
 from flask import Flask, request, jsonify, flash, redirect, url_for, send_from_directory
+
+# halcmd setp hal_manualtoolchange.change_button true
 
 app = Flask(__name__)
 CORS(app)
@@ -27,6 +30,13 @@ mysql = MySQL(app)
 UPLOAD_FOLDER = '/home/machinekit/devel/webUI/files'
 ALLOWED_EXTENSIONS = set(['nc'])
 
+s = socket.socket()
+port = 12345
+s.connect(('192.168.1.224', port))
+# receive data from the server
+print s.recv(1024)
+s.close()
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 file_handler = logging.FileHandler('logfile.log')
@@ -35,6 +45,7 @@ formatter = logging.Formatter(
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
+file_queue = []
 
 try:
     controller = MachinekitController()
@@ -72,7 +83,7 @@ def return_files():
         SELECT * FROM files
         """)
         result = cur.fetchall()
-        return jsonify({"result": result})
+        return jsonify({"result": result, "file_queue": file_queue})
     except Exception as e:
         return jsonify({"errors": str(e)})
 
@@ -189,12 +200,36 @@ def maxvel():
         })
 
 
+@app.route("/update_file_queue", methods=["POST"])
+def update_file_queue():
+    try:
+        global file_queue
+        data = request.json
+        new_queue = data["new_queue"]
+        file_queue = new_queue
+        return jsonify({"success": "Queue updated"})
+    except Exception as e:
+        return jsonify({"errors": e})
+
+
+@app.route("/tool_change", methods=["GET"])
+def test():
+    try:
+        #Dirty fix to bypass toolchange prompt
+        os.system("halcmd setp hal_manualtoolchange.change_button true")
+        time.sleep(1)
+        os.system("halcmd setp hal_manualtoolchange.change_button false")
+        return jsonify({"success": "Command executed"})
+    except Exception as e:
+        return jsonify({"errors": e})
+
+
 @app.route("/open_file", methods=["POST"])
 def open_file():
     try:
         data = request.json
         path = data["path"]
-        return jsonify(controller.openFile(path))
+        return jsonify(controller.open_file("/home/machinekit/devel/webUI/files/" + path))
     except Exception as e:
         return jsonify({"errors": e})
 

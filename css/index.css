@@ -33,7 +33,8 @@
 #task_mode p,
 #mdi_command,
 #status,
-#filemanager {
+#filemanager,
+#filemanager_files_in_queue {
     display: none;
 }
 
@@ -93,7 +94,8 @@ body.success_no_errors.controller.power_on.no_estop #max_velocity_control {
     display: flex;
 }
 
-body.file_manager #filemanager {
+body.file_manager #filemanager,
+body.file_manager.files_in_queue #filemanager_files_in_queue {
     display: block;
 }
 

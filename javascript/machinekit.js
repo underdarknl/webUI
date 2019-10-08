@@ -2,10 +2,11 @@ window.onload = async () => {
   timer();
   setInterval(() => {
     timer();
-  }, 3000);
-  new Sortable.default(document.querySelectorAll('tbody'), {
+  }, 5000);
+  const sortable = new Sortable.default(document.querySelectorAll('tbody'), {
     draggable: 'tr'
   });
+  sortable.on('sortable:stop', () => {});
 };
 
 const api = "http://192.168.1.224:5000";
@@ -39,6 +40,9 @@ const timer = () => {
       appState.isFileManagerFirstRender = false;
       handleErrors();
     }
+    if (state.queue.length > 0) {
+      document.body.classList.add("files_in_queue");
+    }
   } else {
     appState.isTimerRunning = true;
   }
@@ -65,6 +69,13 @@ const request = (url, type, data = {}) => {
       })
       .then(data => {
         return data;
+      })
+      .catch(error => {
+        if (error == "TypeError: Failed to fetch") {
+          document.body.className = `error_server_down ${localStorage.getItem("page")}`;
+          appState.errors = [];
+          return;
+        }
       });
   } else if (type === "UPLOAD") {
     return fetch(url, {
@@ -142,6 +153,7 @@ const getMachineStatus = async () => {
   }
   machinekit_state = status;
   document.body.className = `success_no_errors controller`;
+
   handleErrors();
   setBodyClasses();
   checkIfAxesAreHomedAndRenderTable();
@@ -176,6 +188,12 @@ const checkIfAxesAreHomedAndRenderTable = () => {
   const {
     position,
   } = machinekit_state;
+
+  if (machinekit_state.program.tool_change === 0) {
+    document.getElementById("modaltoggle_warning").checked = true;
+  } else {
+    document.getElementById("modaltoggle_warning").checked = false;
+  }
 
   let totalAxes = 0;
   let axesHomed = 0;
@@ -556,5 +574,10 @@ const sendMdiCommand = async () => {
 
 const nav = (ipage) => {
   page = ipage;
+  getMachineStatus();
+}
+
+const toolChanged = async () => {
+  const result = await request(api + "/tool_change", "GET");
   getMachineStatus();
 }

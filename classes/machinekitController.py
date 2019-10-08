@@ -2,7 +2,7 @@
 import linuxcnc
 
 def checkerrors(f):
-    """Decorator that checks if the machine returned any errors."""
+    """ Decorator that checks if the machine returned any errors."""
     def wrapper(*args, **kwargs):
         errors = f(*args, **kwargs)
         if 'errors' in errors:
@@ -12,7 +12,7 @@ def checkerrors(f):
     return wrapper
 
 class MachinekitController():
-    """The Machinekit python interface in a class"""
+    """ The Machinekit python interface in a class """
 
     def __init__(self):
             self.s = linuxcnc.stat()
@@ -52,13 +52,11 @@ class MachinekitController():
         return modes[state - 1]
 
     def task_mode(self):
-        self.s.poll()
         modes = ["MODE_MANUAL", "MODE_AUTO", "MODE_MDI"]
         return modes[self.s.task_mode - 1]
 
     def axes_position(self):
         """ Loop over axes and return position: {"[axe]": {"homed": bool, "pos": float}} """
-        self.s.poll()
         i = 0
         while i < len(self.axes):
             homed = bool(self.s.axis[i]["homed"])
@@ -89,6 +87,10 @@ class MachinekitController():
         self.s.poll()
         return not self.s.estop and self.s.enabled and self.s.homed and (self.s.interp_state == linuxcnc.INTERP_IDLE)
 
+    def rcs_state(self):
+        modes = ["RCS_DONE", "RCS_EXEC", "RCS_ERROR"]
+        return modes[self.s.state -1]
+
     def get_all_vitals(self):
         self.s.poll()
         return {
@@ -111,7 +113,9 @@ class MachinekitController():
                 "file": self.s.file,
                 "interp_state": self.interp_state(),
                 "task_mode": self.task_mode(),
-                "feedrate": self.s.feedrate
+                "feedrate": self.s.feedrate,
+                "rcs_state": self.rcs_state(),
+                "tool_change": self.s.pocket_prepped
             },
             "values": {
                 "velocity": self.s.velocity,
@@ -129,7 +133,7 @@ class MachinekitController():
     # SETTERS
     @checkerrors
     def machine_status(self, command):
-        """Toggle estop and power with command estop || power"""
+        """ Toggle estop and power with command estop || power"""
         self.s.poll()
         if command == "estop":
             if self.s.estop == linuxcnc.STATE_ESTOP:
@@ -152,7 +156,7 @@ class MachinekitController():
 
     @checkerrors
     def mdi_command(self, command):
-        """Send a MDI movement command to the machine, example "Y1 X1 Z-1" """
+        """ Send a MDI movement command to the machine, example "Y1 X1 Z-1" """
         # Check if the machine is ready for mdi commands
         self.s.poll()
         machine_ready = self.machine_enabled_no_estop()
@@ -191,7 +195,7 @@ class MachinekitController():
 
     @checkerrors
     def home_all_axes(self):
-        """ Return all axes to their given home position """
+        """ Set all axes home """
         machine_ready = self.machine_enabled_no_estop()
         if 'errors' in machine_ready:
             return machine_ready 
@@ -202,6 +206,7 @@ class MachinekitController():
 
     @checkerrors
     def unhome_all_axes(self):
+        """ Unhome all axes """
         machine_ready = self.machine_enabled_no_estop()
         if 'errors' in machine_ready:
             return machine_ready 
@@ -212,7 +217,7 @@ class MachinekitController():
         return self.errors()
 
     def run_program(self, command):
-        """command = start || pause || stop"""
+        """ Command = start || pause || stop || resume = default"""
         machine_ready = self.machine_enabled_no_estop()
         if 'errors' in machine_ready:
             return machine_ready 
@@ -241,6 +246,7 @@ class MachinekitController():
 
     @checkerrors
     def task_pause(self):
+        """ Pause current program """
         self.s.poll()
         if self.s.interp_state is linuxcnc.INTERP_PAUSED:
             return {"errors": "Machine is already paused."}
@@ -254,6 +260,7 @@ class MachinekitController():
 
     @checkerrors
     def task_resume(self):
+        """ Resume current program """
         self.s.poll()
         if self.s.task_mode not in (linuxcnc.MODE_AUTO, linuxcnc.MODE_MDI) or self.s.interp_state is not linuxcnc.INTERP_PAUSED:
             return {"errors": "Machine not ready to resume. Probably because the machine is not paused or not in auto modus"}
@@ -264,12 +271,14 @@ class MachinekitController():
 
     @checkerrors
     def task_stop(self):
+        """ Stop/abort current program """
         self.c.abort()
         self.c.wait_complete()
 
         return self.errors()
 
     def ensure_mode(self, m, *p):
+        """ Ensure that the machine is in given mode. If not switch the mode """
         self.s.poll()
         if self.s.task_mode == m or self.s.task_mode in p:
             return True
@@ -287,6 +296,7 @@ class MachinekitController():
 
     @checkerrors
     def spindle_brake(self, command):
+        """ Engage the spindle brake"""
         self.s.poll()
 
         machine_ready = self.machine_enabled_no_estop()
@@ -306,7 +316,7 @@ class MachinekitController():
 
     @checkerrors
     def spindle_direction(self, command):
-        """command takes parameters: spindle_forward, spindle_reverse, spindle_off, spindle_increase, spindle_decrease, spindle_constant"""
+        """ Command takes parameters: spindle_forward, spindle_reverse, spindle_off, spindle_increase, spindle_decrease, spindle_constant"""
         commands = {
             "spindle_forward": linuxcnc.SPINDLE_FORWARD, 
             "spindle_reverse": linuxcnc.SPINDLE_REVERSE, 
@@ -333,7 +343,7 @@ class MachinekitController():
 
     @checkerrors
     def maxvel(self, maxvel):
-        """Takes int of maxvel min"""
+        """ Takes int of maxvel min"""
         self.c.maxvel(maxvel / 60.)
         self.c.wait_complete()
 
@@ -341,7 +351,7 @@ class MachinekitController():
     
     @checkerrors
     def spindleoverride(self, value):
-        """spindle override floatyboii betweem 0 and 1"""  
+        """ Spindle override floatyboii betweem 0 and 1"""  
         if value > 1 or value < 0:
             return {"errors": "Value outside of limits"}
 
@@ -352,7 +362,7 @@ class MachinekitController():
 
     @checkerrors
     def feedoverride(self, value):
-        """feed override float between 0 and 1.2"""  
+        """ Feed override float between 0 and 1.2"""  
         if value > 1.2 or value < 0:
             return {"errors": "Value outside of limits"}
         self.s.poll()
@@ -363,10 +373,11 @@ class MachinekitController():
         return self.errors()
 
     @checkerrors
-    def openFile(self, path):
+    def open_file(self, path):
+        """ Open file in the /files dir on the beagleboi """ 
         self.s.poll()
 
-        if self.s.task_mode is not linuxcnc.INTERP_IDLE:
+        if self.s.interp_state is not linuxcnc.INTERP_IDLE:
             return {"errors": "Cannot execute command when interp is not idle"}
 
         self.ensure_mode(linuxcnc.MODE_MDI)

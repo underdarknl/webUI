@@ -256,7 +256,7 @@
     <section id="filemanager">
       <h2>File manager</h2>
       <div id="filemanager_upload">
-        <h2>Upload file</h2>
+        <h3>Upload file</h3>
         <form onsubmit="event.preventDefault()">
           <input id="uploadFile" onchange="getFile()" type="file" />
           <button onclick="fUpload()">upload</button>
@@ -264,7 +264,7 @@
       </div>
 
       <div id="filemanager_files_on_server">
-        <h2>Files on server</h2>
+        <h3>Files on server</h3>
         <table id="files">
           <caption>
             Files
@@ -272,7 +272,7 @@
           <thead id="thead_files">
             <tr>
               <th>Name</th>
-              <th></th>
+              <th>Add to queue</th>
             </tr>
           </thead>
           <tbody id="tbody_files">
@@ -281,22 +281,33 @@
       </div>
 
       <div id="filemanager_files_in_queue">
-        <h2>File queue</h2>
-        <table id="files">
+        <h3>File queue</h3>
+        <table id="queue">
           <caption>
             Queue
           </caption>
-          <thead id="thead_files">
+          <thead id="thead_queue">
             <tr>
               <th>Name</th>
-              <th></th>
+              <th>Remove from queue</th>
+
             </tr>
           </thead>
-          <tbody id="tbody_files">
+          <tbody id="tbody_queue">
           </tbody>
         </table>
+        <button class="primary" onclick="getNewQueue()">update</button>
       </div>
     </section>
+
+    <input type="checkbox" id="modaltoggle_warning" class="modaltoggle" hidden>
+    <div class="modal warning">
+      <aside>
+        <h2>Tool change</h2>
+        <p>Please change the tool in the machine</p>
+        <label for="modaltoggle_warning"><button class="primary" onclick="toolChanged()">Tool changed</button></label>
+      </aside>
+    </div>
   </main>
 </body>
 
