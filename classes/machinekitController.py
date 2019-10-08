@@ -52,13 +52,11 @@ class MachinekitController():
         return modes[state - 1]
 
     def task_mode(self):
-        self.s.poll()
         modes = ["MODE_MANUAL", "MODE_AUTO", "MODE_MDI"]
         return modes[self.s.task_mode - 1]
 
     def axes_position(self):
         """ Loop over axes and return position: {"[axe]": {"homed": bool, "pos": float}} """
-        self.s.poll()
         i = 0
         while i < len(self.axes):
             homed = bool(self.s.axis[i]["homed"])
@@ -90,7 +88,6 @@ class MachinekitController():
         return not self.s.estop and self.s.enabled and self.s.homed and (self.s.interp_state == linuxcnc.INTERP_IDLE)
 
     def rcs_state(self):
-        self.s.poll()
         modes = ["RCS_DONE", "RCS_EXEC", "RCS_ERROR"]
         return modes[self.s.state -1]
 
@@ -117,7 +114,8 @@ class MachinekitController():
                 "interp_state": self.interp_state(),
                 "task_mode": self.task_mode(),
                 "feedrate": self.s.feedrate,
-                "rcs_state": self.rcs_state()
+                "rcs_state": self.rcs_state(),
+                "tool_change": self.s.pocket_prepped
             },
             "values": {
                 "velocity": self.s.velocity,

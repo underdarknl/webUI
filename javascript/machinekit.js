@@ -153,6 +153,7 @@ const getMachineStatus = async () => {
   }
   machinekit_state = status;
   document.body.className = `success_no_errors controller`;
+
   handleErrors();
   setBodyClasses();
   checkIfAxesAreHomedAndRenderTable();
@@ -187,6 +188,12 @@ const checkIfAxesAreHomedAndRenderTable = () => {
   const {
     position,
   } = machinekit_state;
+
+  if (machinekit_state.program.tool_change === 0) {
+    document.getElementById("modaltoggle_warning").checked = true;
+  } else {
+    document.getElementById("modaltoggle_warning").checked = false;
+  }
 
   let totalAxes = 0;
   let axesHomed = 0;
@@ -567,5 +574,10 @@ const sendMdiCommand = async () => {
 
 const nav = (ipage) => {
   page = ipage;
+  getMachineStatus();
+}
+
+const toolChanged = async () => {
+  const result = await request(api + "/tool_change", "GET");
   getMachineStatus();
 }
