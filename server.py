@@ -9,7 +9,6 @@ from flask_mysqldb import MySQL
 from werkzeug.utils import secure_filename
 from classes.machinekitController import MachinekitController
 from flask import Flask, request, jsonify, flash, redirect, url_for, send_from_directory
-from decorators import auth
 
 # halcmd setp hal_manualtoolchange.change_button true
 
@@ -45,6 +44,19 @@ except Exception as e:
     print("Machinekit is not running")
     logger.critical(e)
     sys.exit(1)
+
+
+def auth(f):
+    """ Decorator that checks if the machine returned any errors."""
+    def wrapper(*args, **kwargs):
+        headers = request.headers
+        auth = headers.get("API_KEY")
+        if auth != api_token:
+            return jsonify({"errors": "Not authorized"})
+        else:
+            return f(*args, **kwargs)
+    wrapper.__name__ = f.__name__
+    return wrapper
 
 
 @app.route("/status", methods=["GET"])
