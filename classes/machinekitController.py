@@ -362,7 +362,8 @@ class MachinekitController():
 
     
     def feedoverride(self, value):
-        """ Feed override float between 0 and 1.2"""  
+        """ Feed override float between 0 and 1.2"""
+        print(value)
         if value > 1.2 or value < 0:
             return {"errors": "Value outside of limits"}
         self.s.poll()

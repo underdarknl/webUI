@@ -82,6 +82,51 @@ def vitals():
         emit("vitals", controller.get_all_vitals())
 
 
+@socketio.on("manual-control")
+def manual_control(command):
+    controller.manual_control(
+        command['axes'], command['speed'], command['increment'])
+    emit("vitals", controller.get_all_vitals())
+
+
+@socketio.on("program-control")
+def program_control(command):
+    controller.run_program(command)
+    print(command)
+    emit("vitals", controller.get_all_vitals())
+
+
+@socketio.on("spindle-control")
+def spindle_control(command):
+    if "spindle_brake" in command:
+        controller.spindle_brake(command["spindle_brake"])
+    elif "spindle_direction" in command:
+        controller.spindle_direction(command["spindle_direction"])
+    elif "spindle_override" in command:
+        print("oi")
+        print(command)
+        controller.spindleoverride(command["spindle_override"])
+    emit("vitals", controller.get_all_vitals())
+
+
+@socketio.on("feed-override")
+def feed_override(command):
+    controller.feedoverride(command)
+    emit("vitals", controller.get_all_vitals())
+
+
+@socketio.on("maxvel")
+def maxvel(command):
+    controller.maxvel(command)
+    emit("vitals", controller.get_all_vitals())
+
+
+@socketio.on("send-command")
+def send_command(command):
+    controller.mdi_command(command)
+    emit("vitals", controller.get_all_vitals())
+
+
 if __name__ == "__main__":
     app.debug = True
     socketio.run(app, host=host)

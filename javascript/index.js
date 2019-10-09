@@ -4,7 +4,10 @@ let socket;
 
 let appState = {
   errors: [],
-  displayedErrors: []
+  displayedErrors: [],
+  speed: 1,
+  distanceMultiplier: 1,
+  selectedAxe: "x"
 }
 window.onload = async () => {
   socket = io.connect(url);
@@ -79,8 +82,6 @@ const renderPage = () => {
     }
   }
   handleErrors();
-
-
 };
 
 const handleErrors = () => {
@@ -95,7 +96,6 @@ const handleErrors = () => {
   }
 }
 
-
 const removeError = (id) => {
   appState.displayedErrors.splice(id, 1);
   const elem = document.getElementById(id);
@@ -107,6 +107,7 @@ const renderController = () => {
   addToBody("controller");
   addMachineStatusToBody();
   showSliderValues();
+  renderTables();
 };
 
 const showSliderValues = () => {
@@ -129,14 +130,94 @@ const showSliderValues = () => {
   document.getElementById("spindle-override").value = Math.round((spindlerate * 100));
   document.getElementById("spindle-override-output").innerHTML = Math.round((spindlerate * 100));
 
-  document.getElementById("max-velocity").value = (max_velocity);
-  document.getElementById("max-velocity-output").innerHTML = (max_velocity);
+  document.getElementById("max-velocity").value = Math.round((max_velocity));
+  document.getElementById("max-velocity-output").innerHTML = Math.round((max_velocity));
   document.getElementById("current-file").innerHTML = file;
+}
+
+const renderTables = () => {
+  const position = machine_state.position;
+  let axes = 0;
+  let axesHomed = 0;
+  for (const key in position) {
+    let homed = position[key].homed;
+    if (homed) {
+      axesHomed++;
+    }
+    axes++;
+  }
+
+  if (axes === axesHomed) {
+    addToBody("homed");
+  } else {
+    addToBody("unhomed");
+  }
+
+  //Render standard 3 axes table or render custom table
+  if (axes === 3) {
+    addToBody("xyz");
+    document.getElementById("tbody_axes").innerHTML = "";
+    for (const key in position) {
+      let isHomed = "";
+      let color = `error`;
+
+      if (position[key].homed) {
+        isHomed = "(H)";
+        color = `success`;
+      }
+      const tbody = document.getElementById("tbody_axes");
+      let newcell;
+      if (key == "x") {
+        newcell = tbody.insertCell(0);
+        newcell.innerHTML = position[key].pos + isHomed;
+        newcell.className = color;
+      } else {
+        document.getElementById(
+          "tbody_axes"
+        ).innerHTML += `<td class=${color}>${position[key].pos}${isHomed}</td>`;
+      }
+    }
+  } else {
+    addToBody("custom-table");
+    const thead = document.getElementById("c_thead_axes");
+    const tbody = document.getElementById("c_tbody_axes");
+
+    thead.innerHTML = "";
+    tbody.innerHTML = "";
+
+    for (const key in position) {
+      let isHomed = "";
+      let color = `error`;
+      if (position[key].homed) {
+        isHomed = "(H)";
+        color = `success`;
+      }
+      let newcell;
+      if (key == "x") {
+        thead.insertCell(0).innerHTML = key;
+        newcell = tbody.insertCell(0);
+        newcell.innerHTML = position[key].pos + isHomed;
+        newcell.className = color;
+      } else if (key == "y") {
+        thead.insertCell(1).innerHTML = key;
+        newcell = tbody.insertCell(1);
+        newcell.innerHTML = position[key].pos + isHomed;
+        newcell.className = color;
+      } else if (key == "z") {
+        thead.insertCell(2).innerHTML = key;
+        newcell = tbody.insertCell(2);
+        newcell.innerHTML = position[key].pos + isHomed;
+        newcell.className = color;
+      } else {
+        thead.innerHTML += `<th>${key}</th>`;
+        tbody.innerHTML += `<td  class="${color}">${position[key].pos}${isHomed}</td>`;
+      }
+    }
+  }
 }
 
 const addMachineStatusToBody = () => {
   const {
-    position,
     power,
     program: {
       tool_change,
@@ -192,81 +273,14 @@ const addMachineStatusToBody = () => {
   } else {
     addToBody("spindle-disabled");
   }
-
-  let axes = 0;
-  let axesHomed = 0;
-  for (const key in position) {
-    let homed = position[key].homed;
-    if (homed) {
-      axesHomed++;
-    }
-    axes++;
-  }
-
-  if (axes === axesHomed) {
-    addToBody("homed");
-  } else {
-    addToBody("unhomed");
-  }
-
-  //Render standard 3 axes table or render custom table
-  if (axes === 3) {
-    addToBody("xyz");
-    document.getElementById("tbody_axes").innerHTML = "";
-    for (const key in position) {
-      let isHomed = "";
-      let color = `class="error"`;
-      if (position[key].homed) {
-        isHomed = "(H)";
-        color = `class="success"`;
-      }
-      document.getElementById(
-        "tbody_axes"
-      ).innerHTML += `<td ${color}>${position[key].pos}${isHomed}</td>`;
-    }
-  } else {
-    addToBody("custom-table");
-    const thead = document.getElementById("c_thead_axes");
-    const tbody = document.getElementById("c_tbody_axes");
-
-    thead.innerHTML = "";
-    tbody.innerHTML = "";
-
-    for (const key in position) {
-      let isHomed = "";
-      let color = `error`;
-      if (position[key].homed) {
-        isHomed = "(H)";
-        color = `success`;
-      }
-      let newcell;
-      if (key == "x") {
-        thead.insertCell(0).innerHTML = key;
-        newcell = tbody.insertCell(0);
-        newcell.innerHTML = position[key].pos + isHomed;
-        newcell.className = color;
-      } else if (key == "y") {
-        thead.insertCell(1).innerHTML = key;
-        newcell = tbody.insertCell(1);
-        newcell.innerHTML = position[key].pos + isHomed;
-        newcell.className = color;
-      } else if (key == "z") {
-        thead.insertCell(2).innerHTML = key;
-        newcell = tbody.insertCell(2);
-        newcell.innerHTML = position[key].pos + isHomed;
-        newcell.className = color;
-      } else {
-        thead.innerHTML += `<th>${key}</th>`;
-        tbody.innerHTML += `<td  class="${color}">${position[key].pos}${isHomed}</td>`;
-      }
-    }
-  }
 };
 
 const renderFileManager = () => {
   document.body.classList.remove("controller");
   addToBody("file-manager");
 };
+
+//Button functions
 
 function toggleStatus(command) {
   socket.emit("set-status", command, () => {});
@@ -285,4 +299,143 @@ function toggleStatus(command) {
 
 function homeAxes(command) {
   socket.emit("set-home", command, () => {});
+}
+
+function manualControlDistance(element, option) {
+  const value = element.value;
+  const target = element.id;
+  if (option === "distance") {
+    appState.distanceMultiplier = value;
+    document.getElementById(target + "-output").innerHTML = value;
+  } else {
+    appState.speed = value;
+    document.getElementById(target + "-output").innerHTML = value;
+  }
+}
+
+function manualControlSelector(element) {
+  appState.selectedAxe = element.getAttribute("data");
+}
+
+function manualControl(input, increment) {
+  const axeWithNumber = {
+    x: 0,
+    y: 1,
+    z: 2,
+    a: 3,
+    b: 4,
+    c: 5,
+    u: 6,
+    v: 7,
+    w: 8
+  }
+  const axeNumber = axeWithNumber[appState.selectedAxe];
+  let command = {
+    "axes": axeNumber,
+    "speed": parseFloat(appState.speed),
+    "increment": 0
+  }
+  if (input == "increment") {
+    command.increment = increment * appState.distanceMultiplier;
+  } else {
+    command.increment = increment * appState.distanceMultiplier;
+  }
+
+  socket.emit("manual-control", command, () => {});
+}
+
+function programControl(input) {
+  let command = {
+    "command": ""
+  }
+  switch (input) {
+    case "start":
+      command.command = "start";
+      break;
+    case "pause":
+      command.command = "pause";
+      break;
+    case "resume":
+      command.command = "resume";
+      break;
+    case "stop":
+      command.command = "stop";
+      break;
+    default:
+      break;
+  }
+
+  socket.emit("program-control", command.command, () => {});
+}
+
+function spindleControl(input) {
+  let command = {
+    "command": {
+      "spindle_direction": ""
+    }
+  }
+  switch (input) {
+    case "forward":
+      command.command.spindle_direction = "spindle_forward"
+      break;
+    case "off":
+      command.command.spindle_direction = "spindle_off"
+      break;
+    case "reverse":
+      command.command.spindle_direction = "spindle_reverse"
+      break;
+    case "brake":
+      command = {
+        "command": {
+          "spindle_brake": ""
+        }
+      }
+      if (machine_state.spindle.spindle_brake == 0) {
+        command.command.spindle_brake = 1;
+      } else {
+        command.command.spindle_brake = 0;
+      }
+      break;
+
+    default:
+      break;
+  }
+  socket.emit("spindle-control", command.command, () => {});
+}
+
+function spindleSpeedControl(input) {
+  let command = {
+    "command": {
+      "spindle_direction": ""
+    }
+  }
+  if (input == "increment") {
+    command.command.spindle_direction = "spindle_increase";
+  } else {
+    command.command.spindle_direction = "spindle_decrease";
+  }
+  console.log(command.command);
+  socket.emit("spindle-control", command.command, () => {});
+}
+
+function controlFeedOverride(element) {
+  const value = (element.value / 100);
+  const target = element.id;
+
+  document.getElementById(target + "-output").innerHTML = element.value;
+
+  if (target == "feed-override") {
+    socket.emit("feed-override", value, () => {});
+  } else if (target == "spindle-override") {
+    socket.emit("spindle-control", {
+      "spindle_override": value
+    }, () => {});
+  } else {
+    socket.emit("maxvel", (value * 100), () => {});
+  }
+}
+
+function sendMdiCommand() {
+  const command = document.getElementById("mdi-command-input").value.toUpperCase();
+  socket.emit("send-command", command, () => {});
 }
