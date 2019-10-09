@@ -157,6 +157,14 @@ def update_file_queue(new_queue):
     get_files()
 
 
+@socketio.on("tool-changed")
+def tool_changed():
+    os.system("halcmd setp hal_manualtoolchange.change_button true")
+    time.sleep(2)
+    os.system("halcmd setp hal_manualtoolchange.change_button false")
+    emit("vitals", controller.get_all_vitals())
+
+
 if __name__ == "__main__":
     app.debug = True
     socketio.run(app, host=host)

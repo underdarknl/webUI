@@ -476,3 +476,7 @@ function sendMdiCommand() {
   const command = document.getElementById("mdi-command-input").value.toUpperCase();
   socket.emit("send-command", command, () => {});
 }
+
+const toolChanged = async () => {
+  socket.emit("tool-changed", () => {});
+}
