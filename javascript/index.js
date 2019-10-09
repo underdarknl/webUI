@@ -1,7 +1,9 @@
 let machine_state = {};
+let url = "192.168.1.116:5000";
+
 window.onload = async () => {
   let firstConnect = true;
-  const socket = io.connect("http://127.0.0.1:5000");
+  const socket = io.connect(url);
 
   const result = await socket.on("connect", () => {
     socket.on("connected", () => {
@@ -16,7 +18,7 @@ window.onload = async () => {
         //Call every *ms*
         setInterval(() => {
           socket.emit("vitals", () => {});
-        }, 1000);
+        }, 400);
       }
     });
   });
@@ -71,7 +73,13 @@ const renderController = () => {
 };
 
 const addMachineStatusToBody = () => {
-  const { position, power, program, spindle, values } = machine_state;
+  const {
+    position,
+    power,
+    program,
+    spindle,
+    values
+  } = machine_state;
   power.enabled ? addToBody("power-on") : addToBody("power-off");
   power.estop ? addToBody("estop-enabled") : addToBody("estop-disabled");
 
