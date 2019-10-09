@@ -58,9 +58,20 @@ def handle_message(message):
     print(message)
 
 
-@socketio.on('toggle-estop')
-def toggle_estop():
-    print("toggle estop!!!!")
+@socketio.on('set-status')
+def toggle_estop(command):
+    controller.machine_status(command)
+    emit("vitals", controller.get_all_vitals())
+
+
+@socketio.on('set-home')
+def toggle_estop(command):
+    if command == "home":
+        controller.home_all_axes()
+    else:
+        controller.unhome_all_axes()
+
+    emit("vitals", controller.get_all_vitals())
 
 
 @socketio.on("vitals")

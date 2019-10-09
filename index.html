@@ -43,6 +43,9 @@
             Server is down please restart the server
           </p>
         </div>
+        <div id="custom-errors">
+        
+        </div>
       </section>
       <section id="machine-status">
       <label>File</label><p id="current-file"></p>
@@ -114,7 +117,7 @@
             <button
               class="button error"
               id="toggleEstopBtn"
-              onClick="toggleEstop()"
+              onClick="toggleStatus('estop')"
             >
               TOGGLE ESTOP
             </button>
@@ -125,7 +128,7 @@
             <button
               class="button primary"
               id="togglePowerBtn"
-              onClick="togglePower()"
+              onClick="toggleStatus('power')"
             >
               Toggle power
             </button>
@@ -133,10 +136,10 @@
 
           <div id="machine-home-axes">
             <label>Axes</label>
-            <button class="button primary" onClick="homeAllAxes(0)">
+            <button class="button primary" onClick="homeAxes('home')">
               home all axes
             </button>
-            <button class="button primary" onClick="homeAllAxes(1)">
+            <button class="button primary" onClick="homeAxes('unhome')">
               unhome all axes
             </button>
           </div>

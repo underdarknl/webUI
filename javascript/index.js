@@ -1,10 +1,14 @@
 let machine_state = {};
 let url = "192.168.1.116:5000";
-const socket = io.connect(url);
+let socket;
 
+let appState = {
+  errors: [],
+  displayedErrors: []
+}
 window.onload = async () => {
+  socket = io.connect(url);
   let firstConnect = true;
-
   const result = await socket.on("connect", () => {
     socket.on("connected", () => {
       console.log("Connected!");
@@ -59,13 +63,44 @@ const addToBody = (className, onlyClass = false) => {
 };
 
 const renderPage = () => {
+  const {
+    errors
+  } = machine_state;
   const page = localStorage.getItem("page");
   if (page === "controller") {
     renderController();
   } else {
     renderFileManager();
   }
+
+  if (errors.errors) {
+    if (!appState.displayedErrors.includes(errors.errors)) {
+      appState.errors.push(errors.errors);
+    }
+  }
+  handleErrors();
+
+
 };
+
+const handleErrors = () => {
+  const {
+    displayedErrors
+  } = appState;
+  if (appState.errors.length > 0) {
+    displayedErrors.push(appState.errors[0]);
+    const index = displayedErrors.indexOf(appState.errors[0]);
+    appState.errors = [];
+    document.getElementById("custom-errors").innerHTML += `<p class="error" id="error-executing">${displayedErrors[index]}<button class="error" id=${index} onclick="removeError(this.id)">close</button></p>`
+  }
+}
+
+
+const removeError = (id) => {
+  appState.displayedErrors.splice(id, 1);
+  const elem = document.getElementById(id);
+  elem.parentNode.remove()
+}
 
 const renderController = () => {
   document.body.classList.remove("file-manager");
@@ -233,7 +268,21 @@ const renderFileManager = () => {
   addToBody("file-manager");
 };
 
-function toggleEstop() {
-  console.log("Toggle");
-  socket.emit("toggle-estop", () => {});
+function toggleStatus(command) {
+  socket.emit("set-status", command, () => {});
+  if (command === "estop") {
+    document.getElementById("toggleEstopBtn").disabled = true;
+    setTimeout(function () {
+      document.getElementById("toggleEstopBtn").disabled = false;
+    }, 1000);
+  } else {
+    document.getElementById("togglePowerBtn").disabled = true;
+    setTimeout(function () {
+      document.getElementById("togglePowerBtn").disabled = false;
+    }, 1000);
+  }
+}
+
+function homeAxes(command) {
+  socket.emit("set-home", command, () => {});
 }
