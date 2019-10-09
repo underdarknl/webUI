@@ -1,378 +1,263 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>CNC Webinterface</title>
-    <link href="//css.underdark.nl/0.2/base.css" rel="stylesheet" />
-    <link href="//css.underdark.nl/0.2/layout.css" rel="stylesheet" />
-    <link href="//css.underdark.nl/0.2/module.css" rel="stylesheet" />
-    <link href="//css.underdark.nl/0.2/theme.css" rel="stylesheet" />
-    <link rel="stylesheet" href="./css/index.css" />
-    <script
-      src="https://code.jquery.com/jquery-3.4.1.js"
-      integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="
-      crossorigin="anonymous"
-    ></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script>
-    <script src="./javascript/index.js"></script>
-  </head>
-  <body>
-    <header>
-      <div>
-        <div class="logo">
-          <a href="/">CNC Controller</a>
-          <p>Webinterface voor CNC frees</p>
-        </div>
-        <nav>
-          <ul>
-            <li><a onclick="navigation('controller')">Controller</a></li>
-            <li><a onclick="navigation('file_manager')">File manager</a></li>
-          </ul>
-        </nav>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>CNC Webinterface</title>
+  <link href="//css.underdark.nl/0.2/base.css" rel="stylesheet" />
+  <link href="//css.underdark.nl/0.2/layout.css" rel="stylesheet" />
+  <link href="//css.underdark.nl/0.2/module.css" rel="stylesheet" />
+  <link href="//css.underdark.nl/0.2/theme.css" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/index.css" />
+  <script src="https://code.jquery.com/jquery-3.4.1.js" integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@shopify/draggable@1.0.0-beta.8/lib/draggable.bundle.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@shopify/draggable@1.0.0-beta.8/lib/sortable.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script>
+  <script src="./javascript/controller.js"></script>
+  <script src="./javascript/filemanager.js"></script>
+</head>
+
+<body>
+  <header>
+    <div>
+      <div class="logo">
+        <a href="/">CNC Controller</a>
+        <p>Webinterface voor CNC frees</p>
       </div>
-    </header>
-    <main>
-      <section id="error-messages">
-        <label>Status:</label>
-        <div id="errors">
-          <p class="success" id="server-up">Server is running</p>
-          <p class="error" id="machinekit-down">Machinekit is down</p>
-          <p class="error" id="server-down">
-            Server is down please restart the server
-          </p>
+      <nav>
+        <ul>
+          <li><a onclick="navigation('controller')">Controller</a></li>
+          <li><a onclick="navigation('file_manager')">File manager</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section id="error-messages">
+      <label>Status:</label>
+      <div id="errors">
+        <p class="success" id="server-up">Server is running</p>
+        <p class="error" id="machinekit-down">Machinekit is down</p>
+        <p class="error" id="server-down">
+          Server is down please restart the server
+        </p>
+      </div>
+      <div id="custom-errors">
+
+      </div>
+    </section>
+    <section id="machine-status">
+      <label>File</label>
+      <p id="current-file"></p>
+      <table id="status">
+        <caption>
+          Status
+        </caption>
+        <thead>
+          <tr>
+            <th>ESTOP</th>
+            <th>Power</th>
+            <th>Interp state</th>
+            <th>Task mode</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="success" id="estop-disabled">Disabled</td>
+            <td class="error" id="estop-enabled">Enabled</td>
+            <td class="success" id="power-on">On</td>
+            <td class="error" id="power-off">Off</td>
+            <td id="interp-idle">idle</td>
+            <td id="interp-paused">paused</td>
+            <td id="interp-waiting">waiting</td>
+            <td id="interp-reading">reading</td>
+            <td id="task-mdi">mdi</td>
+            <td id="task-auto">auto</td>
+            <td id="task-manual">manual</td>
+          </tr>
+        </tbody>
+      </table>
+      <table id="xyz">
+        <caption>
+          Axes
+        </caption>
+        <thead>
+          <tr id="thead_axes">
+            <th>X</th>
+            <th>Y</th>
+            <th>Z</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr id="tbody_axes">
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table id="custom-table">
+        <caption>
+          Axes
+        </caption>
+        <thead>
+          <tr id="c_thead_axes"></tr>
+        </thead>
+        <tbody>
+          <tr id="c_tbody_axes"></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="controls">
+      <form onsubmit="event.preventDefault()">
+        <div id="machine-estop">
+          <label>ESTOP</label>
+          <button class="button error" id="toggleEstopBtn" onClick="toggleStatus('estop')">
+            TOGGLE ESTOP
+          </button>
         </div>
-        <div id="custom-errors">
-        
+
+        <div id="machine-power">
+          <label>Power</label>
+          <button class="button primary" id="togglePowerBtn" onClick="toggleStatus('power')">
+            Toggle power
+          </button>
         </div>
-      </section>
-      <section id="machine-status">
-      <label>File</label><p id="current-file"></p>
-        <table id="status">
-          <caption>
-            Status
-          </caption>
-          <thead>
-            <tr>
-              <th>ESTOP</th>
-              <th>Power</th>
-              <th>Interp state</th>
-              <th>Task mode</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="success" id="estop-disabled">Disabled</td>
-              <td class="error" id="estop-enabled">Enabled</td>
-              <td class="success" id="power-on">On</td>
-              <td class="error" id="power-off">Off</td>
-              <td id="interp-idle">idle</td>
-              <td id="interp-paused">paused</td>
-              <td id="interp-waiting">waiting</td>
-              <td id="interp-reading">reading</td>
-              <td id="task-mdi">mdi</td>
-              <td id="task-auto">auto</td>
-              <td id="task-manual">manual</td>
-            </tr>
-          </tbody>
-        </table>
-        <table id="xyz">
-          <caption>
-            Axes
-          </caption>
-          <thead>
-            <tr id="thead_axes">
-              <th>X</th>
-              <th>Y</th>
-              <th>Z</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr id="tbody_axes">
-              <td>0</td>
-              <td>0</td>
-              <td>0</td>
-            </tr>
-          </tbody>
-        </table>
 
-        <table id="custom-table">
-          <caption>
-            Axes
-          </caption>
-          <thead>
-            <tr id="c_thead_axes"></tr>
-          </thead>
-          <tbody>
-            <tr id="c_tbody_axes"></tr>
-          </tbody>
-        </table>
-      </section>
+        <div id="machine-home-axes">
+          <label>Axes</label>
+          <button class="button primary" onClick="homeAxes('home')">
+            home all axes
+          </button>
+          <button class="button primary" onClick="homeAxes('unhome')">
+            unhome all axes
+          </button>
+        </div>
 
-      <section id="controls">
-        <form onsubmit="event.preventDefault()">
-          <div id="machine-estop">
-            <label>ESTOP</label>
-            <button
-              class="button error"
-              id="toggleEstopBtn"
-              onClick="toggleStatus('estop')"
-            >
-              TOGGLE ESTOP
-            </button>
-          </div>
+        <div id="manual-control-select">
+          <label>Select axe for manual control</label>
+          <ol id="manual-control-radio-xyz" style="margin-left: 15px">
+            <li>
+              <input type="radio" name="radio" id="radiox" data="x" checked="true"
+                onclick="manualControlSelector(this)" />
+              <label for="radiox">x</label>
+            </li>
+            <li>
+              <input type="radio" name="radio" id="radioy" data="y" onclick="manualControlSelector(this)" />
+              <label for="radiox">y</label>
+            </li>
 
-          <div id="machine-power">
-            <label>Power</label>
-            <button
-              class="button primary"
-              id="togglePowerBtn"
-              onClick="toggleStatus('power')"
-            >
-              Toggle power
-            </button>
-          </div>
+            <li>
+              <input type="radio" name="radio" id="radioz" data="z" onclick="manualControlSelector(this)" />
+              <label for="radioz">z</label>
+            </li>
+          </ol>
 
-          <div id="machine-home-axes">
-            <label>Axes</label>
-            <button class="button primary" onClick="homeAxes('home')">
-              home all axes
-            </button>
-            <button class="button primary" onClick="homeAxes('unhome')">
-              unhome all axes
-            </button>
-          </div>
+          <ol id="manual-control-radio-custom"></ol>
+        </div>
 
-          <div id="manual-control-select">
-            <label>Select axe for manual control</label>
-            <ol id="manual-control-radio-xyz" style="margin-left: 15px">
-              <li>
-                <input
-                  type="radio"
-                  name="radio"
-                  id="radiox"
-                  data="x"
-                  checked="true"
-                  onclick="manualControlSelector(this)"
-                />
-                <label for="radiox">x</label>
-              </li>
-              <li>
-                <input
-                  type="radio"
-                  name="radio"
-                  id="radioy"
-                  data="y"
-                  onclick="manualControlSelector(this)"
-                />
-                <label for="radiox">y</label>
-              </li>
+        <div id="manual-control-distance">
+          <label>Manual control distance multiplier</label>
+          <input type="range" min="1" max="20" value="1" onchange="manualControlDistance(this, 'distance')"
+            id="manual-control-distance-range" />
+          <span><output id="manual-control-distance-range-output">1</output></span>
+        </div>
 
-              <li>
-                <input
-                  type="radio"
-                  name="radio"
-                  id="radioz"
-                  data="z"
-                  onclick="manualControlSelector(this)"
-                />
-                <label for="radioz">z</label>
-              </li>
-            </ol>
+        <div id="manual-control-speed">
+          <label>Manual control speed</label>
+          <input type="range" min="1" max="100" value="1" onchange="manualControlDistance(this, 'speed')"
+            id="manual-control-speed" />
+          <span><output id="manual-control-speed-output">1</output></span>
+        </div>
 
-            <ol id="manual-control-radio-custom"></ol>
-          </div>
+        <div id="manual-control">
+          <label>Manual control</label>
+          <button class="button primary" onclick="manualControl('increment', 2)">
+            ++
+          </button>
+          <button class="button primary" onclick="manualControl('increment', 1)">
+            +
+          </button>
+          <button class="button primary" onclick="manualControl('decrement', -1)">
+            -
+          </button>
+          <button class="button primary" onclick="manualControl('decrement', -2)">
+            --
+          </button>
+        </div>
 
-          <div id="manual-control-distance">
-            <label>Manual control distance multiplier</label>
-            <input
-              type="range"
-              min="1"
-              max="20"
-              value="1"
-              onchange="manualControlDistance(this, 'distance')"
-              id="manual-control-distance-range"
-            />
-            <span
-              ><output id="manual-control-distance-range-output"
-                >1</output
-              ></span
-            >
-          </div>
+        <div id="program-control">
+          <label>Program</label>
+          <button class="button primary" id="program-start" onclick="programControl('start')">
+            start
+          </button>
+          <button class="button primary" id="program-pause" onclick="programControl('pause')">
+            pause
+          </button>
+          <button class="button primary" id="program-resume" onclick="programControl('resume')">
+            resume
+          </button>
+          <button class="button error" id="program-stop" onclick="programControl('stop')">
+            stop
+          </button>
+        </div>
 
-          <div id="manual-control-speed">
-            <label>Manual control speed</label>
-            <input
-              type="range"
-              min="1"
-              max="100"
-              value="1"
-              onchange="manualControlDistance(this, 'speed')"
-              id="manual-control-speed"
-            />
-            <span><output id="manual-control-speed-output">1</output></span>
-          </div>
+        <div id="spindle-control">
+          <label>Spindle</label>
+          <button class="button primary" id="reverse" onclick="spindleControl('reverse')">
+            reverse
+          </button>
+          <button class="button primary" id="forward" onclick="spindleControl('forward')">
+            forward
+          </button>
+          <button class="button primary" id="brake" onclick="spindleControl('brake')">
+            brake
+          </button>
+          <button class="button error" id="off" onclick="spindleControl('off')">
+            off
+          </button>
+        </div>
 
-          <div id="manual-control">
-            <label>Manual control</label>
-            <button
-              class="button primary"
-              onclick="manualControl('increment', 2)"
-            >
-              ++
-            </button>
-            <button
-              class="button primary"
-              onclick="manualControl('increment', 1)"
-            >
-              +
-            </button>
-            <button
-              class="button primary"
-              onclick="manualControl('decrement', -1)"
-            >
-              -
-            </button>
-            <button
-              class="button primary"
-              onclick="manualControl('decrement', -2)"
-            >
-              --
-            </button>
-          </div>
+        <div id="spindle-control-speed">
+          <label>Spindle speed</label>
+          <button class="button primary" onclick="spindleSpeedControl('increment')">
+            +
+          </button>
+          <button class="button primary" onclick="spindleSpeedControl('decrement')">
+            -
+          </button>
+        </div>
 
-          <div id="program-control">
-            <label>Program</label>
-            <button
-              class="button primary"
-              id="program-start"
-              onclick="programControl('start')"
-            >
-              start
-            </button>
-            <button
-              class="button primary"
-              id="program-pause"
-              onclick="programControl('pause')"
-            >
-              pause
-            </button>
-            <button
-              class="button primary"
-              id="program-resume"
-              onclick="programControl('resume')"
-            >
-              resume
-            </button>
-            <button
-              class="button error"
-              id="program-stop"
-              onclick="programControl('stop')"
-            >
-              stop
-            </button>
-          </div>
+        <div id="feed-override-control">
+          <label>Feed override</label>
+          <input type="range" min="0" max="120" value="0" onchange="controlFeedOverride(this)" id="feed-override" />
+          <span><output id="feed-override-output">120</output>%</span>
+        </div>
 
-          <div id="spindle-control">
-            <label>Spindle</label>
-            <button
-              class="button primary"
-              id="reverse"
-              onclick="spindleControl('reverse')"
-            >
-              reverse
-            </button>
-            <button
-              class="button primary"
-              id="forward"
-              onclick="spindleControl('forward')"
-            >
-              forward
-            </button>
-            <button
-              class="button primary"
-              id="brake"
-              onclick="spindleControl('brake')"
-            >
-              brake
-            </button>
-            <button
-              class="button error"
-              id="off"
-              onclick="spindleControl('off')"
-            >
-              off
-            </button>
-          </div>
+        <div id="spindle-override-control">
+          <label>Spindle override</label>
+          <input type="range" min="0" max="100" value="0" onchange="controlFeedOverride(this)" id="spindle-override" />
+          <span><output id="spindle-override-output">100</output>%</span>
+        </div>
 
-          <div id="spindle-control-speed">
-            <label>Spindle speed</label>
-            <button
-              class="button primary"
-              onclick="spindleSpeedControl('increment')"
-            >
-              +
-            </button>
-            <button
-              class="button primary"
-              onclick="spindleSpeedControl('decrement')"
-            >
-              -
-            </button>
-          </div>
+        <div id="max-velocity-control">
+          <label>Max velocity</label>
+          <input type="range" min="0" max="3200" value="0" onchange="controlFeedOverride(this)" id="max-velocity" />
+          <span><output id="max-velocity-output">3200</output></span>
+        </div>
 
-          <div id="feed-override-control">
-            <label>Feed override</label>
-            <input
-              type="range"
-              min="0"
-              max="120"
-              value="0"
-              onchange="controlFeedOverride(this)"
-              id="feed-override"
-            />
-            <span><output id="feed-override-output">120</output>%</span>
-          </div>
-
-          <div id="spindle-override-control">
-            <label>Spindle override</label>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value="0"
-              onchange="controlFeedOverride(this)"
-              id="spindle-override"
-            />
-            <span><output id="spindle-override-output">100</output>%</span>
-          </div>
-
-          <div id="max-velocity-control">
-            <label>Max velocity</label>
-            <input
-              type="range"
-              min="0"
-              max="3200"
-              value="0"
-              onchange="controlFeedOverride(this)"
-              id="max-velocity"
-            />
-            <span><output id="max-velocity-output">3200</output></span>
-          </div>
-
-          <div id="mdi-command">
-            <label>MDI command</label>
-            <input
-              type="text"
-              id="mdi-command-input"
-              placeholder="X1 Y1 Z1"
-              value="X1 Z1"
-            />
-            <button onclick="sendMdiCommand()">send</button>
-          </div>
-        </form>
-      </section>
+        <div id="mdi-command">
+          <label>MDI command</label>
+          <input type="text" id="mdi-command-input" placeholder="X1 Y1 Z1" value="X1 Z1" />
+          <button onclick="sendMdiCommand()">send</button>
+        </div>
+      </form>
+    </section>
 
     <input type="checkbox" id="modaltoggle-warning" class="modaltoggle" hidden>
     <div class="modal warning">
@@ -382,6 +267,55 @@
         <label for="modaltoggle-warning"><button class="primary" onclick="toolChanged()">Tool changed</button></label>
       </aside>
     </div>
-    </main>
-  </body>
+
+
+    <section id="file-manager">
+      <h2>File manager</h2>
+      <div id="filemanager_upload">
+        <h3>Upload file</h3>
+        <form onsubmit="event.preventDefault()">
+          <input id="uploadFile" onchange="getFile()" type="file" />
+          <button onclick="fUpload()">upload</button>
+        </form>
+      </div>
+
+      <div id="filemanager_files_on_server">
+        <h3>Files on server</h3>
+        <table id="files">
+          <caption>
+            Files
+          </caption>
+          <thead id="thead_files">
+            <tr>
+              <th>Name</th>
+              <th>Add to queue</th>
+            </tr>
+          </thead>
+          <tbody id="tbody_files">
+          </tbody>
+        </table>
+      </div>
+
+      <div id="filemanager_files_in_queue">
+        <h3>File queue</h3>
+        <table id="queue">
+          <caption>
+            Queue
+          </caption>
+          <thead id="thead_queue">
+            <tr>
+              <th>Name</th>
+              <th>Remove from queue</th>
+
+            </tr>
+          </thead>
+          <tbody id="tbody_queue">
+          </tbody>
+        </table>
+        <button class="primary" onclick="getNewQueue()">update</button>
+      </div>
+    </section>
+  </main>
+</body>
+
 </html>

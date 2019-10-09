@@ -1,16 +1,6 @@
 #!/usr/bin/python
 import linuxcnc
 
-def checkerrors(f):
-    """ Decorator that checks if the machine returned any errors."""
-    def wrapper(*args, **kwargs):
-        errors = f(*args, **kwargs)
-        if 'errors' in errors:
-            return errors
-        else:
-            return {"success": "Command executed"}
-    return wrapper
-
 class MachinekitController():
     """ The Machinekit python interface in a class """
 
@@ -198,7 +188,8 @@ class MachinekitController():
         """ Set all axes home """
         machine_ready = self.machine_enabled_no_estop()
         if 'errors' in machine_ready:
-            return machine_ready 
+            return machine_ready
+            
         self.ensure_mode(linuxcnc.MODE_MANUAL)
         self.c.home(-1)
         self.c.wait_complete()
@@ -241,7 +232,6 @@ class MachinekitController():
             return {"errors": "Can't start machine because it is currently running or paused in a project"}
         self.ensure_mode(linuxcnc.MODE_AUTO)
         self.c.auto(linuxcnc.AUTO_RUN, 9)
-    
         return
 
     
@@ -254,7 +244,6 @@ class MachinekitController():
             return {"errors": "Machine not ready to recieve pause command. Probably because its currently not working on a program"}
         self.ensure_mode(linuxcnc.MODE_AUTO)
         self.c.auto(linuxcnc.AUTO_PAUSE)
-
         return
      
 
@@ -266,7 +255,6 @@ class MachinekitController():
             return {"errors": "Machine not ready to resume. Probably because the machine is not paused or not in auto modus"}
         self.ensure_mode(linuxcnc.MODE_AUTO)
         self.c.auto(linuxcnc.AUTO_RESUME)
-
         return
 
     
@@ -274,7 +262,6 @@ class MachinekitController():
         """ Stop/abort current program """
         self.c.abort()
         self.c.wait_complete()
-
         return
 
     def ensure_mode(self, m, *p):
@@ -311,7 +298,6 @@ class MachinekitController():
 
         self.ensure_mode(linuxcnc.MODE_MANUAL)
         self.c.brake(command)
-
         return
 
     
@@ -338,7 +324,6 @@ class MachinekitController():
 
         self.ensure_mode(linuxcnc.MODE_MANUAL)
         self.c.spindle(commands[command])
-
         return
 
     
@@ -346,7 +331,6 @@ class MachinekitController():
         """ Takes int of maxvel min"""
         self.c.maxvel(maxvel / 60.)
         self.c.wait_complete()
-
         return
     
     
@@ -357,7 +341,6 @@ class MachinekitController():
 
         self.c.spindleoverride(value)
         self.c.wait_complete()
-
         return
 
     
@@ -370,7 +353,6 @@ class MachinekitController():
 
         self.c.feedrate(value)
         self.c.wait_complete()
-
         return
 
     
@@ -386,7 +368,6 @@ class MachinekitController():
         self.c.wait_complete()
         self.c.program_open(path)
         self.c.wait_complete()
-
         return
 
     

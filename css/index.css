@@ -32,7 +32,8 @@
 #feed-override-control,
 #spindle-override-control,
 #max-velocity-control,
-#mdi-command {
+#mdi-command,
+#file-manager {
   display: none;
 }
 
@@ -49,7 +50,8 @@ body.server-running.controller.estop-disabled.power-on.spindle-brake-on #forward
 body.server-running.controller.estop-disabled.power-on.spindle-forward #reverse,
 body.server-running.controller.estop-disabled.power-on.spindle-reverse #forward,
 body.server-running.controller.estop-disabled.power-on #brake,
-body.server-running.controller.estop-disabled.power-on #off {
+body.server-running.controller.estop-disabled.power-on #off,
+body.server-running.file-manager #file-manager {
   display: block;
 }
 

@@ -1,32 +1,52 @@
 let machine_state = {};
 let url = "192.168.1.116:5000";
 let socket;
+let firstConnect = true;
 
 let appState = {
   errors: [],
   displayedErrors: [],
   speed: 1,
   distanceMultiplier: 1,
-  selectedAxe: "x"
+  selectedAxe: "x",
+  ticks: 1,
+  oldMachineState: {},
+  files: [],
+  file_queue: []
 }
 window.onload = async () => {
+  const sortable = new Sortable.default(document.querySelectorAll('tbody'), {
+    draggable: 'tr'
+  });
   socket = io.connect(url);
-  let firstConnect = true;
+  connectSockets();
+};
+
+const connectSockets = async () => {
   const result = await socket.on("connect", () => {
     socket.on("connected", () => {
       console.log("Connected!");
+
       addToBody("server-running", true);
       //Call once to render page
       socket.emit("vitals", () => {});
 
       //Only start polling once when connected
       if (firstConnect) {
+        controlInterval();
         firstConnect = false;
-        //Call every *ms*
-        setInterval(() => {
-          socket.emit("vitals", () => {});
-        }, 400);
       }
+    });
+
+    socket.on("get-files", (files => {
+      appState.files = files.result;
+      if (files.file_queue !== undefined) {
+        appState.file_queue = files.file_queue;
+      }
+    }));
+
+    socket.on("errors", (message) => {
+      appState.errors.push(message.errors);
     });
   });
 
@@ -37,6 +57,7 @@ window.onload = async () => {
     }
     document.body.className = "server-running";
     addToBody("machinekit-running");
+    appState.oldMachineState = machine_state.position;
     machine_state = message;
     renderPage();
   });
@@ -50,8 +71,23 @@ window.onload = async () => {
     if (result.disconnected) {
       addToBody("server-down", true);
     }
-  }, 1000);
-};
+  }, 2000);
+}
+
+
+const controlInterval = () => {
+  let interval = 200;
+  if (!firstConnect) {
+    const old = JSON.stringify(appState.oldMachineState);
+    const neww = JSON.stringify(machine_state.position);
+    if (old === neww) {
+      interval = 2000;
+    }
+  }
+
+  socket.emit("vitals", () => {});
+  setTimeout(controlInterval, interval);
+}
 
 const navigation = page => {
   localStorage.setItem("page", page);
@@ -278,6 +314,7 @@ const addMachineStatusToBody = () => {
 const renderFileManager = () => {
   document.body.classList.remove("controller");
   addToBody("file-manager");
+  listFilesFromServer();
 };
 
 //Button functions

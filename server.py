@@ -52,24 +52,24 @@ def client_connect():
     emit("connected", {"success": "test"})
 
 
-@socketio.on('message')
-def handle_message(message):
-    print('received message:')
-    print(message)
-
-
 @socketio.on('set-status')
 def toggle_estop(command):
-    controller.machine_status(command)
+    result = controller.machine_status(command)
+    if result is not None:
+        emit("errors", result)
+
     emit("vitals", controller.get_all_vitals())
 
 
 @socketio.on('set-home')
 def toggle_estop(command):
     if command == "home":
-        controller.home_all_axes()
+        result = controller.home_all_axes()
     else:
-        controller.unhome_all_axes()
+        result = controller.unhome_all_axes()
+
+    if result is not None:
+        emit("errors", result)
 
     emit("vitals", controller.get_all_vitals())
 
@@ -84,47 +84,77 @@ def vitals():
 
 @socketio.on("manual-control")
 def manual_control(command):
-    controller.manual_control(
+    result = controller.manual_control(
         command['axes'], command['speed'], command['increment'])
+    if result is not None:
+        emit("errors", result)
     emit("vitals", controller.get_all_vitals())
 
 
 @socketio.on("program-control")
 def program_control(command):
-    controller.run_program(command)
-    print(command)
+    result = controller.run_program(command)
+    if result is not None:
+        emit("errors", result)
     emit("vitals", controller.get_all_vitals())
 
 
 @socketio.on("spindle-control")
 def spindle_control(command):
     if "spindle_brake" in command:
-        controller.spindle_brake(command["spindle_brake"])
+        result = controller.spindle_brake(command["spindle_brake"])
     elif "spindle_direction" in command:
-        controller.spindle_direction(command["spindle_direction"])
+        result = controller.spindle_direction(command["spindle_direction"])
     elif "spindle_override" in command:
-        print("oi")
-        print(command)
-        controller.spindleoverride(command["spindle_override"])
+        result = controller.spindleoverride(command["spindle_override"])
+
+    if result is not None:
+        emit("errors", result)
     emit("vitals", controller.get_all_vitals())
 
 
 @socketio.on("feed-override")
 def feed_override(command):
-    controller.feedoverride(command)
+    result = controller.feedoverride(command)
+    if result is not None:
+        emit("errors", result)
     emit("vitals", controller.get_all_vitals())
 
 
 @socketio.on("maxvel")
 def maxvel(command):
-    controller.maxvel(command)
+    result = controller.maxvel(command)
+    if result is not None:
+        emit("errors", result)
     emit("vitals", controller.get_all_vitals())
 
 
 @socketio.on("send-command")
 def send_command(command):
-    controller.mdi_command(command)
+    result = controller.mdi_command(command)
+    if result is not None:
+        emit("errors", result)
     emit("vitals", controller.get_all_vitals())
+
+
+@socketio.on("get-files")
+def get_files():
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("""
+        SELECT * FROM files
+        """)
+        result = cur.fetchall()
+        emit("get-files", {"result": result, "file_queue": file_queue})
+    except Exception as e:
+        emit("errors", str(e))
+
+
+@socketio.on("update-file-queue")
+def update_file_queue(new_queue):
+    global file_queue
+    file_queue = new_queue
+    get_files()
 
 
 if __name__ == "__main__":
