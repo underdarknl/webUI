@@ -45,6 +45,7 @@
         </div>
       </section>
       <section id="machine-status">
+      <label>File</label><p id="current-file"></p>
         <table id="status">
           <caption>
             Status
@@ -369,6 +370,15 @@
           </div>
         </form>
       </section>
+
+    <input type="checkbox" id="modaltoggle-warning" class="modaltoggle" hidden>
+    <div class="modal warning">
+      <aside>
+        <h2>Tool change</h2>
+        <p>Please change the tool in the machine</p>
+        <label for="modaltoggle-warning"><button class="primary" onclick="toolChanged()">Tool changed</button></label>
+      </aside>
+    </div>
     </main>
   </body>
 </html>

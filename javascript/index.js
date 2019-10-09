@@ -1,9 +1,9 @@
 let machine_state = {};
 let url = "192.168.1.116:5000";
+const socket = io.connect(url);
 
 window.onload = async () => {
   let firstConnect = true;
-  const socket = io.connect(url);
 
   const result = await socket.on("connect", () => {
     socket.on("connected", () => {
@@ -28,6 +28,7 @@ window.onload = async () => {
     if (message.errors === "machinekit is not running") {
       return addToBody("machinekit-down server-running", true);
     }
+    document.body.className = "server-running";
     addToBody("machinekit-running");
     machine_state = message;
     renderPage();
@@ -70,35 +71,91 @@ const renderController = () => {
   document.body.classList.remove("file-manager");
   addToBody("controller");
   addMachineStatusToBody();
+  showSliderValues();
 };
+
+const showSliderValues = () => {
+  const {
+    program: {
+      feedrate,
+      file
+    },
+    spindle: {
+      spindlerate
+    },
+    values: {
+      max_velocity
+    }
+  } = machine_state;
+
+  document.getElementById("feed-override").value = Math.round((feedrate * 100));
+  document.getElementById("feed-override-output").innerHTML = Math.round((feedrate * 100));
+
+  document.getElementById("spindle-override").value = Math.round((spindlerate * 100));
+  document.getElementById("spindle-override-output").innerHTML = Math.round((spindlerate * 100));
+
+  document.getElementById("max-velocity").value = (max_velocity);
+  document.getElementById("max-velocity-output").innerHTML = (max_velocity);
+  document.getElementById("current-file").innerHTML = file;
+}
 
 const addMachineStatusToBody = () => {
   const {
     position,
     power,
-    program,
-    spindle,
-    values
+    program: {
+      tool_change,
+      interp_state,
+      task_mode
+    },
+    spindle: {
+      spindle_brake,
+      spindle_direction,
+      spindle_enabled
+    }
   } = machine_state;
   power.enabled ? addToBody("power-on") : addToBody("power-off");
   power.estop ? addToBody("estop-enabled") : addToBody("estop-disabled");
 
-  if (program.interp_state === "INTERP_IDLE") {
+  if (tool_change === 0) {
+    document.getElementById("modaltoggle-warning").checked = true;
+  } else {
+    document.getElementById("modaltoggle-warning").checked = false;
+  }
+
+  if (interp_state === "INTERP_IDLE") {
     addToBody("interp-idle");
-  } else if (program.interp_state === "INTERP_PAUSED") {
+  } else if (interp_state === "INTERP_PAUSED") {
     addToBody("interp-paused");
-  } else if (program.interp_state === "INTERP_WAITNG") {
+  } else if (interp_state === "INTERP_WAITNG") {
     addToBody("interp-waiting");
   } else {
     addToBody("interp-reading");
   }
 
-  if (program.task_mode === "MODE_MANUAL") {
+  if (task_mode === "MODE_MANUAL") {
     addToBody("task-manual");
-  } else if (program.task_mode === "MODE_AUTO") {
+  } else if (task_mode === "MODE_AUTO") {
     addToBody("task-auto");
   } else {
     addToBody("task-mdi");
+  }
+  if (spindle_brake) {
+    addToBody("spindle-brake-on");
+  } else {
+    addToBody("spindle-brake-off");
+  }
+
+  if (spindle_direction == -1) {
+    addToBody("spindle-backward");
+  } else {
+    addToBody("spindle-forward");
+  }
+
+  if (spindle_enabled) {
+    addToBody("spindle-enabled");
+  } else {
+    addToBody("spindle-disabled");
   }
 
   let axes = 0;
@@ -175,3 +232,8 @@ const renderFileManager = () => {
   document.body.classList.remove("controller");
   addToBody("file-manager");
 };
+
+function toggleEstop() {
+  console.log("Toggle");
+  socket.emit("toggle-estop", () => {});
+}

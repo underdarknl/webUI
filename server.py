@@ -42,6 +42,7 @@ machinekit_down = False
 try:
     controller = MachinekitController()
 except Exception as e:
+    machinekit_down = True
     print("Machinekit is not running")
 
 
@@ -53,8 +54,13 @@ def client_connect():
 
 @socketio.on('message')
 def handle_message(message):
-    print('received message: ')
+    print('received message:')
     print(message)
+
+
+@socketio.on('toggle-estop')
+def toggle_estop():
+    print("toggle estop!!!!")
 
 
 @socketio.on("vitals")
@@ -63,7 +69,6 @@ def vitals():
         emit("vitals", {"errors": "machinekit is not running"})
     else:
         emit("vitals", controller.get_all_vitals())
-    #emit("vitals", {"success": controller.get_all_vitals()})
 
 
 if __name__ == "__main__":
