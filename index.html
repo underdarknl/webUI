@@ -62,10 +62,11 @@
             <th>Power</th>
             <th>Interp state</th>
             <th>Task mode</th>
+            <th>Spindle speed</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
+          <tr id="status-tbody">
             <td class="success" id="estop-disabled">Disabled</td>
             <td class="error" id="estop-enabled">Enabled</td>
             <td class="success" id="power-on">On</td>
@@ -77,6 +78,7 @@
             <td id="task-mdi">mdi</td>
             <td id="task-auto">auto</td>
             <td id="task-manual">manual</td>
+            <td id="spindle-speed"></td>
           </tr>
         </tbody>
       </table>
@@ -259,13 +261,19 @@
       </form>
     </section>
 
-    <input type="checkbox" id="modaltoggle-warning" class="modaltoggle" hidden>
-    <div class="modal warning">
+    <input type="checkbox" id="modaltoggle-warning" hidden>
+    <div class="modal warning" id="modal-warning">
       <aside>
         <h2>Tool change</h2>
         <p>Please change the tool in the machine</p>
-        <label for="modaltoggle-warning"><button class="primary" onclick="toolChanged()">Tool changed</button></label>
+        <label for="modaltoggle-warning"><button id="tool-change-btn" class="primary" onclick="toolChanged()">Tool
+            changed</button>
+          <button class="button error" id="toggleEstopBtn" onClick="toggleStatus('estop')">
+            TOGGLE ESTOP
+          </button>
+        </label>
       </aside>
+
     </div>
 
 

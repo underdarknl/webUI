@@ -2,6 +2,7 @@ let machine_state = {};
 let url = "192.168.1.116:5000";
 let socket;
 let firstConnect = true;
+let firstFileManagerRender = true;
 
 let appState = {
   errors: [],
@@ -12,7 +13,8 @@ let appState = {
   ticks: 1,
   oldMachineState: {},
   files: [],
-  file_queue: []
+  file_queue: [],
+  file: ""
 }
 window.onload = async () => {
   const sortable = new Sortable.default(document.querySelectorAll('tbody'), {
@@ -38,14 +40,8 @@ const connectSockets = async () => {
       }
     });
 
-    socket.on("get-files", (files => {
-      appState.files = files.result;
-      if (files.file_queue !== undefined) {
-        appState.file_queue = files.file_queue;
-      }
-    }));
-
     socket.on("errors", (message) => {
+      console.log(message);
       appState.errors.push(message.errors);
     });
   });
@@ -188,7 +184,7 @@ const renderTables = () => {
   } else {
     addToBody("unhomed");
   }
-
+  document.getElementById("spindle-speed").innerHTML = machine_state.spindle.spindle_speed;
   //Render standard 3 axes table or render custom table
   if (axes === 3) {
     addToBody("xyz");
@@ -258,19 +254,27 @@ const addMachineStatusToBody = () => {
     program: {
       tool_change,
       interp_state,
-      task_mode
+      task_mode,
+      file
     },
     spindle: {
       spindle_brake,
       spindle_direction,
-      spindle_enabled
+      spindle_enabled,
     }
   } = machine_state;
   power.enabled ? addToBody("power-on") : addToBody("power-off");
   power.estop ? addToBody("estop-enabled") : addToBody("estop-disabled");
 
+  if (file == "") {
+    addToBody("no-file");
+  } else {
+    addToBody("file-selected");
+  }
   if (tool_change === 0) {
+    console.log("OI");
     document.getElementById("modaltoggle-warning").checked = true;
+    addToBody("toolchange");
   } else {
     document.getElementById("modaltoggle-warning").checked = false;
   }
@@ -314,7 +318,10 @@ const addMachineStatusToBody = () => {
 const renderFileManager = () => {
   document.body.classList.remove("controller");
   addToBody("file-manager");
-  listFilesFromServer();
+  if (firstFileManagerRender) {
+    listFilesFromServer();
+    firstFileManagerRender = false;
+  }
 };
 
 //Button functions
@@ -451,7 +458,6 @@ function spindleSpeedControl(input) {
   } else {
     command.command.spindle_direction = "spindle_decrease";
   }
-  console.log(command.command);
   socket.emit("spindle-control", command.command, () => {});
 }
 
@@ -477,6 +483,6 @@ function sendMdiCommand() {
   socket.emit("send-command", command, () => {});
 }
 
-const toolChanged = async () => {
+const toolChanged = () => {
   socket.emit("tool-changed", () => {});
 }

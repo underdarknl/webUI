@@ -33,18 +33,19 @@
 #spindle-override-control,
 #max-velocity-control,
 #mdi-command,
-#file-manager {
+#file-manager,
+#modal-warning {
   display: none;
 }
 
 body.server-running #server-up,
 body.server-running.controller #machine-status,
 body.server-running.controller #controls,
-body.server-running.controller.estop-disabled.power-on.interp-paused.homed #program-resume,
-body.server-running.controller.estop-disabled.power-on.interp-reading.homed #program-stop,
-body.server-running.controller.estop-disabled.power-on.interp-paused.homed #program-stop,
-body.server-running.controller.estop-disabled.power-on.interp-reading.homed #program-pause,
-body.server-running.controller.estop-disabled.power-on.interp-idle.homed #program-start,
+body.server-running.controller.estop-disabled.power-on.interp-paused.homed.file-selected #program-resume,
+body.server-running.controller.estop-disabled.power-on.interp-reading.homed.file-selected #program-stop,
+body.server-running.controller.estop-disabled.power-on.interp-paused.homed.file-selected #program-stop,
+body.server-running.controller.estop-disabled.power-on.interp-reading.homed.file-selected #program-pause,
+body.server-running.controller.estop-disabled.power-on.interp-idle.homed.file-selected #program-start,
 body.server-running.controller.estop-disabled.power-on.spindle-brake-on #reverse,
 body.server-running.controller.estop-disabled.power-on.spindle-brake-on #forward,
 body.server-running.controller.estop-disabled.power-on.spindle-forward #reverse,
@@ -68,9 +69,10 @@ body.server-running.controller.estop-disabled.power-on #feed-override-control,
 body.server-running.controller.estop-disabled.power-on #spindle-override-control,
 body.server-running.controller.estop-disabled.power-on.spindle-enabled #spindl-control-speed,
 body.server-running.controller.estop-disabled.power-on #max-velocity-control,
-body.server-running.controller.estop-disabled.power-on.homed #program-control,
+body.server-running.controller.estop-disabled.power-on.homed.file-selected #program-control,
 body.server-running.controller.estop-disabled.power-on.homed #mdi-command,
-body.server-running.controller.estop-disabled.power-on.spindle-enabled #spindle-control-speed {
+body.server-running.controller.estop-disabled.power-on.spindle-enabled #spindle-control-speed,
+body.server-running.toolchange #modal-warning {
   display: flex;
 }
 

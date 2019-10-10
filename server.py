@@ -1,3 +1,4 @@
+import os
 import time
 import random
 import logging
@@ -6,7 +7,9 @@ import linuxcnc
 from flask_mysqldb import MySQL
 from flask import Flask, jsonify
 from flask_socketio import SocketIO, send, emit
+from werkzeug.utils import secure_filename
 from classes.machinekitController import MachinekitController
+
 # halcmd setp hal_manualtoolchange.change_button true
 
 host = "192.168.1.116"
@@ -145,7 +148,20 @@ def get_files():
         SELECT * FROM files
         """)
         result = cur.fetchall()
-        emit("get-files", {"result": result, "file_queue": file_queue})
+        files_on_server = []
+        for res in result:
+            my_file = res[2] + "/" + res[1]
+            if(os.path.isfile(my_file)):
+                files_on_server.append(res)
+            else:
+                cur.execute("""
+                            DELETE FROM files WHERE file_id = %s
+                """ % res[0])
+                cur.connection.commit()
+
+        emit("get-files", {"result": tuple(files_on_server),
+                           "file_queue": file_queue})
+        vitals()
     except Exception as e:
         emit("errors", str(e))
 
@@ -163,6 +179,43 @@ def tool_changed():
     time.sleep(2)
     os.system("halcmd setp hal_manualtoolchange.change_button false")
     emit("vitals", controller.get_all_vitals())
+
+
+@socketio.on("open-file")
+def open_file():
+    controller.open_file("/home/machinekit/devel/webUI/files/" + file_queue[0])
+    emit("vitals", controller.get_all_vitals())
+
+
+@socketio.on("file-upload")
+def upload(data):
+    try:
+        f = open(os.path.join("./files/" + data['name']), "w")
+        f.write(data['file'].encode("utf8"))
+        f.close()
+
+        filename = secure_filename(data['name'])
+        cur = mysql.connection.cursor()
+        cur.execute(
+            """
+            SELECT * FROM files
+            WHERE file_name = '%s' """ % filename)
+
+        result = cur.fetchall()
+
+        if len(result) > 0:
+            return emit("errors", {"errors": "File with given name already on server"})
+
+        cur.execute("""
+            INSERT INTO files (file_name, file_location)
+            VALUES (%s, %s)
+            """, (filename, "/home/machinekit/devel/webUI/files")
+        )
+        mysql.connection.commit()
+        vitals()
+    except Exception as e:
+        print(e)
+        emit("errors", str(e))
 
 
 if __name__ == "__main__":
