@@ -28,45 +28,57 @@ const connectSockets = async () => {
   const result = await socket.on("connect", () => {
     socket.on("connected", () => {
       console.log("Connected!");
+      //Call this to get the file_queue from the server
       listFilesFromServer();
-
       addToBody("server-running", true);
-      //Call once to render page
+
+      //Initial render on connect
       socket.emit("vitals", () => {
-        //Only start polling once when connected
+        //Start interval after first result
         if (firstConnect) {
-          controlInterval();
+          controlIntervalAndQueue();
           firstConnect = false;
         }
       });
     });
 
+    //Listen to the error channel
     socket.on("errors", (message) => {
       appState.errors.push(message.errors);
     });
   });
 
   //On recieving vitals render page
-  socket.on("vitals", message => {
-    if (message.errors === "machinekit is not running") {
+  socket.on("vitals", vitals => {
+    if (vitals.errors === "machinekit is not running") {
       return addToBody("machinekit-down server-running", true);
     }
-    document.body.className = "server-running";
+    addToBody("server-running", true);
     addToBody("machinekit-running");
+
+    /* 
+     * Builds a history to check if machine started moving or if the rcs state changed 
+     * we use this to determine if we need to poll more often on a shorter interval.
+     * Also handles the file_queue
+     */
+
     if (machine_state.program !== undefined) {
       appState.previousAxesPosition = machine_state.position;
       if (machine_state.program.rcs_state === "RCS_EXEC" && machine_state.program.task_mode === "MODE_AUTO") {
         appState.previousExecState = machine_state.program.rcs_state;
       }
     }
-    machine_state = message;
+    //Set the new state
+    machine_state = vitals;
+    //Every time the app recieves 'vitals' update the page
     renderPage();
   });
 
+  //Check if server is down
   if (result.disconnected) {
     addToBody("server-down", true);
   }
-
+  //Keep checking if the server is down
   setInterval(() => {
     //Keep checking if the socket is running
     if (result.disconnected) {
@@ -75,10 +87,11 @@ const connectSockets = async () => {
   }, 2000);
 }
 
-
-const controlInterval = () => {
+//Controls interval rate
+const controlIntervalAndQueue = () => {
   let interval = 200;
   if (!firstConnect) {
+    //Compare axes positions to see if something moved. If something moved increase polling rate
     const old = JSON.stringify(appState.previousAxesPosition);
     const neww = JSON.stringify(machine_state.position);
 
@@ -86,6 +99,7 @@ const controlInterval = () => {
       interval = 2000;
     }
 
+    //If the state changes from RCS_EXECUTING to RCS_DONE remove first item from queue
     const oldExecState = appState.previousExecState;
     const newExecState = machine_state.program.rcs_state;
     if (oldExecState !== newExecState) {
@@ -96,11 +110,12 @@ const controlInterval = () => {
       }
     }
   }
-
+  //Every interval request new vitals
   socket.emit("vitals", () => {});
-  setTimeout(controlInterval, interval);
+  setTimeout(controlIntervalAndQueue, interval);
 }
 
+//Handle navigation
 const navigation = page => {
   localStorage.setItem("page", page);
   renderPage();
@@ -113,6 +128,7 @@ const addToBody = (className, onlyClass = false) => {
   document.body.classList.add(className);
 };
 
+//Handle which page is rendered 
 const renderPage = () => {
   const {
     errors
@@ -123,7 +139,7 @@ const renderPage = () => {
   } else {
     renderFileManager();
   }
-
+  //Check if there are any errors in the 'vitals' if so push them to the error array and render them with handleErrors
   if (errors.errors) {
     if (!appState.displayedErrors.includes(errors.errors)) {
       appState.errors.push(errors.errors);
@@ -132,6 +148,7 @@ const renderPage = () => {
   handleErrors();
 };
 
+//Checks if there are new errors in the error array. If there are check if unique and push to displayed errors
 const handleErrors = () => {
   const {
     displayedErrors
@@ -143,13 +160,14 @@ const handleErrors = () => {
     document.getElementById("custom-errors").innerHTML += `<p class="error" id="error-executing">${displayedErrors[index]}<button class="error" id=${index} onclick="removeError(this.id)">close</button></p>`
   }
 }
-
+//Removes error onclick 
 const removeError = (id) => {
   appState.displayedErrors.splice(id, 1);
   const elem = document.getElementById(id);
   elem.parentNode.remove()
 }
 
+//If the page 'controller' render page and execute functions in order
 const renderController = () => {
   document.body.classList.remove("file-manager");
   addToBody("controller");
@@ -158,6 +176,7 @@ const renderController = () => {
   renderTables();
 };
 
+//Give the html sliders values depending on what is in 'vitals' 
 const showSliderValues = () => {
   const {
     program: {
@@ -181,14 +200,14 @@ const showSliderValues = () => {
   document.getElementById("max-velocity").value = Math.round((max_velocity));
   document.getElementById("max-velocity-output").innerHTML = Math.round((max_velocity));
   document.getElementById("current-file").innerHTML = file;
-
-
 }
 
+//Render standard XYZ table if axes = 3 else render custom table
 const renderTables = () => {
   const position = machine_state.position;
   let axes = 0;
   let axesHomed = 0;
+
   for (const key in position) {
     let homed = position[key].homed;
     if (homed) {
@@ -196,27 +215,29 @@ const renderTables = () => {
     }
     axes++;
   }
-
   if (axes === axesHomed) {
     addToBody("homed");
   } else {
     addToBody("unhomed");
   }
   document.getElementById("spindle-speed").innerHTML = machine_state.spindle.spindle_speed;
-  //Render standard 3 axes table or render custom table
+
+  //Render standard XYZ or custom table
   if (axes === 3) {
     addToBody("xyz");
+    //Because we are on an interval we need to empty the table every time
     document.getElementById("tbody_axes").innerHTML = "";
     for (const key in position) {
       let isHomed = "";
       let color = `error`;
-
+      //If the axe is homed make it green and add (h) to the html
       if (position[key].homed) {
         isHomed = "(H)";
         color = `success`;
       }
       const tbody = document.getElementById("tbody_axes");
       let newcell;
+      //For some reason the object xyz gets resorted to yxz so we need to turn around the 2 values
       if (key == "x") {
         newcell = tbody.insertCell(0);
         newcell.innerHTML = position[key].pos + isHomed;
@@ -266,6 +287,7 @@ const renderTables = () => {
   }
 }
 
+//Every time there is a 'vitals' update add everything to the body so the page is displayed
 const addMachineStatusToBody = () => {
   const {
     power,
@@ -282,6 +304,7 @@ const addMachineStatusToBody = () => {
       spindle_enabled,
     }
   } = machine_state;
+
   power.enabled ? addToBody("power-on") : addToBody("power-off");
   power.estop ? addToBody("estop-enabled") : addToBody("estop-disabled");
 
@@ -336,13 +359,15 @@ const addMachineStatusToBody = () => {
   }
 };
 
+//Handles every function we call for rendering file-manager
 const renderFileManager = () => {
   document.body.classList.remove("controller");
   addToBody("file-manager");
 };
 
-//Button functions
+//Most on click events are down here
 
+//Toggle estop/power
 function toggleStatus(command) {
   socket.emit("set-status", command, () => {});
   if (command === "estop") {
@@ -358,10 +383,12 @@ function toggleStatus(command) {
   }
 }
 
+//Home our unhome axes
 function homeAxes(command) {
   socket.emit("set-home", command, () => {});
 }
 
+//Set the value to which the manual control distance multiplier slider is set
 function manualControlDistance(element, option) {
   const value = element.value;
   const target = element.id;
@@ -374,11 +401,14 @@ function manualControlDistance(element, option) {
   }
 }
 
+//Handles which axe is selected in the radio buttons
 function manualControlSelector(element) {
   appState.selectedAxe = element.getAttribute("data");
 }
 
+//Fires when a manual control movement button is pressed
 function manualControl(input, increment) {
+  //Convert axename to number
   const axeWithNumber = {
     x: 0,
     y: 1,
@@ -390,7 +420,10 @@ function manualControl(input, increment) {
     v: 7,
     w: 8
   }
+
   const axeNumber = axeWithNumber[appState.selectedAxe];
+
+  //Object that contains the axenumber, the speed at which it should move and the incrementation.
   let command = {
     "axes": axeNumber,
     "speed": parseFloat(appState.speed),
@@ -405,6 +438,7 @@ function manualControl(input, increment) {
   socket.emit("manual-control", command, () => {});
 }
 
+//Handles the start/pause/resume/stop of a program
 function programControl(input) {
   let command = {
     "command": ""
@@ -429,6 +463,7 @@ function programControl(input) {
   socket.emit("program-control", command.command, () => {});
 }
 
+//Controlls spindle direction and brake/on/off
 function spindleControl(input) {
   let command = {
     "command": {
@@ -463,7 +498,7 @@ function spindleControl(input) {
   }
   socket.emit("spindle-control", command.command, () => {});
 }
-
+//Controlls the speed. increase/decrease
 function spindleSpeedControl(input) {
   let command = {
     "command": {
@@ -478,7 +513,8 @@ function spindleSpeedControl(input) {
   socket.emit("spindle-control", command.command, () => {});
 }
 
-function controlFeedOverride(element) {
+//Controls feed/spindle override and max vel
+function controlOverrides(element) {
   const value = (element.value / 100);
   const target = element.id;
 
