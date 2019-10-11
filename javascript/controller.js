@@ -2,7 +2,6 @@ let machine_state = {};
 let url = "192.168.1.116:5000";
 let socket;
 let firstConnect = true;
-let firstFileManagerRender = true;
 
 let appState = {
   errors: [],
@@ -11,7 +10,8 @@ let appState = {
   distanceMultiplier: 1,
   selectedAxe: "x",
   ticks: 1,
-  oldMachineState: {},
+  previousAxesPosition: {},
+  previousExecState: "RCS_DONE",
   files: [],
   file_queue: [],
   file: ""
@@ -28,20 +28,20 @@ const connectSockets = async () => {
   const result = await socket.on("connect", () => {
     socket.on("connected", () => {
       console.log("Connected!");
+      listFilesFromServer();
 
       addToBody("server-running", true);
       //Call once to render page
-      socket.emit("vitals", () => {});
-
-      //Only start polling once when connected
-      if (firstConnect) {
-        controlInterval();
-        firstConnect = false;
-      }
+      socket.emit("vitals", () => {
+        //Only start polling once when connected
+        if (firstConnect) {
+          controlInterval();
+          firstConnect = false;
+        }
+      });
     });
 
     socket.on("errors", (message) => {
-      console.log(message);
       appState.errors.push(message.errors);
     });
   });
@@ -53,7 +53,12 @@ const connectSockets = async () => {
     }
     document.body.className = "server-running";
     addToBody("machinekit-running");
-    appState.oldMachineState = machine_state.position;
+    if (machine_state.program !== undefined) {
+      appState.previousAxesPosition = machine_state.position;
+      if (machine_state.program.rcs_state === "RCS_EXEC" && machine_state.program.task_mode === "MODE_AUTO") {
+        appState.previousExecState = machine_state.program.rcs_state;
+      }
+    }
     machine_state = message;
     renderPage();
   });
@@ -74,10 +79,21 @@ const connectSockets = async () => {
 const controlInterval = () => {
   let interval = 200;
   if (!firstConnect) {
-    const old = JSON.stringify(appState.oldMachineState);
+    const old = JSON.stringify(appState.previousAxesPosition);
     const neww = JSON.stringify(machine_state.position);
+
     if (old === neww) {
       interval = 2000;
+    }
+
+    const oldExecState = appState.previousExecState;
+    const newExecState = machine_state.program.rcs_state;
+    if (oldExecState !== newExecState) {
+      if (newExecState === "RCS_DONE") {
+        removeFromQueue(0);
+        getNewQueue();
+        appState.previousExecState = "RCS_DONE";
+      }
     }
   }
 
@@ -165,6 +181,8 @@ const showSliderValues = () => {
   document.getElementById("max-velocity").value = Math.round((max_velocity));
   document.getElementById("max-velocity-output").innerHTML = Math.round((max_velocity));
   document.getElementById("current-file").innerHTML = file;
+
+
 }
 
 const renderTables = () => {
@@ -255,7 +273,8 @@ const addMachineStatusToBody = () => {
       tool_change,
       interp_state,
       task_mode,
-      file
+      file,
+      rcs_state
     },
     spindle: {
       spindle_brake,
@@ -266,13 +285,15 @@ const addMachineStatusToBody = () => {
   power.enabled ? addToBody("power-on") : addToBody("power-off");
   power.estop ? addToBody("estop-enabled") : addToBody("estop-disabled");
 
+  addToBody(rcs_state);
+
   if (file == "") {
     addToBody("no-file");
   } else {
     addToBody("file-selected");
   }
+
   if (tool_change === 0) {
-    console.log("OI");
     document.getElementById("modaltoggle-warning").checked = true;
     addToBody("toolchange");
   } else {
@@ -318,10 +339,6 @@ const addMachineStatusToBody = () => {
 const renderFileManager = () => {
   document.body.classList.remove("controller");
   addToBody("file-manager");
-  if (firstFileManagerRender) {
-    listFilesFromServer();
-    firstFileManagerRender = false;
-  }
 };
 
 //Button functions

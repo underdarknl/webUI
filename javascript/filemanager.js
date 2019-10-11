@@ -2,7 +2,6 @@ let queueNotRendered = true;
 
 const listFilesFromServer = async () => {
     socket.emit("get-files", () => {});
-    firstFileManagerRender = false;
 
     socket.on("get-files", (files => {
         appState.files = files.result;
@@ -15,9 +14,13 @@ const listFilesFromServer = async () => {
                 renderQueue();
                 queueNotRendered = false;
             }
-            if (appState.file_queue[0] !== machine_state.program.file) {
-                socket.emit("open-file");
+            if (machine_state.program !== undefined) {
+                if (appState.file_queue[0] !== machine_state.program.file) {
+                    socket.emit("open-file");
+                }
             }
+        } else {
+            socket.emit("open-file");
         }
 
         document.getElementById("tbody_files").innerHTML = "";
@@ -63,7 +66,6 @@ const getFile = () => {
     const fileList = document.getElementById("uploadFile");
     if ("files" in fileList) {
         const file = fileList.files[0];
-
         if (file.length == 0) {
             appState.errors.push("Please select a file");
             return;
@@ -93,9 +95,10 @@ const getFileExt = (file) => {
 }
 
 const fUpload = async () => {
-    if (appState.file == null) {
+    if (!appState.file) {
         appState.errors.push("Please select a file");
-        return handleErrors();
+        handleErrors();
+        return;
     }
 
     const reader = new FileReader();

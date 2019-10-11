@@ -61,7 +61,7 @@ def toggle_estop(command):
     if result is not None:
         emit("errors", result)
 
-    emit("vitals", controller.get_all_vitals())
+    vitals()
 
 
 @socketio.on('set-home')
@@ -74,7 +74,7 @@ def toggle_estop(command):
     if result is not None:
         emit("errors", result)
 
-    emit("vitals", controller.get_all_vitals())
+    vitals()
 
 
 @socketio.on("vitals")
@@ -91,7 +91,7 @@ def manual_control(command):
         command['axes'], command['speed'], command['increment'])
     if result is not None:
         emit("errors", result)
-    emit("vitals", controller.get_all_vitals())
+    vitals()
 
 
 @socketio.on("program-control")
@@ -99,7 +99,7 @@ def program_control(command):
     result = controller.run_program(command)
     if result is not None:
         emit("errors", result)
-    emit("vitals", controller.get_all_vitals())
+    vitals()
 
 
 @socketio.on("spindle-control")
@@ -113,7 +113,7 @@ def spindle_control(command):
 
     if result is not None:
         emit("errors", result)
-    emit("vitals", controller.get_all_vitals())
+    vitals()
 
 
 @socketio.on("feed-override")
@@ -121,7 +121,7 @@ def feed_override(command):
     result = controller.feedoverride(command)
     if result is not None:
         emit("errors", result)
-    emit("vitals", controller.get_all_vitals())
+    vitals()
 
 
 @socketio.on("maxvel")
@@ -129,7 +129,7 @@ def maxvel(command):
     result = controller.maxvel(command)
     if result is not None:
         emit("errors", result)
-    emit("vitals", controller.get_all_vitals())
+    vitals()
 
 
 @socketio.on("send-command")
@@ -137,7 +137,7 @@ def send_command(command):
     result = controller.mdi_command(command)
     if result is not None:
         emit("errors", result)
-    emit("vitals", controller.get_all_vitals())
+    vitals()
 
 
 @socketio.on("get-files")
@@ -178,13 +178,16 @@ def tool_changed():
     os.system("halcmd setp hal_manualtoolchange.change_button true")
     time.sleep(2)
     os.system("halcmd setp hal_manualtoolchange.change_button false")
-    emit("vitals", controller.get_all_vitals())
+    vitals()
 
 
 @socketio.on("open-file")
 def open_file():
-    controller.open_file("/home/machinekit/devel/webUI/files/" + file_queue[0])
-    emit("vitals", controller.get_all_vitals())
+    if len(file_queue) == 0:
+        controller.open_file("")
+    else:
+        controller.open_file(UPLOAD_FOLDER + "/" + file_queue[0])
+    vitals()
 
 
 @socketio.on("file-upload")
@@ -209,7 +212,7 @@ def upload(data):
         cur.execute("""
             INSERT INTO files (file_name, file_location)
             VALUES (%s, %s)
-            """, (filename, "/home/machinekit/devel/webUI/files")
+            """, (filename, UPLOAD_FOLDER)
         )
         mysql.connection.commit()
         vitals()

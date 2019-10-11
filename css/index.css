@@ -34,7 +34,8 @@
 #max-velocity-control,
 #mdi-command,
 #file-manager,
-#modal-warning {
+#modal-warning,
+#no-file-select {
   display: none;
 }
 
@@ -52,7 +53,8 @@ body.server-running.controller.estop-disabled.power-on.spindle-forward #reverse,
 body.server-running.controller.estop-disabled.power-on.spindle-backward #forward,
 body.server-running.controller.estop-disabled.power-on #brake,
 body.server-running.controller.estop-disabled.power-on #off,
-body.server-running.file-manager #file-manager {
+body.server-running.file-manager #file-manager,
+body.no-file #no-file-select {
   display: block;
 }
 

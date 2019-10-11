@@ -105,7 +105,7 @@ class MachinekitController():
                 "task_mode": self.task_mode(),
                 "feedrate": self.s.feedrate,
                 "rcs_state": self.rcs_state(),
-                "tool_change": self.s.pocket_prepped
+                "tool_change": self.s.pocket_prepped,
             },
             "values": {
                 "velocity": self.s.velocity,
@@ -151,10 +151,12 @@ class MachinekitController():
         self.s.poll()
         machine_ready = self.machine_enabled_no_estop()
         if 'errors' in machine_ready:
-            return machine_ready 
-
+            return machine_ready
+            
         if self.s.interp_state is not linuxcnc.INTERP_IDLE:
             return {"errors": "Cannot execute command when machine interp state isn't idle"}
+
+        self.ensure_mode(linuxcnc.MODE_MDI)
 
         for axe in self.axes_with_cords:
             if not self.axes_with_cords[axe]["homed"]:
@@ -162,7 +164,6 @@ class MachinekitController():
 
         mdi_command = "G0 " + command
 
-        self.ensure_mode(linuxcnc.MODE_MDI)
         self.c.mdi(str(mdi_command))
         return
 
@@ -362,6 +363,11 @@ class MachinekitController():
 
         if self.s.interp_state is not linuxcnc.INTERP_IDLE:
             return {"errors": "Cannot execute command when interp is not idle"}
+        
+        if path == "":
+            self.c.reset_interpreter()
+            self.c.wait_complete()
+            return
 
         self.ensure_mode(linuxcnc.MODE_MDI)
         self.c.reset_interpreter()

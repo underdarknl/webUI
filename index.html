@@ -52,6 +52,7 @@
     <section id="machine-status">
       <label>File</label>
       <p id="current-file"></p>
+      <p id="no-file-select" class="error">No file selected. Please select a file</p>
       <table id="status">
         <caption>
           Status
@@ -255,7 +256,7 @@
 
         <div id="mdi-command">
           <label>MDI command</label>
-          <input type="text" id="mdi-command-input" placeholder="X1 Y1 Z1" value="X1 Z1" />
+          <input type="text" id="mdi-command-input" placeholder="X1 Y1 Z1" value="X0 Z0 Y0" />
           <button onclick="sendMdiCommand()">send</button>
         </div>
       </form>
