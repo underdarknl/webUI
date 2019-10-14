@@ -13,7 +13,6 @@ class MachinekitController():
 
 
     # Class is split up in getters and setters 
-
     def set_axes(self):
         self.s.poll()
         axesDict = {
