@@ -106,7 +106,7 @@ def manual_control(command):
 @socketio.on("program-control")
 @auth
 def program_control(command):
-    result = controller.run_program(command)
+    result = controller.run_program(command['command'])
     if result is not None:
         emit("errors", result)
     vitals({"auth": authKey})

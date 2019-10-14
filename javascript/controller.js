@@ -453,7 +453,8 @@ function manualControl(input, increment) {
 //Handles the start/pause/resume/stop of a program
 function programControl(input) {
   let command = {
-    "command": ""
+    "command": "",
+    "auth": auth
   }
   switch (input) {
     case "start":
@@ -471,8 +472,8 @@ function programControl(input) {
     default:
       break;
   }
-
-  socket.emit("program-control", command.command, () => {});
+  console.log(command);
+  socket.emit("program-control", command, () => {});
 }
 
 //Controlls spindle direction and brake/on/off
