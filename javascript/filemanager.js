@@ -59,7 +59,10 @@ const getNewQueue = async () => {
         appState.file_queue.push(elements.item(i).id);
     }
 
-    socket.emit("update-file-queue", appState.file_queue, () => {});
+    socket.emit("update-file-queue", {
+        "new_queue": appState.file_queue,
+        "auth": auth
+    }, () => {});
 }
 
 const getFile = () => {
@@ -106,7 +109,8 @@ const fUpload = async () => {
         const result = e.target.result;
         socket.emit("file-upload", {
             "file": result,
-            "name": appState.file.name
+            "name": appState.file.name,
+            "auth": auth
         }, () => {
             listFilesFromServer();
         });

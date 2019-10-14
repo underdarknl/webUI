@@ -40,7 +40,7 @@
       <label>Status:</label>
       <div id="errors">
         <p class="success" id="server-up">Server is running</p>
-        <p class="error" id="machinekit-down">Machinekit is down</p>
+        <p class="error" id="machinekit-down">Machinekit is down. Please start machinekit and restart the server. </p>
         <p class="error" id="server-down">
           Server is down please restart the server
         </p>
@@ -258,6 +258,12 @@
           <label>MDI command</label>
           <input type="text" id="mdi-command-input" placeholder="X1 Y1 Z1" value="X0 Z0 Y0" />
           <button onclick="sendMdiCommand()">send</button>
+        </div>
+
+        <div id="touchoff">
+          <label>Touch off</label>
+          <input type="text" id="touchoff-input" placeholder="X1 Y1 Z1" value="X0 Z0 Y0" />
+          <button onclick="">send</button>
         </div>
       </form>
     </section>

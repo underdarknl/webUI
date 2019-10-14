@@ -2,6 +2,7 @@ let machine_state = {};
 let url = "192.168.1.116:5000";
 let socket;
 let firstConnect = true;
+const auth = "test";
 
 let appState = {
   errors: [],
@@ -17,7 +18,7 @@ let appState = {
   file: ""
 }
 window.onload = async () => {
-  const sortable = new Sortable.default(document.querySelectorAll('tbody'), {
+  const sortable = new Sortable.default(document.getElementById('tbody_queue'), {
     draggable: 'tr'
   });
   socket = io.connect(url);
@@ -33,7 +34,9 @@ const connectSockets = async () => {
       addToBody("server-running", true);
 
       //Initial render on connect
-      socket.emit("vitals", () => {
+      socket.emit("vitals", {
+        "auth": auth
+      }, () => {
         //Start interval after first result
         if (firstConnect) {
           controlIntervalAndQueue();
@@ -111,7 +114,9 @@ const controlIntervalAndQueue = () => {
     }
   }
   //Every interval request new vitals
-  socket.emit("vitals", () => {});
+  socket.emit("vitals", {
+    "auth": auth
+  }, () => {});
   setTimeout(controlIntervalAndQueue, interval);
 }
 
@@ -369,7 +374,10 @@ const renderFileManager = () => {
 
 //Toggle estop/power
 function toggleStatus(command) {
-  socket.emit("set-status", command, () => {});
+  socket.emit("set-status", {
+    "command": command,
+    "auth": auth
+  }, () => {});
   if (command === "estop") {
     document.getElementById("toggleEstopBtn").disabled = true;
     setTimeout(function () {
@@ -385,7 +393,10 @@ function toggleStatus(command) {
 
 //Home our unhome axes
 function homeAxes(command) {
-  socket.emit("set-home", command, () => {});
+  socket.emit("set-home", {
+    "command": command,
+    "auth": auth
+  }, () => {});
 }
 
 //Set the value to which the manual control distance multiplier slider is set
@@ -427,7 +438,8 @@ function manualControl(input, increment) {
   let command = {
     "axes": axeNumber,
     "speed": parseFloat(appState.speed),
-    "increment": 0
+    "increment": 0,
+    "auth": auth
   }
   if (input == "increment") {
     command.increment = increment * appState.distanceMultiplier;
@@ -467,7 +479,8 @@ function programControl(input) {
 function spindleControl(input) {
   let command = {
     "command": {
-      "spindle_direction": ""
+      "spindle_direction": "",
+      "auth": auth
     }
   }
   switch (input) {
@@ -502,7 +515,8 @@ function spindleControl(input) {
 function spindleSpeedControl(input) {
   let command = {
     "command": {
-      "spindle_direction": ""
+      "spindle_direction": "",
+      "auth": auth
     }
   }
   if (input == "increment") {
@@ -521,21 +535,33 @@ function controlOverrides(element) {
   document.getElementById(target + "-output").innerHTML = element.value;
 
   if (target == "feed-override") {
-    socket.emit("feed-override", value, () => {});
+    socket.emit("feed-override", {
+      "command": value,
+      "auth": auth
+    }, () => {});
   } else if (target == "spindle-override") {
     socket.emit("spindle-control", {
-      "spindle_override": value
+      "spindle_override": value,
+      "auth": auth
     }, () => {});
   } else {
-    socket.emit("maxvel", (value * 100), () => {});
+    socket.emit("maxvel", {
+      "command": (value * 100),
+      "auth": auth
+    }, () => {});
   }
 }
 
 function sendMdiCommand() {
   const command = document.getElementById("mdi-command-input").value.toUpperCase();
-  socket.emit("send-command", command, () => {});
+  socket.emit("send-command", {
+    "command": command,
+    "auth": auth
+  }, () => {});
 }
 
 const toolChanged = () => {
-  socket.emit("tool-changed", () => {});
+  socket.emit("tool-changed", {
+    "auth": auth
+  }, () => {});
 }

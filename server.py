@@ -16,14 +16,11 @@ host = "192.168.1.116"
 eventlet.monkey_patch()
 app = Flask(__name__)
 
-app.config["SECRET_KEY"] = "very-secret"
-api_token = "test_secret"
-
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = 'machinekit'
 app.config['MYSQL_DB'] = 'machinekit'
-
+authKey = "test"
 mysql = MySQL(app)
 
 UPLOAD_FOLDER = '/home/machinekit/devel/webUI/files'
@@ -38,15 +35,24 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 file_queue = []
-
 socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
-
 machinekit_down = False
+
 try:
     controller = MachinekitController()
 except Exception as e:
+    logger.critical(e)
     machinekit_down = True
-    print("Machinekit is not running")
+
+
+def auth(f):
+    def wrapper(*args, **kwargs):
+        if args[0]['auth'] == authKey:
+            return f(*args, **kwargs)
+        else:
+            return emit("errors", {"errors": "Not authorized"})
+    wrapper.__name__ = f.__name__
+    return wrapper
 
 
 @socketio.on("connect")
@@ -55,18 +61,28 @@ def client_connect():
     emit("connected", {"success": "test"})
 
 
+@socketio.on("vitals")
+@auth
+def vitals(command):
+    if machinekit_down:
+        emit("vitals", {"errors": "machinekit is not running"})
+    else:
+        emit("vitals", controller.get_all_vitals())
+
+
 @socketio.on('set-status')
+@auth
 def toggle_estop(command):
-    result = controller.machine_status(command)
+    result = controller.machine_status(command['command'])
     if result is not None:
         emit("errors", result)
-
-    vitals()
+    vitals({"auth": authKey})
 
 
 @socketio.on('set-home')
+@auth
 def toggle_estop(command):
-    if command == "home":
+    if command['command'] == "home":
         result = controller.home_all_axes()
     else:
         result = controller.unhome_all_axes()
@@ -74,35 +90,30 @@ def toggle_estop(command):
     if result is not None:
         emit("errors", result)
 
-    vitals()
-
-
-@socketio.on("vitals")
-def vitals():
-    if machinekit_down:
-        emit("vitals", {"errors": "machinekit is not running"})
-    else:
-        emit("vitals", controller.get_all_vitals())
+    vitals({"auth": authKey})
 
 
 @socketio.on("manual-control")
+@auth
 def manual_control(command):
     result = controller.manual_control(
         command['axes'], command['speed'], command['increment'])
     if result is not None:
         emit("errors", result)
-    vitals()
+    vitals({"auth": authKey})
 
 
 @socketio.on("program-control")
+@auth
 def program_control(command):
     result = controller.run_program(command)
     if result is not None:
         emit("errors", result)
-    vitals()
+    vitals({"auth": authKey})
 
 
 @socketio.on("spindle-control")
+@auth
 def spindle_control(command):
     if "spindle_brake" in command:
         result = controller.spindle_brake(command["spindle_brake"])
@@ -113,31 +124,34 @@ def spindle_control(command):
 
     if result is not None:
         emit("errors", result)
-    vitals()
+    vitals({"auth": authKey})
 
 
 @socketio.on("feed-override")
+@auth
 def feed_override(command):
-    result = controller.feedoverride(command)
+    result = controller.feedoverride(command['command'])
     if result is not None:
         emit("errors", result)
-    vitals()
+    vitals({"auth": authKey})
 
 
 @socketio.on("maxvel")
+@auth
 def maxvel(command):
-    result = controller.maxvel(command)
+    result = controller.maxvel(command['command'])
     if result is not None:
         emit("errors", result)
-    vitals()
+    vitals({"auth": authKey})
 
 
 @socketio.on("send-command")
+@auth
 def send_command(command):
-    result = controller.mdi_command(command)
+    result = controller.mdi_command(command['command'])
     if result is not None:
         emit("errors", result)
-    vitals()
+    vitals({"auth": authKey})
 
 
 @socketio.on("get-files")
@@ -161,36 +175,44 @@ def get_files():
 
         emit("get-files", {"result": tuple(files_on_server),
                            "file_queue": file_queue})
-        vitals()
+        vitals({"auth": authKey})
     except Exception as e:
-        emit("errors", str(e))
+        emit("errors", {"errors": str(e)})
+        logger.critical(e)
 
 
 @socketio.on("update-file-queue")
-def update_file_queue(new_queue):
+@auth
+def update_file_queue(command):
     global file_queue
-    file_queue = new_queue
+    file_queue = command['new_queue']
     get_files()
 
 
 @socketio.on("tool-changed")
-def tool_changed():
+@auth
+def tool_changed(command):
     os.system("halcmd setp hal_manualtoolchange.change_button true")
     time.sleep(2)
     os.system("halcmd setp hal_manualtoolchange.change_button false")
-    vitals()
+    vitals({"auth": authKey})
 
 
 @socketio.on("open-file")
 def open_file():
-    if len(file_queue) == 0:
-        controller.open_file("")
-    else:
-        controller.open_file(UPLOAD_FOLDER + "/" + file_queue[0])
-    vitals()
+    try:
+        if len(file_queue) == 0:
+            controller.open_file("")
+        else:
+            controller.open_file(UPLOAD_FOLDER + "/" + file_queue[0])
+        vitals({"auth": authKey})
+    except Exception as e:
+        emit("errors", {"errors": str(e)})
+        logger.critical(e)
 
 
 @socketio.on("file-upload")
+@auth
 def upload(data):
     try:
         f = open(os.path.join("./files/" + data['name']), "w")
@@ -215,12 +237,12 @@ def upload(data):
             """, (filename, UPLOAD_FOLDER)
         )
         mysql.connection.commit()
-        vitals()
+        vitals({"auth": authKey})
     except Exception as e:
-        print(e)
-        emit("errors", str(e))
+        emit("errors", {"errors": str(e)})
+        logger.critical(e)
 
 
 if __name__ == "__main__":
     app.debug = True
-    socketio.run(app, host=host)
+    socketio.run(app, host=host,)
