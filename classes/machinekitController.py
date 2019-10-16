@@ -104,9 +104,7 @@ class MachinekitController():
                 "task_mode": self.task_mode(),
                 "feedrate": self.s.feedrate,
                 "rcs_state": self.rcs_state(),
-                "tool_change": self.s.pocket_prepped,
-                "g5x_offset": self.s.g5x_offset,
-                "g92_offset": self.s.g92_offset
+                "tool_change": self.s.pocket_prepped
             },
             "values": {
                 "velocity": self.s.velocity,
