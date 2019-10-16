@@ -1,3 +1,7 @@
+form {
+  overflow: auto;
+}
+
 #server-down,
 #server-up,
 #machinekit-down,
@@ -24,6 +28,7 @@
 #manual-control-speed,
 #manual-control-radio-xyz,
 #manual-control,
+#alternative-manual-control,
 #program-control,
 #program-control button,
 #spindle-control,
@@ -67,6 +72,7 @@ body.server-running.controller.estop-disabled.power-on.interp-idle #manual-contr
 body.server-running.controller.estop-disabled.power-on.interp-idle #manual-control-distance,
 body.server-running.controller.estop-disabled.power-on.interp-idle #manual-control-speed,
 body.server-running.controller.estop-disabled.power-on.interp-idle #manual-control-radio-xyz,
+body.server-running.controller.estop-disabled.power-on.interp-idle #alternative-manual-control,
 body.server-running.controller.estop-disabled.power-on #spindle-control,
 body.server-running.controller.estop-disabled.power-on #feed-override-control,
 body.server-running.controller.estop-disabled.power-on #spindle-override-control,
@@ -105,4 +111,109 @@ body.server-down #server-down {
 
 body.machinekit-down #machinekit-down {
   display: block;
+}
+
+
+/* 
+* CSS for the manual control
+*/
+
+#alternative-manual-control form>div {
+  display: flex;
+  align-items: unset;
+  -webkit-align-items: unset;
+}
+
+#xy-control,
+#z-control {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+#center-controls {
+  display: flex;
+  justify-content: center;
+}
+
+.center {
+  min-width: 0px;
+  width: 65px;
+  height: 55px;
+}
+
+#center-controls button,
+#xy-control button,
+#z-control button {
+  display: flex;
+  justify-content: center;
+  align-self: center;
+  margin: 2px;
+}
+
+.small-horizontal {
+  min-width: 0px;
+  height: 65px;
+  width: 60px;
+}
+
+.medium-horizontal {
+  min-width: 0;
+  height: 85px;
+  width: 70px;
+}
+
+.large-horizontal {
+  min-width: 0;
+  height: 105px;
+  width: 80px;
+}
+
+.medium {
+  width: 140px;
+  height: 45px;
+}
+
+.large {
+  width: 160px;
+  height: 55px;
+}
+
+@media only screen and (max-width: 600px) {
+  .center {
+    min-width: 0px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .small-horizontal {
+    min-width: 0px;
+    height: 50px;
+    width: 40px;
+  }
+
+  .medium-horizontal {
+    min-width: 0;
+    height: 50px;
+    width: 40px;
+    font-size: 22px;
+  }
+
+  .large-horizontal {
+    min-width: 0;
+    height: 50px;
+    width: 30px;
+    font-size: 25px;
+  }
+
+  .medium {
+    height: 40px;
+    font-size: 22px;
+  }
+
+  .large {
+    height: 55px;
+    font-size: 25px;
+  }
+
 }

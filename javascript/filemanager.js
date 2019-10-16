@@ -80,8 +80,7 @@ const getFile = () => {
         }
 
         const ext = getFileExt(file.name);
-
-        if (ext === "nc") {
+        if (ext === "nc" || ext === "gcode") {
             appState.file = file;
             return;
         } else {

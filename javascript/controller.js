@@ -17,6 +17,7 @@ let appState = {
   file_queue: [],
   file: ""
 }
+
 window.onload = async () => {
   const sortable = new Sortable.default(document.getElementById('tbody_queue'), {
     draggable: 'tr'
@@ -41,6 +42,7 @@ const connectSockets = async () => {
         if (firstConnect) {
           controlIntervalAndQueue();
           firstConnect = false;
+
         }
       });
     });
@@ -418,7 +420,7 @@ function manualControlSelector(element) {
 }
 
 //Fires when a manual control movement button is pressed
-function manualControl(input, increment) {
+function manualControl(input, increment, selectedAxe = null) {
   //Convert axename to number
   const axeWithNumber = {
     x: 0,
@@ -431,8 +433,13 @@ function manualControl(input, increment) {
     v: 7,
     w: 8
   }
+  let axeNumber;
+  if (selectedAxe === null) {
+    axeNumber = axeWithNumber[appState.selectedAxe];
+  } else {
+    axeNumber = axeWithNumber[selectedAxe]
+  }
 
-  const axeNumber = axeWithNumber[appState.selectedAxe];
 
   //Object that contains the axenumber, the speed at which it should move and the incrementation.
   let command = {
@@ -472,7 +479,6 @@ function programControl(input) {
     default:
       break;
   }
-  console.log(command);
   socket.emit("program-control", command, () => {});
 }
 
@@ -563,6 +569,12 @@ function sendMdiCommand() {
 
 const toolChanged = () => {
   socket.emit("tool-changed", {
+    "auth": auth
+  }, () => {});
+}
+
+const offset = () => {
+  socket.emit("offset", {
     "auth": auth
   }, () => {});
 }

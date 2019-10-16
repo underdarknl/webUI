@@ -105,6 +105,8 @@ class MachinekitController():
                 "feedrate": self.s.feedrate,
                 "rcs_state": self.rcs_state(),
                 "tool_change": self.s.pocket_prepped,
+                "g5x_offset": self.s.g5x_offset,
+                "g92_offset": self.s.g92_offset
             },
             "values": {
                 "velocity": self.s.velocity,
@@ -346,7 +348,6 @@ class MachinekitController():
     
     def feedoverride(self, value):
         """ Feed override float between 0 and 1.2"""
-        print(value)
         if value > 1.2 or value < 0:
             return {"errors": "Value outside of limits"}
         self.s.poll()
@@ -388,4 +389,5 @@ class MachinekitController():
         
         #toolno, z_offset,  x_offset, diameter, frontangle, backangle, orientation
         #self.s.tool_offset(int, float, float, float, float, float, int)
+        self.c.tool_offset(1, 10,  10, 0, 0, 0, 0)
         return

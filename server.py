@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import random
 import logging
@@ -13,18 +14,16 @@ from classes.machinekitController import MachinekitController
 # halcmd setp hal_manualtoolchange.change_button true
 
 host = "192.168.1.116"
+
 eventlet.monkey_patch()
 app = Flask(__name__)
-
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = 'machinekit'
 app.config['MYSQL_DB'] = 'machinekit'
+
 authKey = "test"
 mysql = MySQL(app)
-
-UPLOAD_FOLDER = '/home/machinekit/devel/webUI/files'
-ALLOWED_EXTENSIONS = set(['nc'])
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
@@ -34,9 +33,11 @@ formatter = logging.Formatter(
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
-file_queue = []
 socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
+
+file_queue = []
 machinekit_down = False
+UPLOAD_FOLDER = '/home/machinekit/devel/webUI/files'
 
 try:
     controller = MachinekitController()
@@ -211,6 +212,14 @@ def open_file():
         logger.critical(e)
 
 
+@socketio.on("offset")
+def offset(command):
+    try:
+        controller.set_offset()
+    except Exception as e:
+        emit("errors", {"errors": str(e)})
+
+
 @socketio.on("file-upload")
 @auth
 def upload(data):
@@ -245,4 +254,4 @@ def upload(data):
 
 if __name__ == "__main__":
     app.debug = True
-    socketio.run(app, host=host,)
+    socketio.run(app, host=host)
