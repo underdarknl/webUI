@@ -1,0 +1,31 @@
+@url = 192.168.1.116:5000
+@token = test_secret
+
+GET http://{{url}}/machinekit/status
+API_KEY: {{token}}
+
+###
+POST http://{{url}}/machinekit/status
+API_KEY: {{token}}
+Content-Type: application/json
+
+{
+    "command": "power"
+}
+
+###
+GET http://{{url}}/machinekit/position
+API_KEY: {{token}}
+
+###
+GET http://{{url}}/server/files
+API_KEY: {{token}}
+
+###
+POST http://{{url}}/machinekit/axes/home
+API_KEY: {{token}}
+Content-Type: application/json
+
+{
+    "command": "home"
+}

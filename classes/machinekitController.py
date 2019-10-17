@@ -6,7 +6,7 @@ def checkerrors(f):
     def wrapper(*args, **kwargs):
         errors = f(*args, **kwargs)
         if 'errors' in errors:
-            return errors
+            raise RuntimeError({"message": errors['errors'], "status": 502})
         else:
             return {"success": "Command executed"}
     return wrapper
@@ -134,6 +134,9 @@ class MachinekitController():
     @checkerrors
     def machine_status(self, command):
         """ Toggle estop and power with command estop || power"""
+        if command != "estop" and command != "power":
+            raise ValueError({"message": "Unknown command " + command, "status": 400})
+
         self.s.poll()
         if command == "estop":
             if self.s.estop == linuxcnc.STATE_ESTOP:
@@ -194,11 +197,18 @@ class MachinekitController():
 
 
     @checkerrors
-    def home_all_axes(self):
+    def home_all_axes(self, command):
         """ Set all axes home """
+        if command != "home" and command != "unhome":
+            raise ValueError({"message": "Unknown command " + command, "status": 400})
+
         machine_ready = self.machine_enabled_no_estop()
         if 'errors' in machine_ready:
-            return machine_ready 
+            return machine_ready
+     
+        if command == "unhome":
+            return self.unhome_all_axes()
+            
         self.ensure_mode(linuxcnc.MODE_MANUAL)
         self.c.home(-1)
         self.c.wait_complete()
@@ -209,7 +219,7 @@ class MachinekitController():
         """ Unhome all axes """
         machine_ready = self.machine_enabled_no_estop()
         if 'errors' in machine_ready:
-            return machine_ready 
+            return machine_ready
 
         self.ensure_mode(linuxcnc.MODE_MANUAL)
         self.c.unhome(-1)
@@ -218,6 +228,10 @@ class MachinekitController():
 
     def run_program(self, command):
         """ Command = start || pause || stop || resume = default"""
+        if command != "start" and command != "pause" and command != "stop" and command != "resume":
+            raise ValueError(
+                {"message": "Unknown command " + command, "status": 400})
+
         machine_ready = self.machine_enabled_no_estop()
         if 'errors' in machine_ready:
             return machine_ready 
