@@ -51,7 +51,7 @@ def auth(f):
         headers = request.headers
         auth = headers.get("API_KEY")
         if auth != api_token:
-            return jsonify({"errors": "Not authorized"})
+            return jsonify({"errors": "Not authorized"}), 400
         else:
             return f(*args, **kwargs)
     wrapper.__name__ = f.__name__
@@ -67,11 +67,11 @@ def get_axis():
         if str(e) == "emcStatusBuffer invalid err=3":
             logger.critical(e)
             return jsonify(
-                {"errors": "Machinekit is not running please restart machinekit and then the server"})
+                {"errors": "Machinekit is not running please restart machinekit and then the server"}), 400
         logger.critical(e)
         return jsonify({
             "errors": str(e)
-        })
+        }), 400
 
 
 @app.route("/position", methods=["GET"])
@@ -83,11 +83,11 @@ def get_position():
         if str(e) == "emcStatusBuffer invalid err=3":
             logger.critical(e)
             return jsonify(
-                {"errors": "Machinekit is not running please restart machinekit and then the server"})
+                {"errors": "Machinekit is not running please restart machinekit and then the server"}), 400
         logger.critical(e)
         return jsonify({
             "errors": str(e)
-        })
+        }), 400
 
 
 @app.route("/return_files", methods=["GET"])
@@ -102,7 +102,7 @@ def return_files():
         return jsonify({"result": result, "file_queue": file_queue})
 
     except Exception as e:
-        return jsonify({"errors": str(e)})
+        return jsonify({"errors": str(e)}), 400
 
 
 @app.route("/set_machine_status", methods=["POST"])
@@ -115,7 +115,7 @@ def set_status():
     except (KeyError, Exception) as e:
         return jsonify({
             "errors": str(e)
-        })
+        }), 400
 
 
 @app.route("/set_home", methods=["POST"])
@@ -131,7 +131,7 @@ def set_home_axes():
     except Exception as e:
         return jsonify({
             "errors": str(e)
-        })
+        }), 400
 
 
 @app.route("/control_program", methods=["POST"])
@@ -143,7 +143,7 @@ def control_program():
     except Exception as e:
         return jsonify({
             "errors": str(e)
-        })
+        }), 400
 
 
 @app.route("/send_command", methods=["POST"])
@@ -156,7 +156,7 @@ def send_command():
     except (KeyError, Exception) as e:
         return jsonify({
             "errors": str(e)
-        })
+        }), 400
 
 
 @app.route("/manual", methods=["POST"])
@@ -171,7 +171,7 @@ def manual():
     except (KeyError, Exception) as e:
         return jsonify({
             "errors": str(e)
-        })
+        }), 400
 
 
 @app.route("/spindle", methods=["POST"])
@@ -191,7 +191,7 @@ def spindle():
     except(KeyError, Exception) as e:
         return jsonify({
             "errors": str(e)
-        })
+        }), 400
 
 
 @app.route("/feed", methods=["POST"])
@@ -204,7 +204,7 @@ def feed():
     except(KeyError, Exception) as e:
         return jsonify({
             "errors": str(e)
-        })
+        }), 400
 
 
 @app.route("/maxvel", methods=["POST"])
@@ -217,7 +217,7 @@ def maxvel():
     except(KeyError, Exception) as e:
         return jsonify({
             "errors": str(e)
-        })
+        }), 400
 
 
 @app.route("/update_file_queue", methods=["POST"])
@@ -230,7 +230,7 @@ def update_file_queue():
         file_queue = new_queue
         return jsonify({"success": "Queue updated"})
     except Exception as e:
-        return jsonify({"errors": e})
+        return jsonify({"errors": e}), 400
 
 
 @app.route("/tool_change", methods=["GET"])
@@ -243,7 +243,7 @@ def tool_changer():
         os.system("halcmd setp hal_manualtoolchange.change_button false")
         return jsonify({"success": "Command executed"})
     except Exception as e:
-        return jsonify({"errors": e})
+        return jsonify({"errors": e}), 400
 
 
 @app.route("/open_file", methods=["POST"])
@@ -254,7 +254,7 @@ def open_file():
         path = data["path"]
         return jsonify(controller.open_file("/home/machinekit/devel/webUI/files/" + path))
     except Exception as e:
-        return jsonify({"errors": e})
+        return jsonify({"errors": e}), 400
 
 
 @app.route("/file_upload", methods=["POST"])
@@ -275,7 +275,7 @@ def upload():
         result = cur.fetchall()
 
         if len(result) > 0:
-            return jsonify({"errors": "File with given name already on server"})
+            return jsonify({"errors": "File with given name already on server"}), 400
 
         cur.execute("""
             INSERT INTO files (file_name, file_location)
@@ -286,7 +286,7 @@ def upload():
         file.save(os.path.join(UPLOAD_FOLDER, filename))
         return jsonify("File added to database and saved to folder")
     except Exception as e:
-        return jsonify({"errors": e})
+        return jsonify({"errors": e}), 400
 
 
 if __name__ == "__main__":
