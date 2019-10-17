@@ -3,6 +3,7 @@ window.onload = async () => {
   setInterval(() => {
     timer();
   }, 5000);
+  
   const sortable = new Sortable.default(document.querySelectorAll('tbody'), {
     draggable: 'tr'
   });
@@ -10,6 +11,7 @@ window.onload = async () => {
 };
 
 const api = "http://192.168.1.116:5000";
+
 let machinekit_state = {
   power: {
     enabled: true,
@@ -54,79 +56,57 @@ const timer = () => {
 }
 
 const request = (url, type, data = {}) => {
+  let header;
+
   if (type === "POST") {
-    return fetch(url, {
-        method: "POST",
-        mode: "cors",
-        headers: {
-          "Content-Type": "application/json",
-          "API_KEY": appState.api_key
-        },
-        body: JSON.stringify(data)
-      })
-      .then(response => {
-        return response.json();
-      })
-      .then(data => {
-        return data;
-      })
-      .catch(error => {
-        if (error == "TypeError: Failed to fetch") {
-          document.body.className = `error_server_down ${localStorage.getItem("page")}`;
-          appState.errors = [];
-          return;
-        }
-      });
-  } else if (type === "UPLOAD") {
-    return fetch(url, {
-        method: "POST",
-        mode: "cors",
-        body: data,
-        headers: {
-          "API_KEY": appState.api_key
-        }
-      })
-      .then(response => {
-        return response.json();
-      })
-      .then(data => {
-        return data;
-      })
-      .catch(error => {
-        if (error == "TypeError: Failed to fetch") {
-          document.body.className = `error_server_down ${localStorage.getItem("page")}`;
-          appState.errors = [];
-          return;
-        }
-      });
+    header = {
+      method: "POST",
+      mode: "cors",
+      headers: {
+        "Content-Type": "application/json",
+        "API_KEY": appState.api_key
+      },
+      body: JSON.stringify(data)
+    }
+  } else if (type === "GET") {
+    header = {
+      method: "GET",
+      headers: {
+        "API_KEY": appState.api_key
+      },
+    }
   } else {
-    return fetch(url, {
-        method: "GET",
-        headers: {
-          "API_KEY": appState.api_key
-        },
-      })
-      .then(response => {
-        return response.json();
-      })
-      .then(data => {
-        if (data.errors == "Machinekit is not running please restart machinekit and then the server") {
-          document.body.className = `error_machinekit ${localStorage.getItem("page")}`;
-          appState.errors = [];
-          return;
-        } else {
-          return data;
-        }
-      })
-      .catch(error => {
-        if (error == "TypeError: Failed to fetch") {
-          document.body.className = `error_server_down ${localStorage.getItem("page")}`;
-          appState.errors = [];
-          return;
-        }
-      });
+    header = {
+      method: "POST",
+      mode: "cors",
+      body: data,
+      headers: {
+        "API_KEY": appState.api_key
+      }
+    }
   }
-};
+
+  return fetch(url, header)
+    .then(response => {
+      return response.json();
+    })
+    .then(data => {
+      if (data.errors == "Machinekit is not running please restart machinekit and then the server") {
+        document.body.className = `error_machinekit ${localStorage.getItem("page")}`;
+        appState.errors = [];
+        return;
+      } else {
+        return data;
+      }
+    })
+    .catch(error => {
+      if (error == "TypeError: Failed to fetch") {
+        document.body.className = `error_server_down ${localStorage.getItem("page")}`;
+        appState.errors = [];
+        return;
+      }
+    });
+}
 
 const setPage = (input) => {
   if (localStorage.getItem("page") === input) {
@@ -263,22 +243,40 @@ const checkIfAxesAreHomedAndRenderTable = () => {
 
 const setBodyClasses = () => {
   const {
-    power,
-    spindle,
+    power: {
+      enabled,
+      estop
+    },
+    spindle: {
+      spindle_brake,
+      spindle_direction,
+      spindle_enabled,
+      spindlerate
+    },
+    program: {
+      interp_state,
+      task_mode,
+      feedrate,
+      file
+    },
+    values: {
+      max_velocity
+    }
   } = machinekit_state;
-  checkAndAddClass(power.enabled, {
+
+  checkAndAddClass(enabled, {
     true: "power_on",
     false: "power_off"
   });
 
-  checkAndAddClass(power.estop, {
+  checkAndAddClass(estop, {
     true: "estop",
     false: "no_estop"
   });
 
   let value;
 
-  switch (machinekit_state.program.interp_state) {
+  switch (interp_state) {
     case "INTERP_IDLE":
       value = "INTERP_IDLE";
       break;
@@ -294,10 +292,11 @@ const setBodyClasses = () => {
     default:
       break;
   }
+
   document.body.classList.add(value);
 
 
-  switch (machinekit_state.program.task_mode) {
+  switch (task_mode) {
     case "MODE_MANUAL":
       value = "MODE_MANUAL";
       break;
@@ -312,31 +311,31 @@ const setBodyClasses = () => {
   }
   document.body.classList.add(value);
 
-  checkAndAddClass(spindle.spindle_brake, {
+  checkAndAddClass(spindle_brake, {
     true: "SPINDLE_BRAKE_ON",
     false: "SPINDLE_BRAKE_OFF"
   });
 
-  if (spindle.spindle_direction == -1) {
+  if (spindle_direction == -1) {
     document.body.classList.add("SPINDLE_BACKWARD");
   } else {
     document.body.classList.add("SPINDLE_FORWARD");
   }
 
-  checkAndAddClass(spindle.spindle_enabled, {
+  checkAndAddClass(spindle_enabled, {
     true: "SPINDLE_ENABLED",
     false: "SPINDLE_DISABLED"
   });
 
-  document.getElementById("feed_override").value = (machinekit_state.program.feedrate * 100);
-  document.getElementById("feed_override_output").innerHTML = (machinekit_state.program.feedrate * 100);
+  document.getElementById("feed_override").value = (feedrate * 100);
+  document.getElementById("feed_override_output").innerHTML = (feedrate * 100);
 
-  document.getElementById("spindle_override").value = (machinekit_state.spindle.spindlerate * 100);
-  document.getElementById("spindle_override_output").innerHTML = (machinekit_state.spindle.spindlerate * 100);
+  document.getElementById("spindle_override").value = (spindlerate * 100);
+  document.getElementById("spindle_override_output").innerHTML = (spindlerate * 100);
 
-  document.getElementById("max_velocity").value = (machinekit_state.values.max_velocity);
-  document.getElementById("max_velocity_output").innerHTML = (machinekit_state.values.max_velocity);
-  document.getElementById("file").innerHTML = machinekit_state.program.file;
+  document.getElementById("max_velocity").value = (max_velocity);
+  document.getElementById("max_velocity_output").innerHTML = (max_velocity);
+  document.getElementById("file").innerHTML = file;
 }
 
 const toggleEstop = async () => {
