@@ -93,5 +93,19 @@ API_KEY: {{token}}
 Content-Type: application/json
 
 {
-    "new_queue": 300
+    "new_queue": ["smileq.nc"]
+}
+
+###
+GET http://{{url}}/machinekit/toolchange
+API_KEY: {{token}}
+Content-Type: application/json
+
+###
+POST http://{{url}}/machinekit/open_file
+API_KEY: {{token}}
+Content-Type: application/json
+
+{
+    "name": "smile.nc"
 }

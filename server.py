@@ -41,6 +41,7 @@ machinekit_running = False
 try:
     controller = MachinekitController()
     machinekit_running = True
+    os.system("halcmd show > halcmd.txt")
 except Exception as e:
     logger.critical(e)
 
@@ -49,7 +50,10 @@ errorMessages = {
     1: {"message": "Not authorized", "status": 403, "type": "AuthorizationError"},
     2: {"message": "Unknown key", "status": 400, "type": "ValueError"},
     3: {"message": "Request cannot be empty", "status": 400, "type": "ValueError"},
-    4: {"message": "Request can only be Content-Type: application/json", "status": 400, "type": "ValueError"}
+    4: {"message": "Request can only be Content-Type: application/json", "status": 400, "type": "ValueError"},
+    5: {"message": "New_queue must be of type list/array", "status": 400, "type": "ValueError"},
+    6: {"message": "File not found", "status": 404, "type": "NameError"},
+    7: {"message": "File with given name already on server", "status": 400, "type": "ValueError"}
 }
 
 
@@ -89,6 +93,8 @@ def errors(f):
             return {"errors": e.message}, 400
         except KeyError as e:
             return {"errors": {"message": "Unknown key expected: " + e.message, "status": 400, "type": "KeyError"}}, 400
+        except NameError as e:
+            return {"errors": e.message}, 404
         except Exception as e:
             return {"errors": {"message": e.message}}
 
@@ -230,72 +236,89 @@ def maxvel():
 @auth
 @errors
 def update_file_queue():
+    global file_queue
+    global UPLOAD_FOLDER
+
     if not "new_queue" in request.json:
         raise ValueError(errorMessages[2])
+    if not type(file_queue) == list:
+        raise ValueError(errorMessages[5])
 
-    global file_queue
     data = request.json
     new_queue = data["new_queue"]
+    for item in new_queue:
+        if not os.path.isfile(UPLOAD_FOLDER + "/" + item):
+            raise NameError(errorMessages[6])
     file_queue = new_queue
     return {"success": "Queue updated"}
 
 
-@app.route("/tool_change", methods=["GET"])
+@app.route("/machinekit/toolchange", methods=["GET"])
 @auth
 @errors
 def tool_changer():
-    try:
-        # Dirty fix to bypass toolchange prompt
-        os.system("halcmd setp hal_manualtoolchange.change_button true")
-        time.sleep(1)
-        os.system("halcmd setp hal_manualtoolchange.change_button false")
-        return {"success": "Command executed"}
-    except Exception as e:
-        return {"errors": e}, 400
+    # Dirty fix to bypass toolchange prompt
+    os.system("halcmd setp hal_manualtoolchange.change_button true")
+    time.sleep(3)
+    os.system("halcmd setp hal_manualtoolchange.change_button false")
+    return {"success": "Command executed"}
 
 
-@app.route("/open_file", methods=["POST"])
+@app.route("/machinekit/halcmd", methods=["POST"])
+@auth
+@errors
+def halcmd():
+    if not "halcmd" in request.json:
+        raise ValueError(errorMessages[2])
+    command = request.json["halcmd"]
+    os.system('halcmd ' + command + " > output.txt")
+    f = open("output.txt", "r")
+    return {"success": f.read()}
+
+
+@app.route("/machinekit/open_file", methods=["POST"])
 @auth
 @errors
 def open_file():
-    if not "path" in request.json:
+    if not "name" in request.json:
         raise ValueError(errorMessages[2])
 
+    global UPLOAD_FOLDER
     data = request.json
-    path = data["path"]
-    return controller.open_file("/home/machinekit/devel/webUI/files/" + path)
+    name = data["name"]
+    return controller.open_file(os.path.join(UPLOAD_FOLDER + "/" + name))
 
 
-@app.route("/file_upload", methods=["POST"])
+@app.route("/server/file_upload", methods=["POST"])
 @auth
+@errors
 def upload():
-    try:
-        if "file" not in request.files:
-            return "No file found"
+    global UPLOAD_FOLDER
 
-        file = request.files["file"]
-        filename = secure_filename(file.filename)
-        cur = mysql.connection.cursor()
-        cur.execute(
-            """
-            SELECT * FROM files
-            WHERE file_name = '%s' """ % filename)
+    if "file" not in request.files:
+        raise ValueError(errorMessages[5])
 
-        result = cur.fetchall()
+    file = request.files["file"]
+    filename = secure_filename(file.filename)
+    cur = mysql.connection.cursor()
+    cur.execute(
+        """
+        SELECT * FROM files
+        WHERE file_name = '%s' """ % filename)
 
-        if len(result) > 0:
-            return {"errors": "File with given name already on server"}, 400
+    result = cur.fetchall()
 
-        cur.execute("""
-            INSERT INTO files (file_name, file_location)
-            VALUES (%s, %s)
-            """, (filename, UPLOAD_FOLDER)
-        )
-        mysql.connection.commit()
-        file.save(os.path.join(UPLOAD_FOLDER, filename))
-        return {"success": "file added"}
-    except Exception as e:
-        return {"errors": e}, 400
+    if len(result) > 0:
+        raise ValueError(errorMessages[7])
+
+    cur.execute("""
+        INSERT INTO files (file_name, file_location)
+        VALUES (%s, %s)
+        """, (filename, UPLOAD_FOLDER)
+    )
+    mysql.connection.commit()
+    file.save(os.path.join(UPLOAD_FOLDER + "/" + filename))
+    return {"success": "file added"}
 
 
 if __name__ == "__main__":

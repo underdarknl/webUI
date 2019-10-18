@@ -1,0 +1,25 @@
+Use 'help <command>' for more details about each command
+Available commands:
+  loadrt              Load realtime module(s)
+  loadusr             Start user space program
+  waitusr             Waits for userspace component to exit
+  unload              Unload realtime module or terminate userspace component
+  lock, unlock        Lock/unlock HAL behaviour
+  linkps              Link pin to signal
+  linksp              Link signal to pin
+  net                 Link a number of pins to a signal
+  unlinkp             Unlink pin
+  newsig, delsig      Create/delete a signal
+  getp, gets          Get the value of a pin, parameter or signal
+  ptype, stype        Get the type of a pin, parameter or signal
+  setp, sets          Set the value of a pin, parameter or signal
+  addf, delf          Add/remove function to/from a thread
+  show                Display info about HAL objects
+  list                Display names of HAL objects
+  source              Execute commands from another .hal file
+  status              Display status information
+  save                Print config as commands
+  start, stop         Start/stop realtime threads
+  alias, unalias      Add or remove pin or parameter name aliases
+  echo, unecho        Echo commands from stdin to stderr
+  quit, exit          Exit from halcmd
