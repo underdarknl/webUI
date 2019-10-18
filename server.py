@@ -8,7 +8,7 @@ from flask_cors import CORS
 from flask_mysqldb import MySQL
 from werkzeug.utils import secure_filename
 from classes.machinekitController import MachinekitController
-from flask import Flask, request, flash, redirect, url_for, send_from_directory
+from flask import Flask, request, flash, redirect, url_for, send_from_directory, abort
 # halcmd setp hal_manualtoolchange.change_button true
 
 app = Flask(__name__)
@@ -37,16 +37,19 @@ logger.addHandler(file_handler)
 
 file_queue = []
 machinekit_running = False
+
 try:
     controller = MachinekitController()
     machinekit_running = True
 except Exception as e:
     logger.critical(e)
-    # sys.exit(1)
 
 errorMessages = {
-    0: {"message": "Machinekit is not running please restart machinekit and then the server!", "status": 500},
-    1: {"message": "Not authorized", "status": 403}
+    0: {"message": "Machinekit is not running please restart machinekit and then the server!", "status": 500, "type": "InternalServerError"},
+    1: {"message": "Not authorized", "status": 403, "type": "AuthorizationError"},
+    2: {"message": "Unknown key", "status": 400, "type": "ValueError"},
+    3: {"message": "Request cannot be empty", "status": 400, "type": "ValueError"},
+    4: {"message": "Request can only be Content-Type: application/json", "status": 400, "type": "ValueError"}
 }
 
 
@@ -54,6 +57,9 @@ def auth(f):
     """ Decorator that checks if the machine returned any errors."""
     def wrapper(*args, **kwargs):
         headers = request.headers
+        if not "API_KEY" in headers:
+            return {"errors": errorMessages[1]}, 403
+
         auth = headers.get("API_KEY")
         if auth != api_token:
             return {"errors": errorMessages[1]}, 403
@@ -67,13 +73,22 @@ def auth(f):
 def errors(f):
     def errorWrapper(*args, **kwargs):
         try:
+            if request.method == "POST":
+                if not request.json:
+                    raise Exception(errorMessages[4])
             if machinekit_running == False:
                 return {"errors": errorMessages[0]}, 500
             return f(*args, **kwargs)
+
         except ValueError as e:
-            return {"errors": e.message}, 400
+            if type(e.message) == str:
+                return {"errors": {"message": e.message, "status": 400, "type": "ValueError"}}, 400
+            else:
+                return {"errors": e.message}, 400
         except RuntimeError as e:
             return {"errors": e.message}, 400
+        except KeyError as e:
+            return {"errors": {"message": "Unknown key expected: " + e.message, "status": 400, "type": "KeyError"}}, 400
         except Exception as e:
             return {"errors": {"message": e.message}}
 
@@ -99,6 +114,9 @@ def get_machinekit_position():
 @auth
 @errors
 def set_machinekit_status():
+    if not "command" in request.json:
+        raise ValueError(errorMessages[2])
+
     data = request.json
     command = data['command']
     return controller.machine_status(command)
@@ -124,6 +142,9 @@ def return_files():
 @auth
 @errors
 def set_home_axes():
+    if not "command" in request.json:
+        raise ValueError(errorMessages[2])
+
     data = request.json
     command = data['command']
     return controller.home_all_axes(command)
@@ -133,100 +154,95 @@ def set_home_axes():
 @auth
 @errors
 def control_program():
+    if not "command" in request.json:
+        raise ValueError(errorMessages[2])
+
     data = request.json
     command = data['command']
     return controller.run_program(command)
 
 
-@app.route("/send_command", methods=["POST"])
+@app.route("/machinekit/position/mdi", methods=["POST"])
 @auth
+@errors
 def send_command():
-    try:
-        data = request.json
-        command = data["mdi_command"]
-        return controller.mdi_command(command)
-    except (KeyError, Exception) as e:
-        return {
-            "errors": str(e)
-        }, 400
+    if not "mdi_command" in request.json:
+        raise ValueError(errorMessages[2])
+
+    if len(request.json["mdi_command"]) == 0:
+        raise ValueError(errorMessages[3])
+
+    data = request.json
+    command = data["mdi_command"]
+    return controller.mdi_command(command)
 
 
-@app.route("/manual", methods=["POST"])
+@app.route("/machinekit/position/manual", methods=["POST"])
 @auth
+@errors
 def manual():
-    try:
-        data = request.json
-        axes = data['axes']
-        speed = data['speed']
-        increment = data['increment']
-        return controller.manual_control(axes, speed, increment)
-    except (KeyError, Exception) as e:
-        return {
-            "errors": str(e)
-        }, 400
+    if not "axes" in request.json or not "speed" in request.json or not "increment" in request.json:
+        raise ValueError(errorMessages[2])
+
+    data = request.json
+    axes = data['axes']
+    speed = data['speed']
+    increment = data['increment']
+    return controller.manual_control(axes, speed, increment)
 
 
-@app.route("/spindle", methods=["POST"])
+@app.route("/machinekit/spindle", methods=["POST"])
 @auth
-def spindle():
-    try:
-        data = request.json
-        command = data["command"]
-        if "spindle_brake" in command:
-            return controller.spindle_brake(command["spindle_brake"])
-        elif "spindle_direction" in command:
-            return controller.spindle_direction(command["spindle_direction"])
-        elif "spindle_override" in command:
-            return controller.spindleoverride(command["spindle_override"])
-        else:
-            return {"error": "Unknown command"}
-    except(KeyError, Exception) as e:
-        return {
-            "errors": str(e)
-        }, 400
+@errors
+def set_machinekit_spindle():
+    if not "command" in request.json:
+        raise ValueError(errorMessages[2])
+    data = request.json
+    command = data["command"]
+    return controller.spindle(command)
 
 
-@app.route("/feed", methods=["POST"])
+@app.route("/machinekit/feed", methods=["POST"])
 @auth
-def feed():
-    try:
-        data = request.json
-        command = data["feedrate"]
-        return controller.feedoverride(command)
-    except(KeyError, Exception) as e:
-        return {
-            "errors": str(e)
-        }, 400
+@errors
+def set_machinekit_feedrate():
+    if not "feedrate" in request.json:
+        raise ValueError(errorMessages[2])
+
+    data = request.json
+    command = float(data["feedrate"])
+    return controller.feedoverride(command)
 
 
-@app.route("/maxvel", methods=["POST"])
+@app.route("/machinekit/maxvel", methods=["POST"])
 @auth
+@errors
 def maxvel():
-    try:
-        data = request.json
-        command = data["velocity"]
-        return controller.maxvel(command)
-    except(KeyError, Exception) as e:
-        return {
-            "errors": str(e)
-        }, 400
+    if not "velocity" in request.json:
+        raise ValueError(errorMessages[2])
+
+    data = request.json
+    command = data["velocity"]
+    return controller.maxvel(float(command))
 
 
-@app.route("/update_file_queue", methods=["POST"])
+@app.route("/server/update_file_queue", methods=["POST"])
 @auth
+@errors
 def update_file_queue():
-    try:
-        global file_queue
-        data = request.json
-        new_queue = data["new_queue"]
-        file_queue = new_queue
-        return {"success": "Queue updated"}
-    except Exception as e:
-        return {"errors": e}, 400
+    if not "new_queue" in request.json:
+        raise ValueError(errorMessages[2])
+
+    global file_queue
+    data = request.json
+    new_queue = data["new_queue"]
+    file_queue = new_queue
+    return {"success": "Queue updated"}
 
 
 @app.route("/tool_change", methods=["GET"])
 @auth
+@errors
 def tool_changer():
     try:
         # Dirty fix to bypass toolchange prompt
@@ -240,13 +256,14 @@ def tool_changer():
 
 @app.route("/open_file", methods=["POST"])
 @auth
+@errors
 def open_file():
-    try:
-        data = request.json
-        path = data["path"]
-        return controller.open_file("/home/machinekit/devel/webUI/files/" + path)
-    except Exception as e:
-        return {"errors": e}, 400
+    if not "path" in request.json:
+        raise ValueError(errorMessages[2])
+
+    data = request.json
+    path = data["path"]
+    return controller.open_file("/home/machinekit/devel/webUI/files/" + path)
 
 
 @app.route("/file_upload", methods=["POST"])
