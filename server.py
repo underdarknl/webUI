@@ -44,7 +44,6 @@ if config['server']['mockup']:
     machinekit_running = True
     from mockup.machinekitController import MachinekitController
     controller = MachinekitController()
-    print(controller.set_axes)
 else:
     import linuxcnc
     from classes.machinekitController import MachinekitController

@@ -11,18 +11,85 @@ def checkerrors(f):
 
 
 class linuxcnc():
+    INTERP_IDLE = 1
+    INTERP_READING = 2
+    INTERP_PAUSED = 3
+    INTERP_WAITING = 4
+
+    RCS_DONE = 1
+    RCS_EXEC = 2
+    RCS_ERROR = 3
+
+    MODE_MDI = 1
+    MODE_AUTO = 2
+    MODE_MANUAL = 3
+
+    STATE_ESTOP = 0
+    STATE_ESTOP_RESET = 1
+
+
+
     class stat():
         def __init__(self):
             print("Hello from stat")
             self.axes = 3
+            self.enabled = 1
+            self.estop = 0
+            self.power = 1
+            self.homed = 1
+
+            self.interp_state = linuxcnc.INTERP_IDLE
+            self.state = linuxcnc.RCS_DONE
+
+            self.task_mode = linuxcnc.MODE_MDI
+            self.axis = self.generateAxis()
+
+            self.spindle_speed = 300
+            self.spindle_enabled = 1
+            self.spindle_brake = 0
+            self.spindle_direction = 1
+            self.spindle_increasing = 0
+            self.spindle_override_enabled = 0
+            self.spindlerate = 300
+            self.tool_in_spindle = 0
+
+            self.file = "/dir/files/smile.nc"
+            self.feedrate = 1
+            self.velocity = 1200
+            self.max_velocity = 50
+            self.max_acceleration = 5000
+            self.pocket_prepped = -1
+
+
+        def poll(self):
+            return True
+
+        def generateAxis(self):
+            i = 0
+            axis = {}
+
+            while i < self.axes:
+                axis.update({i: {"homed": 0, "input": 0}})
+                i += 1
+            return axis
 
     class command():
         def __init__(self):
             print("Hello from command")
+        
+        def wait_complete(self):
+            return True
+        
+        def state(self, command):
+            print()
 
     class error_channel():
         def __init__(self):
             print("Hello from error channel")
+
+        def poll(self):
+            return True
+
 
 
 class MachinekitController():

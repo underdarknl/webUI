@@ -117,5 +117,5 @@ API_KEY: {{token}}
 Content-Type: application/json
 
 {
-    "halcmd": "help"
+    "halcmd": "show"
 }
