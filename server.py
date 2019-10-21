@@ -7,7 +7,7 @@ import configparser
 from flask_cors import CORS
 from flask_mysqldb import MySQL
 from werkzeug.utils import secure_filename
-from flask import Flask, request, redirect, abort, escape, render_template
+from flask import Flask, request, redirect, abort, escape, render_template, jsonify
 
 # halcmd setp hal_manualtoolchange.change_button true
 
@@ -39,7 +39,7 @@ with open("./jsonFiles/errorMessages.json") as f:
 with open("./jsonFiles/halCommands.json") as f:
     halCommands = json.load(f)
 
-if config['server']['mockup']:
+if config['server']['mockup'] == 'true':
     print("Mockup")
     machinekit_running = True
     from mockup.machinekitController import MachinekitController
@@ -211,7 +211,7 @@ def set_machinekit_spindle():
     if not "command" in request.json:
         raise ValueError(['2'])
     data = request.json
-    command = escape(data["command"])
+    command = data["command"]
     return controller.spindle(command)
 
 
@@ -343,5 +343,5 @@ def upload():
 
 
 if __name__ == "__main__":
-    app.run(config['server']['host'], debug=True,
-            port=config['server']['port'])
+    app.run('0.0.0.0', debug=True,
+            port=5000)
