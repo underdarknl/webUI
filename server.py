@@ -1,30 +1,26 @@
 import os
 import sys
 import json
-import logging
 import time
+import logging
+import configparser
 from flask_cors import CORS
 from flask_mysqldb import MySQL
 from werkzeug.utils import secure_filename
-from flask import Flask, request, redirect, abort, escape
-from classes.machinekitController import MachinekitController
+from flask import Flask, request, redirect, abort, escape, render_template
+
 # halcmd setp hal_manualtoolchange.change_button true
 
+config = configparser.ConfigParser()
+config.read("default.ini")
 app = Flask(__name__)
 CORS(app)
-
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'machinekit'
-app.config['MYSQL_DB'] = 'machinekit'
-api_token = "test_secret"
-
+app.config['MYSQL_HOST'] = config['mysql']['host']
+app.config['MYSQL_USER'] = config['mysql']['user']
+app.config['MYSQL_PASSWORD'] = config['mysql']['password']
+app.config['MYSQL_DB'] = config['mysql']['database']
+api_token = config['security']['token']
 mysql = MySQL(app)
-
-UPLOAD_FOLDER = '/home/machinekit/devel/webUI/files'
-ALLOWED_EXTENSIONS = set(['nc'])
-
-port = 12345
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
@@ -36,60 +32,30 @@ logger.addHandler(file_handler)
 
 file_queue = []
 machinekit_running = False
+UPLOAD_FOLDER = '/home/machinekit/devel/webUI/files'
 
-try:
-    controller = MachinekitController()
+with open("./jsonFiles/errorMessages.json") as f:
+    errorMessages = json.load(f)
+with open("./jsonFiles/halCommands.json") as f:
+    halCommands = json.load(f)
+
+if config['server']['mockup']:
+    print("Mockup")
     machinekit_running = True
-    os.system("halcmd show > halcmd.txt")
-except Exception as e:
-    logger.critical(e)
-
-errorMessages = {
-    0: {"message": "Machinekit is not running please restart machinekit and then the server!", "status": 500, "type": "InternalServerError"},
-    1: {"message": "Not authorized", "status": 403, "type": "AuthorizationError"},
-    2: {"message": "Unknown key", "status": 400, "type": "ValueError"},
-    3: {"message": "Request cannot be empty", "status": 400, "type": "ValueError"},
-    4: {"message": "Request can only be Content-Type: application/json", "status": 400, "type": "ValueError"},
-    5: {"message": "New_queue must be of type list/array", "status": 400, "type": "ValueError"},
-    6: {"message": "File not found", "status": 404, "type": "NameError"},
-    7: {"message": "File with given name already on server", "status": 400, "type": "ValueError"},
-    8: {"message": "Command not in list with hal commands", "status": 404, "type": "ValueError"}
-}
-
-halCommands = [
-    {"command": "loadrt", "description": ""},
-    {"command": "loadusr", "description": ""},
-    {"command": "waitusr", "description": ""},
-    {"command": "unload", "description": ""},
-    {"command": "lock", "description": ""},
-    {"command": "unlock", "description": ""},
-    {"command": "net", "description": ""},
-    {"command": "linkps", "description": ""},
-    {"command": "linksp", "description": ""},
-    {"command": "unlinkp", "description": ""},
-    {"command": "newsig", "description": ""},
-    {"command": "delsig", "description": ""},
-    {"command": "setp", "description": ""},
-    {"command": "getp", "description": ""},
-    {"command": "ptype", "description": ""},
-    {"command": "sets", "description": ""},
-    {"command": "gets", "description": ""},
-    {"command": "stype", "description": ""},
-    {"command": "addf", "description": ""},
-    {"command": "delf", "description": ""},
-    {"command": "show", "description": ""},
-    {"command": "list", "description": ""},
-    {"command": "save", "description": ""},
-    {"command": "status", "description": ""},
-    {"command": "start", "description": ""},
-    {"command": "stop", "description": ""},
-    {"command": "source", "description": ""},
-    {"command": "echo", "description": ""},
-    {"command": "unecho", "description": ""},
-    {"command": "quit", "description": ""},
-    {"command": "exit", "description": ""},
-    {"command": "help command", "description": ""}
-]
+    from mockup.machinekitController import MachinekitController
+    controller = MachinekitController()
+    print(controller.set_axes)
+else:
+    import linuxcnc
+    from classes.machinekitController import MachinekitController
+    try:
+        controller = MachinekitController()
+        machinekit_running = True
+    except (linuxcnc.error) as e:
+        print("Machinekit is down please start machinekit and then restart the server")
+    except Exception as e:
+        logger.critical(e)
+        sys.exit({"errors": [e]})
 
 
 def auth(f):
@@ -97,11 +63,11 @@ def auth(f):
     def wrapper(*args, **kwargs):
         headers = request.headers
         if not "API_KEY" in headers:
-            return {"errors": errorMessages[1]}, 403
+            return {"errors": errorMessages['1']}, 403
 
         auth = headers.get("API_KEY")
         if auth != api_token:
-            return {"errors": errorMessages[1]}, 403
+            return {"errors": errorMessages['1']}, 403
 
         return f(*args, **kwargs)
 
@@ -114,9 +80,10 @@ def errors(f):
         try:
             if request.method == "POST":
                 if not request.json:
-                    raise Exception(errorMessages[4])
+                    raise Exception(errorMessages['4'])
+
             if machinekit_running == False:
-                return {"errors": errorMessages[0]}, 500
+                return {"errors": errorMessages['0']}, 500
             return f(*args, **kwargs)
 
         except ValueError as e:
@@ -135,6 +102,12 @@ def errors(f):
 
     errorWrapper.__name__ = f.__name__
     return errorWrapper
+
+
+@app.route("/", methods=['GET'])
+def home():
+    """Landing page."""
+    return render_template('/index.html')
 
 
 @app.route("/machinekit/status", methods=["GET"])
@@ -156,7 +129,7 @@ def get_machinekit_position():
 @errors
 def set_machinekit_status():
     if not "command" in request.json:
-        raise ValueError(errorMessages[2])
+        raise ValueError(errorMessages['2'])
 
     data = request.json
     command = escape(data['command'])
@@ -174,10 +147,9 @@ def return_files():
                     """)
         result = cur.fetchall()
         return {"result": result, "file_queue": file_queue}
-
     except Exception as e:
-        logger.log(e)
-        return {"errors": {"message": e.message, "status": 500}}, 500
+        logger.critical(e)
+        return {"errors": errorMessages['9']}, 500
 
 
 @app.route("/machinekit/axes/home", methods=["POST"])
@@ -185,7 +157,7 @@ def return_files():
 @errors
 def set_home_axes():
     if not "command" in request.json:
-        raise ValueError(errorMessages[2])
+        raise ValueError(errorMessages['2'])
 
     data = request.json
     command = escape(data['command'])
@@ -197,7 +169,7 @@ def set_home_axes():
 @errors
 def control_program():
     if not "command" in request.json:
-        raise ValueError(errorMessages[2])
+        raise ValueError(errorMessages['2'])
 
     data = request.json
     command = escape(data['command'])
@@ -209,10 +181,10 @@ def control_program():
 @errors
 def send_command():
     if not "mdi_command" in request.json:
-        raise ValueError(errorMessages[2])
+        raise ValueError(errorMessages['2'])
 
     if len(request.json["mdi_command"]) == 0:
-        raise ValueError(errorMessages[3])
+        raise ValueError(errorMessages['3'])
 
     data = request.json
     command = escape(data["mdi_command"])
@@ -224,7 +196,7 @@ def send_command():
 @errors
 def manual():
     if not "axes" in request.json or not "speed" in request.json or not "increment" in request.json:
-        raise ValueError(errorMessages[2])
+        raise ValueError(errorMessages['2'])
 
     data = request.json
     axes = escape(data['axes'])
@@ -238,7 +210,7 @@ def manual():
 @errors
 def set_machinekit_spindle():
     if not "command" in request.json:
-        raise ValueError(errorMessages[2])
+        raise ValueError(['2'])
     data = request.json
     command = escape(data["command"])
     return controller.spindle(command)
@@ -249,7 +221,7 @@ def set_machinekit_spindle():
 @errors
 def set_machinekit_feedrate():
     if not "feedrate" in request.json:
-        raise ValueError(errorMessages[2])
+        raise ValueError(errorMessages['2'])
 
     data = request.json
     command = float(escape(data["feedrate"]))
@@ -261,7 +233,7 @@ def set_machinekit_feedrate():
 @errors
 def maxvel():
     if not "velocity" in request.json:
-        raise ValueError(errorMessages[2])
+        raise ValueError(errorMessages['2'])
 
     data = request.json
     command = escape(data["velocity"])
@@ -276,15 +248,15 @@ def update_file_queue():
     global UPLOAD_FOLDER
 
     if not "new_queue" in request.json:
-        raise ValueError(errorMessages[2])
+        raise ValueError(errorMessages['2'])
     if not type(file_queue) == list:
-        raise ValueError(errorMessages[5])
+        raise ValueError(errorMessages['5'])
 
     data = request.json
     new_queue = escape(data["new_queue"])
     for item in new_queue:
         if not os.path.isfile(UPLOAD_FOLDER + "/" + item):
-            raise NameError(errorMessages[6])
+            raise NameError(errorMessages['6'])
     file_queue = new_queue
     return {"success": "Queue updated"}
 
@@ -305,7 +277,7 @@ def tool_changer():
 @errors
 def halcmd():
     if not "halcmd" in request.json:
-        raise ValueError(errorMessages[2])
+        raise ValueError(errorMessages['2'])
     command = request.json["halcmd"]
     i_command = command.split(' ', 1)[0]
 
@@ -315,7 +287,7 @@ def halcmd():
             isInList = True
             break
     if not isInList:
-        raise ValueError(errorMessages[8])
+        raise ValueError(errorMessages['8'])
 
     os.system('halcmd ' + command + " > output.txt")
     f = open("output.txt", "r")
@@ -327,7 +299,7 @@ def halcmd():
 @errors
 def open_file():
     if not "name" in request.json:
-        raise ValueError(errorMessages[2])
+        raise ValueError(errorMessages['2'])
 
     global UPLOAD_FOLDER
     data = request.json
@@ -339,33 +311,38 @@ def open_file():
 @auth
 @errors
 def upload():
-    global UPLOAD_FOLDER
+    try:
+        global UPLOAD_FOLDER
 
-    if "file" not in request.files:
-        raise ValueError(errorMessages[5])
+        if "file" not in request.files:
+            raise ValueError(errorMessages['5'])
 
-    file = request.files["file"]
-    filename = secure_filename(file.filename)
-    cur = mysql.connection.cursor()
-    cur.execute(
-        """
-        SELECT * FROM files
-        WHERE file_name = '%s' """ % filename)
+        file = request.files["file"]
+        filename = secure_filename(file.filename)
+        cur = mysql.connection.cursor()
+        cur.execute(
+            """
+            SELECT * FROM files
+            WHERE file_name = '%s' """ % filename)
 
-    result = cur.fetchall()
+        result = cur.fetchall()
 
-    if len(result) > 0:
-        raise ValueError(errorMessages[7])
+        if len(result) > 0:
+            raise ValueError(errorMessages['7'])
 
-    cur.execute("""
-        INSERT INTO files (file_name, file_location)
-        VALUES (%s, %s)
-        """, (filename, UPLOAD_FOLDER)
-    )
-    mysql.connection.commit()
-    file.save(os.path.join(UPLOAD_FOLDER + "/" + filename))
-    return {"success": "file added"}
+        cur.execute("""
+            INSERT INTO files (file_name, file_location)
+            VALUES (%s, %s)
+            """, (filename, UPLOAD_FOLDER)
+        )
+        mysql.connection.commit()
+        file.save(os.path.join(UPLOAD_FOLDER + "/" + filename))
+        return {"success": "file added"}
+    except Exception as e:
+        logger.critical(e)
+        return {"errors": errorMessages['9']}, 500
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host='192.168.1.116', port=5000)
+    app.run(config['server']['host'], debug=True,
+            port=config['server']['port'])

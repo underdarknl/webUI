@@ -1,6 +1,8 @@
 @url = 192.168.1.116:5000
 @token = test_secret
 
+GET http://{{url}}
+###
 GET http://{{url}}/machinekit/status
 API_KEY: {{token}}
 
