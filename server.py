@@ -2,13 +2,12 @@ import os
 import sys
 import json
 import logging
-import linuxcnc
 import time
 from flask_cors import CORS
 from flask_mysqldb import MySQL
 from werkzeug.utils import secure_filename
+from flask import Flask, request, redirect, abort, escape
 from classes.machinekitController import MachinekitController
-from flask import Flask, request, flash, redirect, url_for, send_from_directory, abort
 # halcmd setp hal_manualtoolchange.change_button true
 
 app = Flask(__name__)
@@ -53,8 +52,44 @@ errorMessages = {
     4: {"message": "Request can only be Content-Type: application/json", "status": 400, "type": "ValueError"},
     5: {"message": "New_queue must be of type list/array", "status": 400, "type": "ValueError"},
     6: {"message": "File not found", "status": 404, "type": "NameError"},
-    7: {"message": "File with given name already on server", "status": 400, "type": "ValueError"}
+    7: {"message": "File with given name already on server", "status": 400, "type": "ValueError"},
+    8: {"message": "Command not in list with hal commands", "status": 404, "type": "ValueError"}
 }
+
+halCommands = [
+    {"command": "loadrt", "description": ""},
+    {"command": "loadusr", "description": ""},
+    {"command": "waitusr", "description": ""},
+    {"command": "unload", "description": ""},
+    {"command": "lock", "description": ""},
+    {"command": "unlock", "description": ""},
+    {"command": "net", "description": ""},
+    {"command": "linkps", "description": ""},
+    {"command": "linksp", "description": ""},
+    {"command": "unlinkp", "description": ""},
+    {"command": "newsig", "description": ""},
+    {"command": "delsig", "description": ""},
+    {"command": "setp", "description": ""},
+    {"command": "getp", "description": ""},
+    {"command": "ptype", "description": ""},
+    {"command": "sets", "description": ""},
+    {"command": "gets", "description": ""},
+    {"command": "stype", "description": ""},
+    {"command": "addf", "description": ""},
+    {"command": "delf", "description": ""},
+    {"command": "show", "description": ""},
+    {"command": "list", "description": ""},
+    {"command": "save", "description": ""},
+    {"command": "status", "description": ""},
+    {"command": "start", "description": ""},
+    {"command": "stop", "description": ""},
+    {"command": "source", "description": ""},
+    {"command": "echo", "description": ""},
+    {"command": "unecho", "description": ""},
+    {"command": "quit", "description": ""},
+    {"command": "exit", "description": ""},
+    {"command": "help command", "description": ""}
+]
 
 
 def auth(f):
@@ -124,7 +159,7 @@ def set_machinekit_status():
         raise ValueError(errorMessages[2])
 
     data = request.json
-    command = data['command']
+    command = escape(data['command'])
     return controller.machine_status(command)
 
 
@@ -141,6 +176,7 @@ def return_files():
         return {"result": result, "file_queue": file_queue}
 
     except Exception as e:
+        logger.log(e)
         return {"errors": {"message": e.message, "status": 500}}, 500
 
 
@@ -152,7 +188,7 @@ def set_home_axes():
         raise ValueError(errorMessages[2])
 
     data = request.json
-    command = data['command']
+    command = escape(data['command'])
     return controller.home_all_axes(command)
 
 
@@ -164,7 +200,7 @@ def control_program():
         raise ValueError(errorMessages[2])
 
     data = request.json
-    command = data['command']
+    command = escape(data['command'])
     return controller.run_program(command)
 
 
@@ -179,7 +215,7 @@ def send_command():
         raise ValueError(errorMessages[3])
 
     data = request.json
-    command = data["mdi_command"]
+    command = escape(data["mdi_command"])
     return controller.mdi_command(command)
 
 
@@ -191,9 +227,9 @@ def manual():
         raise ValueError(errorMessages[2])
 
     data = request.json
-    axes = data['axes']
-    speed = data['speed']
-    increment = data['increment']
+    axes = escape(data['axes'])
+    speed = escape(data['speed'])
+    increment = escape(data['increment'])
     return controller.manual_control(axes, speed, increment)
 
 
@@ -204,7 +240,7 @@ def set_machinekit_spindle():
     if not "command" in request.json:
         raise ValueError(errorMessages[2])
     data = request.json
-    command = data["command"]
+    command = escape(data["command"])
     return controller.spindle(command)
 
 
@@ -216,7 +252,7 @@ def set_machinekit_feedrate():
         raise ValueError(errorMessages[2])
 
     data = request.json
-    command = float(data["feedrate"])
+    command = float(escape(data["feedrate"]))
     return controller.feedoverride(command)
 
 
@@ -228,7 +264,7 @@ def maxvel():
         raise ValueError(errorMessages[2])
 
     data = request.json
-    command = data["velocity"]
+    command = escape(data["velocity"])
     return controller.maxvel(float(command))
 
 
@@ -245,7 +281,7 @@ def update_file_queue():
         raise ValueError(errorMessages[5])
 
     data = request.json
-    new_queue = data["new_queue"]
+    new_queue = escape(data["new_queue"])
     for item in new_queue:
         if not os.path.isfile(UPLOAD_FOLDER + "/" + item):
             raise NameError(errorMessages[6])
@@ -271,6 +307,16 @@ def halcmd():
     if not "halcmd" in request.json:
         raise ValueError(errorMessages[2])
     command = request.json["halcmd"]
+    i_command = command.split(' ', 1)[0]
+
+    isInList = False
+    for item in halCommands:
+        if item['command'] == i_command:
+            isInList = True
+            break
+    if not isInList:
+        raise ValueError(errorMessages[8])
+
     os.system('halcmd ' + command + " > output.txt")
     f = open("output.txt", "r")
     return {"success": f.read()}
@@ -285,7 +331,7 @@ def open_file():
 
     global UPLOAD_FOLDER
     data = request.json
-    name = data["name"]
+    name = escape(data["name"])
     return controller.open_file(os.path.join(UPLOAD_FOLDER + "/" + name))
 
 

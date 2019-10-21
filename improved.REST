@@ -109,3 +109,11 @@ Content-Type: application/json
 {
     "name": "smile.nc"
 }
+###
+POST http://{{url}}/machinekit/halcmd
+API_KEY: {{token}}
+Content-Type: application/json
+
+{
+    "halcmd": "help"
+}

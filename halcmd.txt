@@ -1,21 +1,21 @@
 HAL Components:
     ID  Type Flags Inst Name                                      PID   State
-   825  User          0 axisui                                    26589 ready, u1:0 u2:0
+   825  User          0 axisui                                    2812  ready, u1:0 u2:0
    708  RT   cd       3 comp                                      RT    ready, u1:0 u2:0
    544  RT   cd       6 ddt                                       RT    ready, u1:0 u2:0
     66  rHAL   i      0 hal_lib                                   0     ready, u1:0 u2:0
-    78  uHAL   i      0 hal_lib26546                              26546 ready, u1:0 u2:0
-   105  uHAL   i      0 hal_lib26550                              26550 ready, u1:0 u2:0
-   683  uHAL   i      0 hal_lib26574                              26574 ready, u1:0 u2:0
-   752  uHAL   i      0 hal_lib26588                              26588 ready, u1:0 u2:0
-   823  uHAL   i      0 hal_lib26589                              26589 ready, u1:0 u2:0
-   929  uHAL   i      0 hal_lib27904                              27904 ready, u1:0 u2:0
-   685  User          0 hal_manualtoolchange                      26574 ready, u1:0 u2:0
-   931  User          0 halcmd27904                               27904 ready, u1:0 u2:0
-   107  User          0 halui                                     26550 ready, u1:0 u2:0
+    78  uHAL   i      0 hal_lib2769                               2769  ready, u1:0 u2:0
+   105  uHAL   i      0 hal_lib2773                               2773  ready, u1:0 u2:0
+   683  uHAL   i      0 hal_lib2797                               2797  ready, u1:0 u2:0
+   752  uHAL   i      0 hal_lib2811                               2811  ready, u1:0 u2:0
+   823  uHAL   i      0 hal_lib2812                               2812  ready, u1:0 u2:0
+  1013  uHAL   i      0 hal_lib3366                               3366  ready, u1:0 u2:0
+   685  User          0 hal_manualtoolchange                      2797  ready, u1:0 u2:0
+  1015  User          0 halcmd3366                                3366  ready, u1:0 u2:0
+   107  User          0 halui                                     2773  ready, u1:0 u2:0
    588  RT   cd       2 hypot                                     RT    ready, u1:0 u2:0
-   754  User          0 inihal                                    26588 ready, u1:0 u2:0
-    80  User          0 iocontrol                                 26546 ready, u1:0 u2:0
+   754  User          0 inihal                                    2811  ready, u1:0 u2:0
+    80  User          0 iocontrol                                 2769  ready, u1:0 u2:0
    637  RT   cd       1 limit2                                    RT    ready, u1:0 u2:0
    650  RT   cd       1 lowpass                                   RT    ready, u1:0 u2:0
    309  RT            0 motmod                                    RT    ready, u1:0 u2:0
@@ -60,12 +60,12 @@ Component Pins:
    309        bit   OUT         FALSE  axis.0.faulted                          		--l-
    309        float OUT            33  axis.0.free-pos-cmd                     	0.000010	--l-
    309        bit   OUT         FALSE  axis.0.free-tp-enable                   		--l-
-   309        float OUT           1.2  axis.0.free-vel-lim                     	0.000010	--l-
+   309        float OUT             0  axis.0.free-vel-lim                     	0.000010	--l-
    309        float IN              0  axis.0.home                             	0.000010	--l-
    309        float IN              0  axis.0.home-offset                      	0.000010	--l-
    309        s32   OUT             0  axis.0.home-state                       		--l-
-   309        bit   IN           TRUE  axis.0.home-sw-in                       		--l-	      <== XZhomesw
-   309        bit   OUT          TRUE  axis.0.homed                            		--l-
+   309        bit   IN          FALSE  axis.0.home-sw-in                       		--l-	      <== XZhomesw
+   309        bit   OUT         FALSE  axis.0.homed                            		--l-
    309        bit   OUT         FALSE  axis.0.homing                           		--l-
    309        bit   OUT          TRUE  axis.0.in-position                      		--l-
    309        bit   I/O         FALSE  axis.0.index-enable                     		--l-
@@ -77,9 +77,9 @@ Component Pins:
    309        float OUT            33  axis.0.joint-pos-fb                     	0.000010	--l-
    309        float OUT             0  axis.0.joint-vel-cmd                    	0.000010	--l-
    309        bit   OUT         FALSE  axis.0.kb-jog-active                    		--l-
-   309        float OUT       1.01346  axis.0.motor-offset                     	0.000010	--l-
-   309        float OUT      34.01346  axis.0.motor-pos-cmd                    	0.000010	--l-	      ==> Xpos
-   309        float IN       34.01346  axis.0.motor-pos-fb                     	0.000010	--l-	      <== Xpos
+   309        float OUT           -33  axis.0.motor-offset                     	0.000010	--l-
+   309        float OUT             0  axis.0.motor-pos-cmd                    	0.000010	--l-	      ==> Xpos
+   309        float IN              0  axis.0.motor-pos-fb                     	0.000010	--l-	      <== Xpos
    309        bit   OUT         FALSE  axis.0.neg-hard-limit                   		--l-
    309        bit   IN          FALSE  axis.0.neg-lim-sw-in                    		--l-
    309        bit   OUT         FALSE  axis.0.pos-hard-limit                   		--l-
@@ -99,12 +99,12 @@ Component Pins:
    309        bit   OUT         FALSE  axis.1.faulted                          		--l-
    309        float OUT            10  axis.1.free-pos-cmd                     	0.000010	--l-
    309        bit   OUT         FALSE  axis.1.free-tp-enable                   		--l-
-   309        float OUT             1  axis.1.free-vel-lim                     	0.000010	--l-
+   309        float OUT             0  axis.1.free-vel-lim                     	0.000010	--l-
    309        float IN              0  axis.1.home                             	0.000010	--l-
    309        float IN              0  axis.1.home-offset                      	0.000010	--l-
    309        s32   OUT             0  axis.1.home-state                       		--l-
-   309        bit   IN           TRUE  axis.1.home-sw-in                       		--l-	      <== Yhomesw
-   309        bit   OUT          TRUE  axis.1.homed                            		--l-
+   309        bit   IN          FALSE  axis.1.home-sw-in                       		--l-	      <== Yhomesw
+   309        bit   OUT         FALSE  axis.1.homed                            		--l-
    309        bit   OUT         FALSE  axis.1.homing                           		--l-
    309        bit   OUT          TRUE  axis.1.in-position                      		--l-
    309        bit   I/O         FALSE  axis.1.index-enable                     		--l-
@@ -116,9 +116,9 @@ Component Pins:
    309        float OUT            10  axis.1.joint-pos-fb                     	0.000010	--l-
    309        float OUT             0  axis.1.joint-vel-cmd                    	0.000010	--l-
    309        bit   OUT         FALSE  axis.1.kb-jog-active                    		--l-
-   309        float OUT      0.526796  axis.1.motor-offset                     	0.000010	--l-
-   309        float OUT       10.5268  axis.1.motor-pos-cmd                    	0.000010	--l-	      ==> Ypos
-   309        float IN        10.5268  axis.1.motor-pos-fb                     	0.000010	--l-	      <== Ypos
+   309        float OUT           -10  axis.1.motor-offset                     	0.000010	--l-
+   309        float OUT             0  axis.1.motor-pos-cmd                    	0.000010	--l-	      ==> Ypos
+   309        float IN              0  axis.1.motor-pos-fb                     	0.000010	--l-	      <== Ypos
    309        bit   OUT         FALSE  axis.1.neg-hard-limit                   		--l-
    309        bit   IN          FALSE  axis.1.neg-lim-sw-in                    		--l-
    309        bit   OUT         FALSE  axis.1.pos-hard-limit                   		--l-
@@ -138,12 +138,12 @@ Component Pins:
    309        bit   OUT         FALSE  axis.2.faulted                          		--l-
    309        float OUT  2.919374e-08  axis.2.free-pos-cmd                     	0.000010	--l-
    309        bit   OUT         FALSE  axis.2.free-tp-enable                   		--l-
-   309        float OUT         30.48  axis.2.free-vel-lim                     	0.000010	--l-
+   309        float OUT             0  axis.2.free-vel-lim                     	0.000010	--l-
    309        float IN              0  axis.2.home                             	0.000010	--l-
    309        float IN           25.4  axis.2.home-offset                      	0.000010	--l-
    309        s32   OUT             0  axis.2.home-state                       		--l-
-   309        bit   IN           TRUE  axis.2.home-sw-in                       		--l-	      <== XZhomesw
-   309        bit   OUT          TRUE  axis.2.homed                            		--l-
+   309        bit   IN          FALSE  axis.2.home-sw-in                       		--l-	      <== XZhomesw
+   309        bit   OUT         FALSE  axis.2.homed                            		--l-
    309        bit   OUT         FALSE  axis.2.homing                           		--l-
    309        bit   OUT          TRUE  axis.2.in-position                      		--l-
    309        bit   I/O         FALSE  axis.2.index-enable                     		--l-
@@ -155,9 +155,9 @@ Component Pins:
    309        float OUT  2.919374e-08  axis.2.joint-pos-fb                     	0.000010	--l-
    309        float OUT             0  axis.2.joint-vel-cmd                    	0.000010	--l-
    309        bit   OUT         FALSE  axis.2.kb-jog-active                    		--l-
-   309        float OUT      -23.3807  axis.2.motor-offset                     	0.000010	--l-
-   309        float OUT      -23.3807  axis.2.motor-pos-cmd                    	0.000010	--l-	      ==> Zpos
-   309        float IN       -23.3807  axis.2.motor-pos-fb                     	0.000010	--l-	      <== Zpos
+   309        float OUT  -2.919374e-08  axis.2.motor-offset                     	0.000010	--l-
+   309        float OUT  -3.308722e-24  axis.2.motor-pos-cmd                    	0.000010	--l-	      ==> Zpos
+   309        float IN   -3.308722e-24  axis.2.motor-pos-fb                     	0.000010	--l-	      <== Zpos
    309        bit   OUT         FALSE  axis.2.neg-hard-limit                   		--l-
    309        bit   IN          FALSE  axis.2.neg-lim-sw-in                    		--l-
    309        bit   OUT         FALSE  axis.2.pos-hard-limit                   		--l-
@@ -178,56 +178,56 @@ Component Pins:
    825        bit   IN          FALSE  axisui.notifications-clear-info         		--l-
    825        bit   IN          FALSE  axisui.run-disable                      		--l-
    708    710 bit   OUT         FALSE  comp_x.equal                            		--l-
-   708    710 s32   OUT          3125  comp_x.funct.time                       		----
-   708    710 s32   I/O         11125  comp_x.funct.tmax                       		----
+   708    710 s32   OUT          2209  comp_x.funct.time                       		----
+   708    710 s32   I/O         10875  comp_x.funct.tmax                       		----
    708    710 bit   OUT         FALSE  comp_x.funct.tmax-inc                   		----
    708    710 float IN           0.02  comp_x.hyst                             	0.000010	--l-
    708    710 float IN              1  comp_x.in0                              	0.000010	--l-	      <== Xhomeswpos
-   708    710 float IN       34.01346  comp_x.in1                              	0.000010	--l-	      <== Xpos
-   708    710 bit   OUT          TRUE  comp_x.out                              		--l-	      ==> Xhomesw
+   708    710 float IN              0  comp_x.in1                              	0.000010	--l-	      <== Xpos
+   708    710 bit   OUT         FALSE  comp_x.out                              		--l-	      ==> Xhomesw
    708    720 bit   OUT         FALSE  comp_y.equal                            		--l-
-   708    720 s32   OUT          1791  comp_y.funct.time                       		----
-   708    720 s32   I/O          9750  comp_y.funct.tmax                       		----
+   708    720 s32   OUT          1958  comp_y.funct.time                       		----
+   708    720 s32   I/O          9792  comp_y.funct.tmax                       		----
    708    720 bit   OUT         FALSE  comp_y.funct.tmax-inc                   		----
    708    720 float IN           0.02  comp_y.hyst                             	0.000010	--l-
    708    720 float IN            0.5  comp_y.in0                              	0.000010	--l-	      <== Yhomeswpos
-   708    720 float IN        10.5268  comp_y.in1                              	0.000010	--l-	      <== Ypos
-   708    720 bit   OUT          TRUE  comp_y.out                              		--l-	      ==> Yhomesw
+   708    720 float IN              0  comp_y.in1                              	0.000010	--l-	      <== Ypos
+   708    720 bit   OUT         FALSE  comp_y.out                              		--l-	      ==> Yhomesw
    708    730 bit   OUT         FALSE  comp_z.equal                            		--l-
-   708    730 s32   OUT          1834  comp_z.funct.time                       		----
+   708    730 s32   OUT          2333  comp_z.funct.time                       		----
    708    730 s32   I/O         10000  comp_z.funct.tmax                       		----
    708    730 bit   OUT         FALSE  comp_z.funct.tmax-inc                   		----
    708    730 float IN           0.02  comp_z.hyst                             	0.000010	--l-
    708    730 float IN              2  comp_z.in0                              	0.000010	--l-	      <== Zhomeswpos
-   708    730 float IN       -23.3807  comp_z.in1                              	0.000010	--l-	      <== Zpos
+   708    730 float IN   -3.308722e-24  comp_z.in1                              	0.000010	--l-	      <== Zpos
    708    730 bit   OUT         FALSE  comp_z.out                              		--l-	      ==> Zhomesw
    544    546 s32   OUT          2917  ddt_x.funct.time                        		----
-   544    546 s32   I/O         11542  ddt_x.funct.tmax                        		----
+   544    546 s32   I/O         11209  ddt_x.funct.tmax                        		----
    544    546 bit   OUT         FALSE  ddt_x.funct.tmax-inc                    		----
-   544    546 float IN       34.01346  ddt_x.in                                	0.000010	--l-	      <== Xpos
+   544    546 float IN              0  ddt_x.in                                	0.000010	--l-	      <== Xpos
    544    546 float OUT             0  ddt_x.out                               	0.000010	--l-	      ==> Xvel
-   544    553 s32   OUT          1708  ddt_xv.funct.time                       		----
-   544    553 s32   I/O          9375  ddt_xv.funct.tmax                       		----
+   544    553 s32   OUT          2125  ddt_xv.funct.time                       		----
+   544    553 s32   I/O          8959  ddt_xv.funct.tmax                       		----
    544    553 bit   OUT         FALSE  ddt_xv.funct.tmax-inc                   		----
    544    553 float IN              0  ddt_xv.in                               	0.000010	--l-	      <== Xvel
    544    553 float OUT             0  ddt_xv.out                              	0.000010	--l-	      ==> Xacc
-   544    560 s32   OUT          1667  ddt_y.funct.time                        		----
-   544    560 s32   I/O          9333  ddt_y.funct.tmax                        		----
+   544    560 s32   OUT          1666  ddt_y.funct.time                        		----
+   544    560 s32   I/O          9000  ddt_y.funct.tmax                        		----
    544    560 bit   OUT         FALSE  ddt_y.funct.tmax-inc                    		----
-   544    560 float IN        10.5268  ddt_y.in                                	0.000010	--l-	      <== Ypos
+   544    560 float IN              0  ddt_y.in                                	0.000010	--l-	      <== Ypos
    544    560 float OUT             0  ddt_y.out                               	0.000010	--l-	      ==> Yvel
    544    567 s32   OUT          1875  ddt_yv.funct.time                       		----
-   544    567 s32   I/O         10125  ddt_yv.funct.tmax                       		----
+   544    567 s32   I/O          9584  ddt_yv.funct.tmax                       		----
    544    567 bit   OUT         FALSE  ddt_yv.funct.tmax-inc                   		----
    544    567 float IN              0  ddt_yv.in                               	0.000010	--l-	      <== Yvel
    544    567 float OUT             0  ddt_yv.out                              	0.000010	--l-	      ==> Yacc
-   544    574 s32   OUT          1708  ddt_z.funct.time                        		----
-   544    574 s32   I/O          9167  ddt_z.funct.tmax                        		----
+   544    574 s32   OUT          1875  ddt_z.funct.time                        		----
+   544    574 s32   I/O          9834  ddt_z.funct.tmax                        		----
    544    574 bit   OUT         FALSE  ddt_z.funct.tmax-inc                    		----
-   544    574 float IN       -23.3807  ddt_z.in                                	0.000010	--l-	      <== Zpos
+   544    574 float IN   -3.308722e-24  ddt_z.in                                	0.000010	--l-	      <== Zpos
    544    574 float OUT             0  ddt_z.out                               	0.000010	--l-	      ==> Zvel
    544    581 s32   OUT          1917  ddt_zv.funct.time                       		----
-   544    581 s32   I/O          9833  ddt_zv.funct.tmax                       		----
+   544    581 s32   I/O          8917  ddt_zv.funct.tmax                       		----
    544    581 bit   OUT         FALSE  ddt_zv.funct.tmax-inc                   		----
    544    581 float IN              0  ddt_zv.in                               	0.000010	--l-	      <== Zvel
    544    581 float OUT             0  ddt_zv.out                              	0.000010	--l-	      ==> Zacc
@@ -272,7 +272,7 @@ Component Pins:
    107        bit   IN          FALSE  halui.feed-override.direct-value        		--l-
    107        bit   IN          FALSE  halui.feed-override.increase            		--l-
    107        float IN            0.1  halui.feed-override.scale               	0.000010	--l-
-   107        float OUT          1.15  halui.feed-override.value               	0.000010	--l-
+   107        float OUT             1  halui.feed-override.value               	0.000010	--l-
    107        bit   OUT         FALSE  halui.flood.is-on                       		--l-
    107        bit   IN          FALSE  halui.flood.off                         		--l-
    107        bit   IN          FALSE  halui.flood.on                          		--l-
@@ -304,7 +304,7 @@ Component Pins:
    107        bit   IN          FALSE  halui.jog.selected.plus                 		--l-
    107        bit   OUT         FALSE  halui.joint.0.has-fault                 		--l-
    107        bit   IN          FALSE  halui.joint.0.home                      		--l-
-   107        bit   OUT          TRUE  halui.joint.0.is-homed                  		--l-
+   107        bit   OUT         FALSE  halui.joint.0.is-homed                  		--l-
    107        bit   OUT         FALSE  halui.joint.0.is-selected               		--l-
    107        bit   OUT         FALSE  halui.joint.0.on-hard-max-limit         		--l-
    107        bit   OUT         FALSE  halui.joint.0.on-hard-min-limit         		--l-
@@ -314,7 +314,7 @@ Component Pins:
    107        bit   IN          FALSE  halui.joint.0.unhome                    		--l-
    107        bit   OUT         FALSE  halui.joint.1.has-fault                 		--l-
    107        bit   IN          FALSE  halui.joint.1.home                      		--l-
-   107        bit   OUT          TRUE  halui.joint.1.is-homed                  		--l-
+   107        bit   OUT         FALSE  halui.joint.1.is-homed                  		--l-
    107        bit   OUT         FALSE  halui.joint.1.is-selected               		--l-
    107        bit   OUT         FALSE  halui.joint.1.on-hard-max-limit         		--l-
    107        bit   OUT         FALSE  halui.joint.1.on-hard-min-limit         		--l-
@@ -324,7 +324,7 @@ Component Pins:
    107        bit   IN          FALSE  halui.joint.1.unhome                    		--l-
    107        bit   OUT         FALSE  halui.joint.2.has-fault                 		--l-
    107        bit   IN          FALSE  halui.joint.2.home                      		--l-
-   107        bit   OUT          TRUE  halui.joint.2.is-homed                  		--l-
+   107        bit   OUT         FALSE  halui.joint.2.is-homed                  		--l-
    107        bit   OUT         FALSE  halui.joint.2.is-selected               		--l-
    107        bit   OUT         FALSE  halui.joint.2.on-hard-max-limit         		--l-
    107        bit   OUT         FALSE  halui.joint.2.on-hard-min-limit         		--l-
@@ -335,7 +335,7 @@ Component Pins:
    107        u32   OUT    0x00000000  halui.joint.selected                    		--l-
    107        bit   OUT         FALSE  halui.joint.selected.has-fault          		--l-
    107        bit   IN          FALSE  halui.joint.selected.home               		--l-
-   107        bit   OUT          TRUE  halui.joint.selected.is_homed           		--l-
+   107        bit   OUT         FALSE  halui.joint.selected.is_homed           		--l-
    107        bit   OUT         FALSE  halui.joint.selected.on-hard-max-limit  		--l-
    107        bit   OUT         FALSE  halui.joint.selected.on-hard-min-limit  		--l-
    107        bit   OUT         FALSE  halui.joint.selected.on-soft-limit      		--l-
@@ -360,8 +360,8 @@ Component Pins:
    107        bit   IN          FALSE  halui.mode.auto                         		--l-
    107        bit   OUT         FALSE  halui.mode.is-auto                      		--l-
    107        bit   OUT          TRUE  halui.mode.is-joint                     		--l-
-   107        bit   OUT         FALSE  halui.mode.is-manual                    		--l-
-   107        bit   OUT          TRUE  halui.mode.is-mdi                       		--l-
+   107        bit   OUT          TRUE  halui.mode.is-manual                    		--l-
+   107        bit   OUT         FALSE  halui.mode.is-mdi                       		--l-
    107        bit   OUT         FALSE  halui.mode.is-teleop                    		--l-
    107        bit   IN          FALSE  halui.mode.joint                        		--l-
    107        bit   IN          FALSE  halui.mode.manual                       		--l-
@@ -503,8 +503,8 @@ Component Pins:
     80        bit   IN          FALSE  iocontrol.0.update                      		--l-
     80        bit   OUT          TRUE  iocontrol.0.user-enable-out             		--l-	      ==> estop-loop
     80        bit   OUT         FALSE  iocontrol.0.user-request-enable         		--l-
-   637    639 s32   OUT          3166  limit_speed.funct.time                  		----
-   637    639 s32   I/O         12166  limit_speed.funct.tmax                  		----
+   637    639 s32   OUT          2583  limit_speed.funct.time                  		----
+   637    639 s32   I/O         11542  limit_speed.funct.tmax                  		----
    637    639 bit   OUT         FALSE  limit_speed.funct.tmax-inc              		----
    637    639 float IN              0  limit_speed.in                          	0.000010	--l-	      <== spindle-speed-cmd
    637    639 bit   IN          FALSE  limit_speed.load                        		--l-
@@ -512,11 +512,11 @@ Component Pins:
    637    639 float I/O          5000  limit_speed.maxv                        	0.000010	--l-
    637    639 float I/O        -1e+20  limit_speed.min                         	0.000010	--l-
    637    639 float OUT             0  limit_speed.out                         	0.000010	--l-	      ==> spindle-speed-limited
-   309        s32   OUT          6417  motion-command-handler.time             		----
-   309        s32   I/O         24833  motion-command-handler.tmax             		----
+   309        s32   OUT          4000  motion-command-handler.time             		----
+   309        s32   I/O         24958  motion-command-handler.tmax             		----
    309        bit   OUT         FALSE  motion-command-handler.tmax-inc         		----
-   309        s32   OUT         42458  motion-controller.time                  		----
-   309        s32   I/O         90375  motion-controller.tmax                  		----
+   309        s32   OUT         32459  motion-controller.time                  		----
+   309        s32   I/O         74792  motion-controller.tmax                  		----
    309        bit   OUT         FALSE  motion-controller.tmax-inc              		----
    309        float IN              1  motion.adaptive-feed                    	0.000010	--l-
    309        float IN              0  motion.analog-in-00                     	0.000010	--l-
@@ -532,7 +532,7 @@ Component Pins:
    309        float I/O             0  motion.analog-out-io-02                 	0.000010	--l-
    309        float I/O             0  motion.analog-out-io-03                 	0.000010	--l-
    309        bit   OUT         FALSE  motion.coord-error                      		--l-
-   309        bit   OUT          TRUE  motion.coord-mode                       		--l-
+   309        bit   OUT         FALSE  motion.coord-mode                       		--l-
    309        s32   OUT             0  motion.current-motion                   		--l-
    309        float OUT             0  motion.current-vel                      	0.000010	--l-
    309        bit   IN          FALSE  motion.digital-in-00                    		--l-
@@ -584,9 +584,9 @@ Component Pins:
    309        s32   IN              0  motion.spindle-orient-fault             		--l-
    309        s32   OUT             0  motion.spindle-orient-mode              		--l-
    309        bit   OUT         FALSE  motion.spindle-reverse                  		--l-
-   309        float IN      -15.26087  motion.spindle-revs                     	0.000010	--l-	      <== spindle-pos
+   309        float IN              0  motion.spindle-revs                     	0.000010	--l-	      <== spindle-pos
    309        float OUT             0  motion.spindle-speed-cmd-rps            	0.000010	--l-
-   309        float IN   -3.45846e-323  motion.spindle-speed-in                 	0.000010	--l-	      <== spindle-rpm-filtered
+   309        float IN              0  motion.spindle-speed-in                 	0.000010	--l-	      <== spindle-rpm-filtered
    309        float OUT             0  motion.spindle-speed-out                	0.000010	--l-	      ==> spindle-speed-cmd
    309        float OUT             0  motion.spindle-speed-out-abs            	0.000010	--l-
    309        float OUT             0  motion.spindle-speed-out-rps            	0.000010	--l-
@@ -602,45 +602,45 @@ Component Pins:
    309        float OUT             0  motion.tooloffset.y                     	0.000010	--l-
    309        float OUT             0  motion.tooloffset.z                     	0.000010	--l-
    661    663 float I/O            10  near_speed.difference                   	0.000010	--l-
-   661    663 s32   OUT          2208  near_speed.funct.time                   		----
-   661    663 s32   I/O         11750  near_speed.funct.tmax                   		----
+   661    663 s32   OUT          2625  near_speed.funct.time                   		----
+   661    663 s32   I/O         11292  near_speed.funct.tmax                   		----
    661    663 bit   OUT         FALSE  near_speed.funct.tmax-inc               		----
    661    663 float IN              0  near_speed.in1                          	0.000010	--l-	      <== spindle-speed-cmd
-   661    663 float IN   -3.45846e-323  near_speed.in2                          	0.000010	--l-	      <== spindle-rpm-filtered
+   661    663 float IN              0  near_speed.in2                          	0.000010	--l-	      <== spindle-rpm-filtered
    661    663 bit   OUT          TRUE  near_speed.out                          		--l-	      ==> spindle-at-speed
    661    663 float I/O           1.1  near_speed.scale                        	0.000010	--l-
-   698    700 s32   OUT          2042  or2_0.funct.time                        		----
-   698    700 s32   I/O         10500  or2_0.funct.tmax                        		----
+   698    700 s32   OUT          3000  or2_0.funct.time                        		----
+   698    700 s32   I/O         11750  or2_0.funct.tmax                        		----
    698    700 bit   OUT         FALSE  or2_0.funct.tmax-inc                    		----
-   698    700 bit   IN           TRUE  or2_0.in0                               		--l-	      <== Xhomesw
+   698    700 bit   IN          FALSE  or2_0.in0                               		--l-	      <== Xhomesw
    698    700 bit   IN          FALSE  or2_0.in1                               		--l-	      <== Zhomesw
-   698    700 bit   OUT          TRUE  or2_0.out                               		--l-	      ==> XZhomesw
-    66        s32   OUT       1002833  servo-thread.curr-period                		----
-    66        s32   OUT         80459  servo-thread.time                       		----
-    66        s32   I/O        173875  servo-thread.tmax                       		----
-   626    628 s32   OUT          2667  sim_spindle.funct.time                  		----
-   626    628 s32   I/O         11708  sim_spindle.funct.tmax                  		----
+   698    700 bit   OUT         FALSE  or2_0.out                               		--l-	      ==> XZhomesw
+    66        s32   OUT        993083  servo-thread.curr-period                		----
+    66        s32   OUT         70458  servo-thread.time                       		----
+    66        s32   I/O        173791  servo-thread.tmax                       		----
+   626    628 s32   OUT          2500  sim_spindle.funct.time                  		----
+   626    628 s32   I/O         10375  sim_spindle.funct.tmax                  		----
    626    628 bit   OUT         FALSE  sim_spindle.funct.tmax-inc              		----
    626    628 bit   I/O         FALSE  sim_spindle.index-enable                		--l-	      <=> spindle-index-enable
-   626    628 float OUT     -15.26087  sim_spindle.position-fb                 	0.000010	--l-	      ==> spindle-pos
+   626    628 float OUT             0  sim_spindle.position-fb                 	0.000010	--l-	      ==> spindle-pos
    626    628 float I/O    0.01666667  sim_spindle.scale                       	0.000010	--l-
    626    628 float IN              0  sim_spindle.velocity-cmd                	0.000010	--l-	      <== spindle-speed-limited
-   650    652 s32   OUT          2291  spindle_mass.funct.time                 		----
-   650    652 s32   I/O         10875  spindle_mass.funct.tmax                 		----
+   650    652 s32   OUT          2417  spindle_mass.funct.time                 		----
+   650    652 s32   I/O         11083  spindle_mass.funct.tmax                 		----
    650    652 bit   OUT         FALSE  spindle_mass.funct.tmax-inc             		----
    650    652 float IN           0.07  spindle_mass.gain                       	0.000010	--l-
    650    652 float IN              0  spindle_mass.in                         	0.000010	--l-	      <== spindle-speed-limited
    650    652 bit   IN          FALSE  spindle_mass.load                       		--l-
-   650    652 float OUT  -3.45846e-323  spindle_mass.out                        	0.000010	--l-	      ==> spindle-rpm-filtered
-   588    590 s32   OUT          3333  vel_xy.funct.time                       		----
-   588    590 s32   I/O         28959  vel_xy.funct.tmax                       		----
+   650    652 float OUT             0  spindle_mass.out                        	0.000010	--l-	      ==> spindle-rpm-filtered
+   588    590 s32   OUT          2958  vel_xy.funct.time                       		----
+   588    590 s32   I/O         28625  vel_xy.funct.tmax                       		----
    588    590 bit   OUT         FALSE  vel_xy.funct.tmax-inc                   		----
    588    590 float IN              0  vel_xy.in0                              	0.000010	--l-	      <== Xvel
    588    590 float IN              0  vel_xy.in1                              	0.000010	--l-	      <== Yvel
    588    590 float IN              0  vel_xy.in2                              	0.000010	--l-
    588    590 float OUT             0  vel_xy.out                              	0.000010	--l-	      ==> XYvel
-   588    599 s32   OUT          2417  vel_xyz.funct.time                      		----
-   588    599 s32   I/O          9625  vel_xyz.funct.tmax                      		----
+   588    599 s32   OUT          2000  vel_xyz.funct.time                      		----
+   588    599 s32   I/O         10250  vel_xyz.funct.tmax                      		----
    588    599 bit   OUT         FALSE  vel_xyz.funct.tmax-inc                  		----
    588    599 float IN              0  vel_xyz.in0                             	0.000010	--l-	      <== Zvel
    588    599 float IN              0  vel_xyz.in1                             	0.000010	--l-	      <== XYvel
@@ -654,18 +654,18 @@ float             0  --    XYZvel
 float             0  --    XYvel                
                                  <== vel_xy.out
                                  ==> vel_xyz.in1
-bit            TRUE  --    XZhomesw             
+bit           FALSE  --    XZhomesw             
                                  ==> axis.0.home-sw-in
                                  ==> axis.2.home-sw-in
                                  <== or2_0.out
 float             0  --    Xacc                 
                                  <== ddt_xv.out
-bit            TRUE  --    Xhomesw              
+bit           FALSE  --    Xhomesw              
                                  <== comp_x.out
                                  ==> or2_0.in0
 float             1  --    Xhomeswpos           
                                  ==> comp_x.in0
-float      34.01346  --    Xpos                 
+float             0  --    Xpos                 
                                  <== axis.0.motor-pos-cmd
                                  ==> axis.0.motor-pos-fb
                                  ==> comp_x.in1
@@ -676,12 +676,12 @@ float             0  --    Xvel
                                  ==> vel_xy.in0
 float             0  --    Yacc                 
                                  <== ddt_yv.out
-bit            TRUE  --    Yhomesw              
+bit           FALSE  --    Yhomesw              
                                  ==> axis.1.home-sw-in
                                  <== comp_y.out
 float           0.5  --    Yhomeswpos           
                                  ==> comp_y.in0
-float       10.5268  --    Ypos                 
+float             0  --    Ypos                 
                                  <== axis.1.motor-pos-cmd
                                  ==> axis.1.motor-pos-fb
                                  ==> comp_y.in1
@@ -697,7 +697,7 @@ bit           FALSE  --    Zhomesw
                                  ==> or2_0.in1
 float             2  --    Zhomeswpos           
                                  ==> comp_z.in0
-float      -23.3807  --    Zpos                 
+float  -3.308722e-24  --    Zpos                 
                                  <== axis.2.motor-pos-cmd
                                  ==> axis.2.motor-pos-fb
                                  ==> comp_z.in1
@@ -715,10 +715,10 @@ bit            TRUE  --    spindle-at-speed
 bit           FALSE  --    spindle-index-enable 
                                  <=> motion.spindle-index-enable
                                  <=> sim_spindle.index-enable
-float     -15.26087  --    spindle-pos          
+float             0  --    spindle-pos          
                                  ==> motion.spindle-revs
                                  <== sim_spindle.position-fb
-float  -3.45846e-323  --    spindle-rpm-filtered 
+float             0  --    spindle-rpm-filtered 
                                  ==> motion.spindle-speed-in
                                  ==> near_speed.in2
                                  <== spindle_mass.out
@@ -748,13 +748,13 @@ Parameters:
  Comp    Inst Type   Dir         Value  Name
    309         bit   RO          FALSE  motion.debug-bit-0
    309         bit   RO          FALSE  motion.debug-bit-1
-   309         float RO           1.15  motion.debug-float-0
-   309         float RO      -15.26087  motion.debug-float-1
-   309         float RO   -3.45846e-323  motion.debug-float-2
+   309         float RO              1  motion.debug-float-0
+   309         float RO              0  motion.debug-float-1
+   309         float RO              0  motion.debug-float-2
    309         float RO              1  motion.debug-float-3
    309         s32   RO              0  motion.debug-s32-0
    309         s32   RO              0  motion.debug-s32-1
-   309         u32   RO     0x000F45FF  motion.servo.last-period
+   309         u32   RO     0x000F3BE7  motion.servo.last-period
    309         u32   RW     0x00000000  motion.servo.overruns
    309         float RO              0  tc.0.acc
    309         float RO              0  tc.0.pos
@@ -774,30 +774,30 @@ Parameters:
 
 Exported Functions:
   Comp   Inst CodeAddr      Arg           FP   Users Type    Name
-   708    710 0000b53aab35  0000b6620bc8  YES      1 xthread comp_x.funct
-   708    720 0000b53aab35  0000b6620ba8  YES      1 xthread comp_y.funct
-   708    730 0000b53aab35  0000b6620b88  YES      1 xthread comp_z.funct
-   544    546 0000b5529a75  0000b6620eb0  YES      1 xthread ddt_x.funct
-   544    553 0000b5529a75  0000b6620e98  YES      1 xthread ddt_xv.funct
-   544    560 0000b5529a75  0000b6620e80  YES      1 xthread ddt_y.funct
-   544    567 0000b5529a75  0000b6620e68  YES      1 xthread ddt_yv.funct
-   544    574 0000b5529a75  0000b6620e50  YES      1 xthread ddt_z.funct
-   544    581 0000b5529a75  0000b6620e38  YES      1 xthread ddt_zv.funct
-    66        0000b663d585  000000000000  NO       0 user    delinst
-   637    639 0000b53eebdd  0000b6620cc0  YES      1 xthread limit_speed.funct
-   309        0000b55403ad  000000000000  YES      1 xthread motion-command-handler
-   309        0000b5543899  000000000000  YES      1 xthread motion-controller
-   661    663 0000b53ccb79  0000b6620c80  YES      1 xthread near_speed.funct
-    66        0000b663d43d  000000000000  NO       0 user    newinst
-   698    700 0000b53bba91  0000b6620be8  NO       1 xthread or2_0.funct
-   626    628 0000b5507b7d  0000b6620cf0  YES      1 xthread sim_spindle.funct
-   650    652 0000b53ddb01  0000b6620ca0  YES      1 xthread spindle_mass.funct
-   588    590 0000b5518af9  0000b6620e18  YES      1 xthread vel_xy.funct
-   588    599 0000b5518af9  0000b6620e00  YES      1 xthread vel_xyz.funct
+   708    710 0000b53deb35  0000b6653bc8  YES      1 xthread comp_x.funct
+   708    720 0000b53deb35  0000b6653ba8  YES      1 xthread comp_y.funct
+   708    730 0000b53deb35  0000b6653b88  YES      1 xthread comp_z.funct
+   544    546 0000b555ca75  0000b6653eb0  YES      1 xthread ddt_x.funct
+   544    553 0000b555ca75  0000b6653e98  YES      1 xthread ddt_xv.funct
+   544    560 0000b555ca75  0000b6653e80  YES      1 xthread ddt_y.funct
+   544    567 0000b555ca75  0000b6653e68  YES      1 xthread ddt_yv.funct
+   544    574 0000b555ca75  0000b6653e50  YES      1 xthread ddt_z.funct
+   544    581 0000b555ca75  0000b6653e38  YES      1 xthread ddt_zv.funct
+    66        0000b6670585  000000000000  NO       0 user    delinst
+   637    639 0000b5528bdd  0000b6653cc0  YES      1 xthread limit_speed.funct
+   309        0000b55733ad  000000000000  YES      1 xthread motion-command-handler
+   309        0000b5576899  000000000000  YES      1 xthread motion-controller
+   661    663 0000b5506b79  0000b6653c80  YES      1 xthread near_speed.funct
+    66        0000b667043d  000000000000  NO       0 user    newinst
+   698    700 0000b53efa91  0000b6653be8  NO       1 xthread or2_0.funct
+   626    628 0000b553ab7d  0000b6653cf0  YES      1 xthread sim_spindle.funct
+   650    652 0000b5517b01  0000b6653ca0  YES      1 xthread spindle_mass.funct
+   588    590 0000b554baf9  0000b6653e18  YES      1 xthread vel_xy.funct
+   588    599 0000b554baf9  0000b6653e00  YES      1 xthread vel_xyz.funct
 
 Realtime Threads (flavor: xenomai, currently running) :
      Period  FP CPU   Name                                          Time  Max-Time util  max  jitter-95%     flags
-    1000000  YES -1   servo-thread                                 97917,   173875   9%  17%  +/- 1.06% 
+    1000000  YES -1   servo-thread                                 78209,   173791   7%  17%  +/- 1.10% 
                     1 motion-command-handler
                     2 motion-controller
                     3 ddt_x.funct
