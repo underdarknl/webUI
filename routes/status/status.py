@@ -10,3 +10,10 @@ status = Blueprint('status', __name__)
 @errors
 def get_machinekit_status():
     return settings.controller.get_all_vitals()
+
+
+@status.route("/machinekit/position", endpoint='get_machinekit_position', methods=["GET"])
+@auth
+@errors
+def get_machinekit_position():
+    return settings.controller.axes_position()

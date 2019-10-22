@@ -8,7 +8,6 @@ from flask_cors import CORS
 from flask_mysqldb import MySQL
 from werkzeug.utils import secure_filename
 from flask import Flask, request, redirect, abort, escape, render_template, jsonify
-from routes.test import account_api
 from routes.status.status import status
 from decorators.auth import auth
 from decorators.errors import errors
@@ -27,7 +26,6 @@ app.config['MYSQL_PASSWORD'] = config['mysql']['password']
 app.config['MYSQL_DB'] = config['mysql']['database']
 mysql = MySQL(app)
 
-app.register_blueprint(account_api)
 app.register_blueprint(status)
 
 logger = logging.getLogger(__name__)
@@ -71,18 +69,11 @@ def home():
     return render_template('/index.html')
 
 
-# @app.route("/machinekit/status", endpoint='get_machine_status', methods=["GET"])
+# @app.route("/machinekit/position", endpoint='get_machinekit_position', methods=["GET"])
 # @auth
 # @errors
-# def get_machinekit_status():
-#     return settings.controller.get_all_vitals()
-
-
-@app.route("/machinekit/position", endpoint='get_machinekit_position', methods=["GET"])
-@auth
-@errors
-def get_machinekit_position():
-    return controller.axes_position()
+# def get_machinekit_position():
+#     return controller.axes_position()
 
 
 @app.route("/machinekit/status", endpoint='set_machinekit_status', methods=["POST"])
