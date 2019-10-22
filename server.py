@@ -1,17 +1,20 @@
 import os
 import sys
 import json
-import time
 import logging
+import settings
 import configparser
 from flask_cors import CORS
 from flask_mysqldb import MySQL
+from decorators.auth import auth
 from werkzeug.utils import secure_filename
 from flask import Flask, request, redirect, abort, escape, render_template, jsonify
-from routes.status.status import status
-from decorators.auth import auth
 from decorators.errors import errors
-import settings
+
+from routes.axes.axes import axes
+from routes.status.status import status
+from routes.program.program import program
+from routes.spindle.spindle import spindle
 settings.init()
 
 # halcmd setp hal_manualtoolchange.change_button true
@@ -26,7 +29,10 @@ app.config['MYSQL_PASSWORD'] = config['mysql']['password']
 app.config['MYSQL_DB'] = config['mysql']['database']
 mysql = MySQL(app)
 
+app.register_blueprint(axes)
 app.register_blueprint(status)
+app.register_blueprint(spindle)
+app.register_blueprint(program)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
@@ -69,25 +75,6 @@ def home():
     return render_template('/index.html')
 
 
-# @app.route("/machinekit/position", endpoint='get_machinekit_position', methods=["GET"])
-# @auth
-# @errors
-# def get_machinekit_position():
-#     return controller.axes_position()
-
-
-@app.route("/machinekit/status", endpoint='set_machinekit_status', methods=["POST"])
-@auth
-@errors
-def set_machinekit_status():
-    if not "command" in request.json:
-        raise ValueError(errorMessages['2'])
-
-    data = request.json
-    command = escape(data['command'])
-    return controller.machine_status(command)
-
-
 @app.route("/server/files", endpoint='return_files', methods=["GET"])
 @auth
 @errors
@@ -102,143 +89,6 @@ def return_files():
     except Exception as e:
         logger.critical(e)
         return {"errors": errorMessages['9']}, 500
-
-
-@app.route("/machinekit/axes/home", endpoint='set_home_axes', methods=["POST"])
-@auth
-@errors
-def set_home_axes():
-    if not "command" in request.json:
-        raise ValueError(errorMessages['2'])
-
-    data = request.json
-    command = escape(data['command'])
-    return controller.home_all_axes(command)
-
-
-@app.route("/machinekit/program", endpoint='control_program', methods=["POST"])
-@auth
-@errors
-def control_program():
-    if not "command" in request.json:
-        raise ValueError(errorMessages['2'])
-
-    data = request.json
-    command = escape(data['command'])
-    return controller.run_program(command)
-
-
-@app.route("/machinekit/position/mdi", endpoint='send_command', methods=["POST"])
-@auth
-@errors
-def send_command():
-    if not "mdi_command" in request.json:
-        raise ValueError(errorMessages['2'])
-
-    if len(request.json["mdi_command"]) == 0:
-        raise ValueError(errorMessages['3'])
-
-    data = request.json
-    command = escape(data["mdi_command"])
-    return controller.mdi_command(command)
-
-
-@app.route("/machinekit/position/manual", endpoint='manual', methods=["POST"])
-@auth
-@errors
-def manual():
-    if not "axes" in request.json or not "speed" in request.json or not "increment" in request.json:
-        raise ValueError(errorMessages['2'])
-
-    data = request.json
-    axes = escape(data['axes'])
-    speed = escape(data['speed'])
-    increment = escape(data['increment'])
-    return controller.manual_control(axes, speed, increment)
-
-
-@app.route("/machinekit/spindle/speed", endpoint='set_machinekit_spindle_speed', methods=["POST"])
-@auth
-@errors
-def set_machinekit_spindle_speed():
-    if not "spindle_speed" in request.json:
-        raise ValueError(errorMessages['2'])
-
-    data = request.json
-    command = escape(data["spindle_speed"])
-    return controller.spindle_speed(command)
-
-
-@app.route("/machinekit/spindle/brake", endpoint='set_machinekit_spindle_brake', methods=["POST"])
-@auth
-@errors
-def set_machinekit_spindle_brake():
-    if not "spindle_brake" in request.json:
-        raise ValueError(errorMessages['2'])
-
-    data = request.json
-    command = escape(data["spindle_brake"])
-    return controller.spindle_brake(command)
-
-
-@app.route("/machinekit/spindle/direction", endpoint='get_machinekit_spindle_direction', methods=["POST"])
-@auth
-@errors
-def set_machinekit_spindle_direction():
-    if not "spindle_direction" in request.json:
-        raise ValueError(errorMessages['2'])
-
-    data = request.json
-    command = escape(data['spindle_direction'])
-    return controller.spindle_direction(command)
-
-
-@app.route("/machinekit/spindle/enabled", endpoint='set_spindle_enabled', methods=["POST"])
-@auth
-@errors
-def set_spindle_enabled():
-    if not "spindle_enabled" in request.json:
-        raise ValueError(errorMessages['2'])
-
-    data = request.json
-    command = escape(data["spindle_enabled"])
-    return controller.spindle_enabled(command)
-
-
-@app.route("/machinekit/spindle/override", endpoint='set_machinekit_spindle_override', methods=["POST"])
-@auth
-@errors
-def set_machinekit_spindle_override():
-    if not "spindle_override" in request.json:
-        raise ValueError(errorMessages['2'])
-
-    data = request.json
-    command = escape(data["spindle_override"])
-    return controller.spindleoverride(float(command))
-
-
-@app.route("/machinekit/feed", endpoint='set_machinekit_feedrate', methods=["POST"])
-@auth
-@errors
-def set_machinekit_feedrate():
-    if not "feedrate" in request.json:
-        raise ValueError(errorMessages['2'])
-
-    data = request.json
-    command = float(escape(data["feedrate"]))
-    return controller.feedoverride(command)
-
-
-@app.route("/machinekit/maxvel", endpoint='maxvel', methods=["POST"])
-@auth
-@errors
-def maxvel():
-    if not "velocity" in request.json:
-        raise ValueError(errorMessages['2'])
-
-    data = request.json
-    command = escape(data["velocity"])
-    return controller.maxvel(float(command))
 
 
 @app.route("/server/update_file_queue", endpoint='update_file_queue', methods=["POST"])
@@ -262,20 +112,6 @@ def update_file_queue():
 
     file_queue = new_queue
     return {"success": "Queue updated"}
-
-
-@app.route("/machinekit/toolchange", endpoint='tool_changer', methods=["GET"])
-@auth
-@errors
-def tool_changer():
-    if config['server']['mockup'] == 'true':
-        return {"success": "Command executed"}
-    else:
-        # Dirty fix to bypass toolchange prompt
-        os.system("halcmd setp hal_manualtoolchange.change_button true")
-        time.sleep(3)
-        os.system("halcmd setp hal_manualtoolchange.change_button false")
-        return {"success": "Command executed"}
 
 
 @app.route("/machinekit/halcmd", endpoint='halcmd', methods=["POST"])

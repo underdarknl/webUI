@@ -4,126 +4,8 @@
 GET http://{{url}}
 
 ###
-GET http://{{url}}/machinekit/status
-API_KEY: {{token}}
-
-###
-POST http://{{url}}/machinekit/status
-API_KEY: {{token}}
-Content-Type: application/json
-
-{
-    "command": "power"
-}
-
-###
-GET http://{{url}}/machinekit/position
-API_KEY: {{token}}
-
-###
 GET http://{{url}}/server/files
 API_KEY: {{token}}
-
-###
-POST http://{{url}}/machinekit/axes/home
-API_KEY: {{token}}
-Content-Type: application/json
-
-{
-    "command": "home"
-}
-
-###
-POST http://{{url}}/machinekit/program
-API_KEY: {{token}}
-Content-Type: application/json
-
-{
-    "command": "stop"
-}
-###
-POST http://{{url}}/machinekit/position/mdi
-API_KEY: {{token}}
-Content-Type: application/json
-
-{
-    "mdi_command": "Y102 X53 Z301"
-}
-
-###
-POST http://{{url}}/machinekit/position/manual
-API_KEY: {{token}}
-Content-Type: application/json
-
-{
-    "axes": 0,
-    "speed": 1.2,
-    "increment": 5
-}
-
-###
-POST http://{{url}}/machinekit/spindle/brake
-API_KEY: {{token}}
-Content-Type: application/json
-
-{
-    "spindle_brake": "brake_engaged"
-}
-
-###
-POST http://{{url}}/machinekit/spindle/direction
-API_KEY: {{token}}
-Content-Type: application/json
-
-{
-    "spindle_direction": "spindle_forward"
-}
-
-
-###
-POST http://{{url}}/machinekit/spindle/enabled
-API_KEY: {{token}}
-Content-Type: application/json
-
-{
-    "spindle_enabled": "spindle_off"
-}
-
-###
-POST http://{{url}}/machinekit/spindle/speed
-API_KEY: {{token}}
-Content-Type: application/json
-
-{
-    "spindle_speed": "spindle_decrease"
-}
-
-###
-POST http://{{url}}/machinekit/spindle/override
-API_KEY: {{token}}
-Content-Type: application/json
-
-{
-    "spindle_override": 1
-}
-
-###
-POST http://{{url}}/machinekit/feed
-API_KEY: {{token}}
-Content-Type: application/json
-
-{
-    "feedrate": 1.15
-}
-
-###
-POST http://{{url}}/machinekit/maxvel
-API_KEY: {{token}}
-Content-Type: application/json
-
-{
-    "velocity": 300
-}
 
 ###
 POST http://{{url}}/server/update_file_queue
@@ -133,11 +15,6 @@ Content-Type: application/json
 {
     "new_queue": ["smile.nc"]
 }
-
-###
-GET http://{{url}}/machinekit/toolchange
-API_KEY: {{token}}
-Content-Type: application/json
 
 ###
 POST http://{{url}}/machinekit/open_file
