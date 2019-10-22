@@ -394,60 +394,93 @@ class MachinekitController():
             self.s.poll()
         return self.s.task_mode == linuxcnc.MODE_AUTO and self.s.interp_state is not linuxcnc.INTERP_IDLE
 
-    def spindle(self, command):
-        if "spindle_brake" not in command and "spindle_direction" not in command and "spindle_override" not in command:
-            raise ValueError(
-                {"message": "Unknown command " + next(iter(command)), "status": 400, "type": "ValueError"})
-
-        if "spindle_brake" in command:
-            self.spindle_brake(command["spindle_brake"])
-            return {"success": "Command executed"}
-        elif "spindle_direction" in command:
-            self.spindle_direction(command["spindle_direction"])
-            return {"success": "Command executed"}
-        elif "spindle_override" in command:
-            self.s.spindleoverride = command["spindle_override"]
-            return {"success": "Command executed"}
-
+ 
     @checkerrors
     def spindle_brake(self, command):
         """ Engage the spindle brake"""
-        self.s.poll()
-        print(command)
-        if self.s.spindle_brake == command:
-            return {"errors": "Command could not be executed because the spindle_brake is already in this state"}
+        if "brake_engage" not in command and "brake_release" not in command:
+            raise ValueError({"message": "unknown command", "status": 400, "type": "ValueError"})
 
+        self.s.poll()
+        brake_command = None
+        if "brake_engage" in command:
+            brake_command = linuxcnc.BRAKE_ENGAGE
+        else:
+            brake_command = linuxcnc.BRAKE_RELEASE
+
+        if self.s.spindle_brake == brake_command:
+            return {"errors": "Command could not be executed because the spindle_brake is already in this state"}
+        
         if self.s.interp_state is not linuxcnc.INTERP_IDLE:
             return {"errors": "Cannot execute command when machine interp state isn't idle"}
 
-        self.s.spindle_brake = command
+        self.s.spindle_brake = brake_command
         return self.errors()
 
     @checkerrors
     def spindle_direction(self, command):
-        """ Command takes parameters: spindle_forward, spindle_reverse, spindle_off, spindle_increase, spindle_decrease, spindle_constant"""
-        if self.s.interp_state is not linuxcnc.INTERP_IDLE:
-            return {"errors": "Cannot execute command when machine interp state isn't idle"}
+        """ Command takes parameters spindle_forward and spindle_reverse"""
+        if "spindle_forward" not in command and "spindle_reverse" not in command:
+            raise ValueError({"message": "unknown command",
+                              "status": 400, "type": "ValueError"})
 
-        if self.s.spindle_direction == command:
+        self.s.poll() 
+        commands = {
+            "spindle_forward": linuxcnc.SPINDLE_FORWARD, 
+            "spindle_reverse": linuxcnc.SPINDLE_REVERSE, 
+            }
+
+        if self.s.spindle_direction == commands[command]:
             return {"errors": "Command could not be executed because the spindle_direction is already in this state"}
-
-        self.s.spindle_direction = command
+        self.s.spindle_direction = commands[command]
         return self.errors()
 
     @checkerrors
-    def maxvel(self, maxvel):
-        """ Takes int of maxvel min"""
-        self.s.max_velocity = (maxvel / 60)
-        return self.errors()
+    def spindle_speed(self, command):
+        """ Command takes parameters spindle_increase and spindle_decrease """
+        if "spindle_increase" not in command and "spindle_decrease" not in command:
+            raise ValueError({"message": "Unknown command", "status": 400, "type": "ValueError"})
+    
+        self.s.poll()
 
+        if not self.s.spindle_enabled:
+            return {"errors": "Command could not be executed because the spindle is not enabled"}
+
+        commands = {
+            "spindle_increase": linuxcnc.SPINDLE_INCREASE,
+            "spindle_decrease": linuxcnc.SPINDLE_DECREASE
+        }
+        self.s.spindle_speed += commands[command]
+        return self.errors()
+        
+
+    @checkerrors
+    def spindle_enabled(self, command):
+        if "spindle_off" not in command and "spindle_on" not in command:
+            raise ValueError({"message": "Unknown command",
+                              "status": 400, "type": "ValueError"})
+
+        commands = {
+            "spindle_off": linuxcnc.SPINDLE_OFF,
+            "spindle_on": linuxcnc.SPINDLE_CONSTANT
+        }
+
+        self.s.spindle_enabled = commands[command]
+        return self.errors()
+    
     @checkerrors
     def spindleoverride(self, value):
         """ Spindle override floatyboii betweem 0 and 1"""
         if value > 1 or value < 0:
             return {"errors": "Value outside of limits"}
 
-        self.s.spindlerate = value
+        self.s.spindle_speed = value
+        return self.errors()
+
+    @checkerrors
+    def maxvel(self, maxvel):
+        """ Takes int of maxvel min"""
+        self.s.max_velocity = (maxvel / 60)
         return self.errors()
 
     @checkerrors

@@ -15,9 +15,8 @@ from routes.axes.axes import axes
 from routes.status.status import status
 from routes.program.program import program
 from routes.spindle.spindle import spindle
-settings.init()
 
-# halcmd setp hal_manualtoolchange.change_button true
+settings.init()
 
 config = configparser.ConfigParser()
 config.read("default.ini")
@@ -42,10 +41,6 @@ formatter = logging.Formatter(
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
-file_queue = []
-machinekit_running = False
-UPLOAD_FOLDER = '/home/machinekit/devel/webUI/files'
-
 with open("./jsonFiles/errorMessages.json") as f:
     errorMessages = json.load(f)
 with open("./jsonFiles/halCommands.json") as f:
@@ -54,7 +49,7 @@ with open("./jsonFiles/halCommands.json") as f:
 if config['server']['mockup'] == 'true':
     print("Mockup")
     from mockup.machinekitController import MachinekitController
-    controller = MachinekitController()
+    settings.controller = MachinekitController()
     settings.machinekit_running = True
 else:
     import linuxcnc
@@ -85,7 +80,7 @@ def return_files():
                     SELECT * FROM files
                     """)
         result = cur.fetchall()
-        return {"result": result, "file_queue": file_queue}
+        return {"result": result, "file_queue": settings.file_queue}
     except Exception as e:
         logger.critical(e)
         return {"errors": errorMessages['9']}, 500
@@ -95,22 +90,19 @@ def return_files():
 @auth
 @errors
 def update_file_queue():
-    global file_queue
-    global UPLOAD_FOLDER
-
     if not "new_queue" in request.json:
         raise ValueError(errorMessages['2'])
-    if not type(file_queue) == list:
+    if not type(settings.file_queue) == list:
         raise ValueError(errorMessages['5'])
 
     data = request.json
     new_queue = data["new_queue"]
 
     for item in new_queue:
-        if not os.path.isfile(UPLOAD_FOLDER + "/" + escape(item)):
+        if not os.path.isfile(settings.UPLOAD_FOLDER + "/" + escape(item)):
             raise NameError(errorMessages['6'])
 
-    file_queue = new_queue
+    settings.file_queue = new_queue
     return {"success": "Queue updated"}
 
 
@@ -143,10 +135,9 @@ def open_file():
     if not "name" in request.json:
         raise ValueError(errorMessages['2'])
 
-    global UPLOAD_FOLDER
     data = request.json
     name = escape(data["name"])
-    return controller.open_file(os.path.join(UPLOAD_FOLDER + "/" + name))
+    return controller.open_file(os.path.join(settings.UPLOAD_FOLDER + "/" + name))
 
 
 @app.route("/server/file_upload", endpoint='upload', methods=["POST"])
@@ -154,8 +145,6 @@ def open_file():
 @errors
 def upload():
     try:
-        global UPLOAD_FOLDER
-
         if "file" not in request.files:
             raise ValueError(errorMessages['5'])
 
@@ -175,10 +164,10 @@ def upload():
         cur.execute("""
             INSERT INTO files (file_name, file_location)
             VALUES (%s, %s)
-            """, (filename, UPLOAD_FOLDER)
+            """, (filename, settings.UPLOAD_FOLDER)
         )
         mysql.connection.commit()
-        file.save(os.path.join(UPLOAD_FOLDER + "/" + filename))
+        file.save(os.path.join(settings.UPLOAD_FOLDER + "/" + filename))
         return {"success": "file added"}
     except Exception as e:
         logger.critical(e)
