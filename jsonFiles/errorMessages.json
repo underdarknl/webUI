@@ -5,7 +5,7 @@
         "type": "InternalServerError"
     },
     "1": {
-        "message": "Not authorized",
+        "message": "Authorization error. Invalid API key.",
         "status": 403,
         "type": "AuthorizationError"
     },

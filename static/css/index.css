@@ -1,0 +1,36 @@
+/*Error messages*/
+#no-critical-errors,
+#machinekit-down,
+#no-file-selected,
+#invalid-api-key {
+    display: none
+}
+
+/*Status-tbody*/
+#estop-disabled,
+#estop-enabled,
+#power-on,
+#power-off,
+#interp-idle,
+#interp-paused,
+#interp-waiting,
+#interp-reading,
+#task-mdi,
+#task-auto,
+#task-manual,
+#spindle-speed {
+    display: none;
+}
+
+#section-vitals {
+    display: none;
+}
+
+body.not-authorized #invalid-api-key {
+    display: block;
+}
+
+body.no-critical-errors #no-critical-errors,
+body.controller.no-critical-errors #section-vitals {
+    display: block;
+}
