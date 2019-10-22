@@ -2,6 +2,7 @@
 @token = test_secret
 
 GET http://{{url}}
+
 ###
 GET http://{{url}}/machinekit/status
 API_KEY: {{token}}
@@ -29,7 +30,7 @@ API_KEY: {{token}}
 Content-Type: application/json
 
 {
-    "command": "home"
+    "command": "unhome"
 }
 
 ###
@@ -38,7 +39,7 @@ API_KEY: {{token}}
 Content-Type: application/json
 
 {
-    "command": "pause"
+    "command": "stop"
 }
 ###
 POST http://{{url}}/machinekit/position/mdi
@@ -46,7 +47,7 @@ API_KEY: {{token}}
 Content-Type: application/json
 
 {
-    "mdi_command": "Y0"
+    "mdi_command": "Y102 X53 Z301"
 }
 
 ###
@@ -57,7 +58,7 @@ Content-Type: application/json
 {
     "axes": 0,
     "speed": 1.2,
-    "increment": 1
+    "increment": 5
 }
 
 ###
@@ -67,7 +68,7 @@ Content-Type: application/json
 
 {
     "command": {
-        "spindle_direction": "spindle_reverse"
+        "spindle_direction": 1
     }
 }
 

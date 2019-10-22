@@ -252,10 +252,12 @@ def update_file_queue():
         raise ValueError(errorMessages['5'])
 
     data = request.json
-    new_queue = escape(data["new_queue"])
+    new_queue = data["new_queue"]
+
     for item in new_queue:
-        if not os.path.isfile(UPLOAD_FOLDER + "/" + item):
+        if not os.path.isfile(UPLOAD_FOLDER + "/" + escape(item)):
             raise NameError(errorMessages['6'])
+
     file_queue = new_queue
     return {"success": "Queue updated"}
 
@@ -264,11 +266,14 @@ def update_file_queue():
 @auth
 @errors
 def tool_changer():
-    # Dirty fix to bypass toolchange prompt
-    os.system("halcmd setp hal_manualtoolchange.change_button true")
-    time.sleep(3)
-    os.system("halcmd setp hal_manualtoolchange.change_button false")
-    return {"success": "Command executed"}
+    if config['server']['mockup'] == 'true':
+        return {"success": "Command executed"}
+    else:
+        # Dirty fix to bypass toolchange prompt
+        os.system("halcmd setp hal_manualtoolchange.change_button true")
+        time.sleep(3)
+        os.system("halcmd setp hal_manualtoolchange.change_button false")
+        return {"success": "Command executed"}
 
 
 @app.route("/machinekit/halcmd", methods=["POST"])

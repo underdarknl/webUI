@@ -30,6 +30,14 @@ class linuxcnc():
     STATE_DISABLED = True
     STATE_ENABLED = False
 
+    SPINDLE_FORWARD = 1
+    SPINDLE_REVERSE = -1
+    SPINDLE_OFF = 0
+    SPINDLE_INCREASE = 100
+    SPINDLE_DECREASE = -100
+    SPINDLE_CONSTANT = 50
+
+
     class stat():
         def __init__(self):
             print("Hello from stat")
@@ -417,34 +425,20 @@ class MachinekitController():
 
     @checkerrors
     def spindle_direction(self, command):
-        print(command)
         """ Command takes parameters: spindle_forward, spindle_reverse, spindle_off, spindle_increase, spindle_decrease, spindle_constant"""
-        commands = {
-            "spindle_forward": linuxcnc.SPINDLE_FORWARD,
-            "spindle_reverse": linuxcnc.SPINDLE_REVERSE,
-            "spindle_off": linuxcnc.SPINDLE_OFF,
-            "spindle_increase": linuxcnc.SPINDLE_INCREASE,
-            "spindle_decrease": linuxcnc.SPINDLE_DECREASE,
-            "spindle_constant": linuxcnc.SPINDLE_CONSTANT}
-
-        self.s.poll()
         if self.s.interp_state is not linuxcnc.INTERP_IDLE:
             return {"errors": "Cannot execute command when machine interp state isn't idle"}
 
-        if self.s.spindle_direction == commands[command]:
+        if self.s.spindle_direction == command:
             return {"errors": "Command could not be executed because the spindle_direction is already in this state"}
 
-        self.ensure_mode(linuxcnc.MODE_MANUAL)
-        self.c.spindle(commands[command])
-
+        self.s.spindle_direction = command
         return self.errors()
 
     @checkerrors
     def maxvel(self, maxvel):
         """ Takes int of maxvel min"""
-        self.c.maxvel(maxvel / 60.)
-        self.c.wait_complete()
-
+        self.s.max_velocity = (maxvel / 60)
         return self.errors()
 
     @checkerrors
@@ -453,9 +447,7 @@ class MachinekitController():
         if value > 1 or value < 0:
             return {"errors": "Value outside of limits"}
 
-        self.c.spindleoverride(value)
-        self.c.wait_complete()
-
+        self.s.spindlerate = value
         return self.errors()
 
     @checkerrors
@@ -466,9 +458,7 @@ class MachinekitController():
                 {"message": "Value is outside of range. min 0 max 1.2", "status": 400, "type": "ValueError"})
 
         self.s.poll()
-        self.c.feedrate(value)
-        self.c.wait_complete()
-
+        self.s.feedrate = value
         return self.errors()
 
     @checkerrors
@@ -479,12 +469,8 @@ class MachinekitController():
         if self.s.interp_state is not linuxcnc.INTERP_IDLE:
             return {"errors": "Cannot execute command when interp is not idle"}
 
-        self.ensure_mode(linuxcnc.MODE_MDI)
-        self.c.reset_interpreter()
-        self.c.wait_complete()
-        self.c.program_open(path)
-        self.c.wait_complete()
 
+        self.s.file = path
         return self.errors()
 
     @checkerrors
