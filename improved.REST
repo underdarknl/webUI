@@ -67,7 +67,7 @@ API_KEY: {{token}}
 Content-Type: application/json
 
 {
-    "spindle_brake": "brake_release"
+    "spindle_brake": "brake_engaged"
 }
 
 ###
@@ -77,6 +77,25 @@ Content-Type: application/json
 
 {
     "spindle_direction": "spindle_forward"
+}
+
+
+###
+POST http://{{url}}/machinekit/spindle/enabled
+API_KEY: {{token}}
+Content-Type: application/json
+
+{
+    "spindle_enabled": "spindle_off"
+}
+
+###
+POST http://{{url}}/machinekit/spindle/speed
+API_KEY: {{token}}
+Content-Type: application/json
+
+{
+    "spindle_speed": "spindle_decrease"
 }
 
 ###

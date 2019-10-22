@@ -8,6 +8,12 @@ from flask_cors import CORS
 from flask_mysqldb import MySQL
 from werkzeug.utils import secure_filename
 from flask import Flask, request, redirect, abort, escape, render_template, jsonify
+from routes.test import account_api
+from routes.status.status import status
+from decorators.auth import auth
+from decorators.errors import errors
+import settings
+settings.init()
 
 # halcmd setp hal_manualtoolchange.change_button true
 
@@ -19,8 +25,10 @@ app.config['MYSQL_HOST'] = config['mysql']['host']
 app.config['MYSQL_USER'] = config['mysql']['user']
 app.config['MYSQL_PASSWORD'] = config['mysql']['password']
 app.config['MYSQL_DB'] = config['mysql']['database']
-api_token = config['security']['token']
 mysql = MySQL(app)
+
+app.register_blueprint(account_api)
+app.register_blueprint(status)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
@@ -41,66 +49,20 @@ with open("./jsonFiles/halCommands.json") as f:
 
 if config['server']['mockup'] == 'true':
     print("Mockup")
-    machinekit_running = True
     from mockup.machinekitController import MachinekitController
     controller = MachinekitController()
+    settings.machinekit_running = True
 else:
     import linuxcnc
     from classes.machinekitController import MachinekitController
     try:
-        controller = MachinekitController()
-        machinekit_running = True
+        settings.controller = MachinekitController()
+        settings.machinekit_running = True
     except (linuxcnc.error) as e:
         print("Machinekit is down please start machinekit and then restart the server")
     except Exception as e:
         logger.critical(e)
         sys.exit({"errors": [e]})
-
-
-def auth(f):
-    """ Decorator that checks if the machine returned any errors."""
-    def wrapper(*args, **kwargs):
-        headers = request.headers
-        if not "API_KEY" in headers:
-            return {"errors": errorMessages['1']}, 403
-
-        auth = headers.get("API_KEY")
-        if auth != api_token:
-            return {"errors": errorMessages['1']}, 403
-
-        return f(*args, **kwargs)
-
-    wrapper.__name__ = f.__name__
-    return wrapper
-
-
-def errors(f):
-    def errorWrapper(*args, **kwargs):
-        try:
-            if request.method == "POST":
-                if not request.json:
-                    raise Exception(errorMessages['4'])
-
-            if machinekit_running == False:
-                return {"errors": errorMessages['0']}, 500
-            return f(*args, **kwargs)
-
-        except ValueError as e:
-            if type(e.message) == str:
-                return {"errors": {"message": e.message, "status": 400, "type": "ValueError"}}, 400
-            else:
-                return {"errors": e.message}, 400
-        except RuntimeError as e:
-            return {"errors": e.message}, 400
-        except KeyError as e:
-            return {"errors": {"message": "Unknown key expected: " + e.message, "status": 400, "type": "KeyError"}}, 400
-        except NameError as e:
-            return {"errors": e.message}, 404
-        except Exception as e:
-            return {"errors": {"message": e.message}}
-
-    errorWrapper.__name__ = f.__name__
-    return errorWrapper
 
 
 @app.route("/", methods=['GET'])
@@ -109,21 +71,21 @@ def home():
     return render_template('/index.html')
 
 
-@app.route("/machinekit/status", methods=["GET"])
-@auth
-@errors
-def get_machinekit_status():
-    return controller.get_all_vitals()
+# @app.route("/machinekit/status", endpoint='get_machine_status', methods=["GET"])
+# @auth
+# @errors
+# def get_machinekit_status():
+#     return settings.controller.get_all_vitals()
 
 
-@app.route("/machinekit/position", methods=["GET"])
+@app.route("/machinekit/position", endpoint='get_machinekit_position', methods=["GET"])
 @auth
 @errors
 def get_machinekit_position():
     return controller.axes_position()
 
 
-@app.route("/machinekit/status", methods=["POST"])
+@app.route("/machinekit/status", endpoint='set_machinekit_status', methods=["POST"])
 @auth
 @errors
 def set_machinekit_status():
@@ -135,7 +97,7 @@ def set_machinekit_status():
     return controller.machine_status(command)
 
 
-@app.route("/server/files", methods=["GET"])
+@app.route("/server/files", endpoint='return_files', methods=["GET"])
 @auth
 @errors
 def return_files():
@@ -151,7 +113,7 @@ def return_files():
         return {"errors": errorMessages['9']}, 500
 
 
-@app.route("/machinekit/axes/home", methods=["POST"])
+@app.route("/machinekit/axes/home", endpoint='set_home_axes', methods=["POST"])
 @auth
 @errors
 def set_home_axes():
@@ -163,7 +125,7 @@ def set_home_axes():
     return controller.home_all_axes(command)
 
 
-@app.route("/machinekit/program", methods=["POST"])
+@app.route("/machinekit/program", endpoint='control_program', methods=["POST"])
 @auth
 @errors
 def control_program():
@@ -175,7 +137,7 @@ def control_program():
     return controller.run_program(command)
 
 
-@app.route("/machinekit/position/mdi", methods=["POST"])
+@app.route("/machinekit/position/mdi", endpoint='send_command', methods=["POST"])
 @auth
 @errors
 def send_command():
@@ -190,7 +152,7 @@ def send_command():
     return controller.mdi_command(command)
 
 
-@app.route("/machinekit/position/manual", methods=["POST"])
+@app.route("/machinekit/position/manual", endpoint='manual', methods=["POST"])
 @auth
 @errors
 def manual():
@@ -204,7 +166,7 @@ def manual():
     return controller.manual_control(axes, speed, increment)
 
 
-@app.route("/machinekit/spindle/speed", methods=["POST"])
+@app.route("/machinekit/spindle/speed", endpoint='set_machinekit_spindle_speed', methods=["POST"])
 @auth
 @errors
 def set_machinekit_spindle_speed():
@@ -216,7 +178,7 @@ def set_machinekit_spindle_speed():
     return controller.spindle_speed(command)
 
 
-@app.route("/machinekit/spindle/brake", methods=["POST"])
+@app.route("/machinekit/spindle/brake", endpoint='set_machinekit_spindle_brake', methods=["POST"])
 @auth
 @errors
 def set_machinekit_spindle_brake():
@@ -228,7 +190,7 @@ def set_machinekit_spindle_brake():
     return controller.spindle_brake(command)
 
 
-@app.route("/machinekit/spindle/direction", methods=["POST"])
+@app.route("/machinekit/spindle/direction", endpoint='get_machinekit_spindle_direction', methods=["POST"])
 @auth
 @errors
 def set_machinekit_spindle_direction():
@@ -240,7 +202,7 @@ def set_machinekit_spindle_direction():
     return controller.spindle_direction(command)
 
 
-@app.route("/machinekit/spindle/enabled", methods=["POST"])
+@app.route("/machinekit/spindle/enabled", endpoint='set_spindle_enabled', methods=["POST"])
 @auth
 @errors
 def set_spindle_enabled():
@@ -251,7 +213,8 @@ def set_spindle_enabled():
     command = escape(data["spindle_enabled"])
     return controller.spindle_enabled(command)
 
-@app.route("/machinekit/spindle/override", methods=["POST"])
+
+@app.route("/machinekit/spindle/override", endpoint='set_machinekit_spindle_override', methods=["POST"])
 @auth
 @errors
 def set_machinekit_spindle_override():
@@ -263,7 +226,7 @@ def set_machinekit_spindle_override():
     return controller.spindleoverride(float(command))
 
 
-@app.route("/machinekit/feed", methods=["POST"])
+@app.route("/machinekit/feed", endpoint='set_machinekit_feedrate', methods=["POST"])
 @auth
 @errors
 def set_machinekit_feedrate():
@@ -275,7 +238,7 @@ def set_machinekit_feedrate():
     return controller.feedoverride(command)
 
 
-@app.route("/machinekit/maxvel", methods=["POST"])
+@app.route("/machinekit/maxvel", endpoint='maxvel', methods=["POST"])
 @auth
 @errors
 def maxvel():
@@ -287,7 +250,7 @@ def maxvel():
     return controller.maxvel(float(command))
 
 
-@app.route("/server/update_file_queue", methods=["POST"])
+@app.route("/server/update_file_queue", endpoint='update_file_queue', methods=["POST"])
 @auth
 @errors
 def update_file_queue():
@@ -310,7 +273,7 @@ def update_file_queue():
     return {"success": "Queue updated"}
 
 
-@app.route("/machinekit/toolchange", methods=["GET"])
+@app.route("/machinekit/toolchange", endpoint='tool_changer', methods=["GET"])
 @auth
 @errors
 def tool_changer():
@@ -324,7 +287,7 @@ def tool_changer():
         return {"success": "Command executed"}
 
 
-@app.route("/machinekit/halcmd", methods=["POST"])
+@app.route("/machinekit/halcmd", endpoint='halcmd', methods=["POST"])
 @auth
 @errors
 def halcmd():
@@ -346,7 +309,7 @@ def halcmd():
     return {"success": f.read()}
 
 
-@app.route("/machinekit/open_file", methods=["POST"])
+@app.route("/machinekit/open_file", endpoint='open_file', methods=["POST"])
 @auth
 @errors
 def open_file():
@@ -359,7 +322,7 @@ def open_file():
     return controller.open_file(os.path.join(UPLOAD_FOLDER + "/" + name))
 
 
-@app.route("/server/file_upload", methods=["POST"])
+@app.route("/server/file_upload", endpoint='upload', methods=["POST"])
 @auth
 @errors
 def upload():
