@@ -240,6 +240,17 @@ def set_machinekit_spindle_direction():
     return controller.spindle_direction(command)
 
 
+@app.route("/machinekit/spindle/enabled", methods=["POST"])
+@auth
+@errors
+def set_spindle_enabled():
+    if not "spindle_enabled" in request.json:
+        raise ValueError(errorMessages['2'])
+
+    data = request.json
+    command = escape(data["spindle_enabled"])
+    return controller.spindle_enabled(command)
+
 @app.route("/machinekit/spindle/override", methods=["POST"])
 @auth
 @errors

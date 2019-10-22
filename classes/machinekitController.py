@@ -361,6 +361,21 @@ class MachinekitController():
         
 
     @checkerrors
+    def spindle_enabled(self, command):
+        if "spindle_off" not in command and "spindle_on" not in command:
+            raise ValueError({"message": "Unknown command",
+                              "status": 400, "type": "ValueError"})
+
+        commands = {
+            "spindle_off": linuxcnc.SPINDLE_OFF,
+            "spindle_on": linuxcnc.SPINDLE_CONSTANT
+        }
+
+        self.ensure_mode(linuxcnc.MODE_MANUAL)
+        self.c.spindle(commands[command])
+        return self.errors()
+    
+    @checkerrors
     def spindleoverride(self, value):
         """ Spindle override floatyboii betweem 0 and 1"""
         if value > 1 or value < 0:
