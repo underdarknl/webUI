@@ -204,15 +204,52 @@ def manual():
     return controller.manual_control(axes, speed, increment)
 
 
-@app.route("/machinekit/spindle", methods=["POST"])
+@app.route("/machinekit/spindle/speed", methods=["POST"])
 @auth
 @errors
-def set_machinekit_spindle():
-    if not "command" in request.json:
-        raise ValueError(['2'])
+def set_machinekit_spindle_speed():
+    if not "spindle_speed" in request.json:
+        raise ValueError(errorMessages['2'])
+
     data = request.json
-    command = data["command"]
-    return controller.spindle(command)
+    command = escape(data["spindle_speed"])
+    return controller.spindle_speed(command)
+
+
+@app.route("/machinekit/spindle/brake", methods=["POST"])
+@auth
+@errors
+def set_machinekit_spindle_brake():
+    if not "spindle_brake" in request.json:
+        raise ValueError(errorMessages['2'])
+
+    data = request.json
+    command = escape(data["spindle_brake"])
+    return controller.spindle_brake(command)
+
+
+@app.route("/machinekit/spindle/direction", methods=["POST"])
+@auth
+@errors
+def set_machinekit_spindle_direction():
+    if not "spindle_direction" in request.json:
+        raise ValueError(errorMessages['2'])
+
+    data = request.json
+    command = escape(data['spindle_direction'])
+    return controller.spindle_direction(command)
+
+
+@app.route("/machinekit/spindle/override", methods=["POST"])
+@auth
+@errors
+def set_machinekit_spindle_override():
+    if not "spindle_override" in request.json:
+        raise ValueError(errorMessages['2'])
+
+    data = request.json
+    command = escape(data["spindle_override"])
+    return controller.spindleoverride(float(command))
 
 
 @app.route("/machinekit/feed", methods=["POST"])

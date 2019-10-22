@@ -30,7 +30,7 @@ API_KEY: {{token}}
 Content-Type: application/json
 
 {
-    "command": "unhome"
+    "command": "home"
 }
 
 ###
@@ -62,14 +62,30 @@ Content-Type: application/json
 }
 
 ###
-POST http://{{url}}/machinekit/spindle
+POST http://{{url}}/machinekit/spindle/brake
 API_KEY: {{token}}
 Content-Type: application/json
 
 {
-    "command": {
-        "spindle_direction": 1
-    }
+    "spindle_brake": "brake_release"
+}
+
+###
+POST http://{{url}}/machinekit/spindle/direction
+API_KEY: {{token}}
+Content-Type: application/json
+
+{
+    "spindle_direction": "spindle_forward"
+}
+
+###
+POST http://{{url}}/machinekit/spindle/override
+API_KEY: {{token}}
+Content-Type: application/json
+
+{
+    "spindle_override": 1
 }
 
 ###
@@ -96,7 +112,7 @@ API_KEY: {{token}}
 Content-Type: application/json
 
 {
-    "new_queue": ["smileq.nc"]
+    "new_queue": ["smile.nc"]
 }
 
 ###
