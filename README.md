@@ -1,6 +1,10 @@
 # webUI
-Configure the INI fil, if you are not running the code from a BeagleBone make sure to set mockup to true.
+Webinterface to control a CNC machine with 3 axes.
 
-Start the server with python server.py
+#Getting started
+If you are running this on a beaglebone with machinekit installed then you should be able to run this without issues.
+If you want to test the webUI without machinekit installed change the mockup setting to true in the default.ini.
+To start the flask API simply navigate to the install folder and type: python server.py
 
-Mockup has limited functionality. Contains basic error messages but since there is no machine to read the error channel from there wont be detailed error messages.
+#Mockup
+The mockup feature is pretty basic, it contains some errors but it wont simulate real machine behaviour.
