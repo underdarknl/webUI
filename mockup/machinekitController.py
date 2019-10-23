@@ -33,6 +33,7 @@ class linuxcnc():
     SPINDLE_FORWARD = 1
     SPINDLE_REVERSE = -1
     SPINDLE_OFF = 0
+    SPINDLE_ON = 1
     SPINDLE_INCREASE = 100
     SPINDLE_DECREASE = -100
     SPINDLE_CONSTANT = 50
@@ -386,6 +387,7 @@ class MachinekitController():
 
         self.s.poll()
         brake_command = None
+
         if "brake_engage" in command:
             brake_command = linuxcnc.BRAKE_ENGAGE
         else:
@@ -394,11 +396,9 @@ class MachinekitController():
         if self.s.spindle_brake == brake_command:
             return {"errors": "Command could not be executed because the spindle_brake is already in this state"}
         
-        if self.s.interp_state is not linuxcnc.INTERP_IDLE:
-            return {"errors": "Cannot execute command when machine interp state isn't idle"}
-
         if brake_command == linuxcnc.BRAKE_ENGAGE:
             self.s.spindle_direction = 0
+
         self.s.spindle_brake = brake_command
         return self.errors()
 
@@ -417,6 +417,7 @@ class MachinekitController():
 
         if self.s.spindle_direction == commands[command]:
             return {"errors": "Command could not be executed because the spindle_direction is already in this state"}
+        self.s.spindle_enabled = linuxcnc.SPINDLE_ON
         self.s.spindle_brake = linuxcnc.BRAKE_RELEASE
         self.s.spindle_direction = commands[command]
         return self.errors()

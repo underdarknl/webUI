@@ -85,7 +85,8 @@ class Machinekit {
                 spindle_speed,
                 spindle_brake,
                 spindle_direction,
-                spindlerate
+                spindlerate,
+                spindle_enabled
             },
             values: {
                 max_velocity
@@ -187,6 +188,12 @@ class Machinekit {
             document.body.classList.add("spindle-reverse");
         } else {
             document.body.classList.add("spindle-not-moving");
+        }
+
+        if (spindle_enabled) {
+            document.body.classList.add("spindle-enabled");
+        } else {
+            document.body.classList.add("spindle-disabled");
         }
         document.getElementById("feed-override").value = Math.round((feedrate * 100));
         document.getElementById("feed-override-output").innerHTML = Math.round((feedrate * 100));
