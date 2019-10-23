@@ -228,7 +228,7 @@ class Machinekit {
         if (this.page == "controller") {
             this.getMachineVitals();
             if (this.saveState == 1) {
-                if (this.oldState !== JSON.stringify(this.state.position)) {
+                if (this.oldState !== JSON.stringify(this.state.position) && this.oldState != undefined) {
                     this.interval = 200;
                 } else {
                     if (this.interval != 2000) {
