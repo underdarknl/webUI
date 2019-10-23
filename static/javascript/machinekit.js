@@ -67,13 +67,14 @@ class Machinekit {
             "velocity": 0.0
         }
     }
-    displayedErrors = []
+    displayedErrors = [];
     page = "controller";
+    interval = 2000;
+    isIntervalRunning = false;
 
     constructor() {
         this.request = new Request();
-        this.interval = 2000;
-        console.log('description', localStorage.getItem("page"));
+        this.controlInterval();
     }
 
     async getMachineVitals() {
@@ -82,7 +83,12 @@ class Machinekit {
             return this.errorHandler(result.errors);
         }
 
-        document.body.className = this.page + " " + "no-critical-errors";
+        document.body.className = "controller no-critical-errors";
+    }
+
+    fileManager() {
+        console.log("Render the file manager");
+        document.body.className = "filemanager no-critical-errors";
     }
 
     errorHandler(error) {
@@ -122,14 +128,24 @@ class Machinekit {
         console.log(page);
         localStorage.setItem("page", page);
         this.page = page;
+
+        if (page == "controller") {
+            this.getMachineVitals();
+        } else {
+            this.fileManager();
+        }
+    }
+
+    controlInterval() {
+        if (!this.isIntervalRunning) {
+            this.isIntervalRunning = true;
+        }
+        if (this.page == "controller") {
+            console.log("get vitals");
+            this.getMachineVitals();
+        }
+        setTimeout(this.controlInterval.bind(this), this.interval)
     }
 }
 
 let machinekit = new Machinekit();
-
-const controlInterval = () => {
-    machinekit.getMachineVitals();
-    setTimeout(controlInterval, machinekit.interval);
-}
-
-controlInterval();
