@@ -2,7 +2,7 @@ class Request {
     api = "http://192.168.1.116:5000";
     api_key = "test_secret";
 
-    get(url, data = {}) {
+    get(url) {
         return fetch(this.api + url, {
                 method: "GET",
                 headers: {
@@ -11,12 +11,21 @@ class Request {
             })
             .then((response) => response.json())
             .then((data) => data)
-            .catch((err) => {
-                console.log(err);
-            });
+            .catch((err) => console.log(err));
     }
-    post() {
-
+    post(url, data) {
+        return fetch(this.api + url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "API_KEY": this.api_key,
+                },
+                mode: "cors",
+                body: JSON.stringify(data)
+            })
+            .then((response) => response.json())
+            .then((data) => data)
+            .catch((err) => console.log(err));
     }
     update() {
 
@@ -24,54 +33,12 @@ class Request {
 }
 
 class Machinekit {
-    state = {
-        "position": {
-            "x": {
-                "homed": true,
-                "pos": 0
-            },
-            "y": {
-                "homed": true,
-                "pos": 0
-            },
-            "z": {
-                "homed": true,
-                "pos": 0
-            }
-        },
-        "power": {
-            "enabled": true,
-            "estop": false
-        },
-        "program": {
-            "feedrate": 1.0,
-            "file": "/usr/share/axis/images/axis.ngc",
-            "interp_state": "INTERP_IDLE",
-            "rcs_state": "RCS_DONE",
-            "task_mode": "MODE_MANUAL",
-            "tool_change": -1
-        },
-        "spindle": {
-            "spindle_brake": 1,
-            "spindle_direction": 0,
-            "spindle_enabled": 0,
-            "spindle_increasing": 0,
-            "spindle_override_enabled": true,
-            "spindle_speed": 0.0,
-            "spindlerate": 1.0,
-            "tool_in_spindle": 0
-        },
-        "values": {
-            "max_acceleration": 508.0,
-            "max_velocity": 3200.0,
-            "velocity": 0.0
-        }
-    }
+    state = {}
     displayedErrors = [];
     page = "controller";
     interval = 2000;
     isIntervalRunning = false;
-
+    saveState = 1;
     constructor() {
         this.request = new Request();
         this.controlInterval();
@@ -157,6 +124,7 @@ class Machinekit {
         document.getElementById("spindle-speed").innerHTML = spindle_speed;
         let axesHomed = 0;
         const totalAxes = Object.keys(position).length;
+
         if (totalAxes === 3) {
             for (const axe in position) {
                 let homed = "";
@@ -258,10 +226,41 @@ class Machinekit {
             this.isIntervalRunning = true;
         }
         if (this.page == "controller") {
-            console.log("get vitals");
             this.getMachineVitals();
+            if (this.saveState == 1) {
+                if (this.oldState !== JSON.stringify(this.state.position)) {
+                    this.interval = 200;
+                } else {
+                    if (this.interval != 2000) {
+                        this.interval = 2000;
+                    }
+                }
+                this.oldState = JSON.stringify(this.state.position);
+                this.saveState = 0;
+            }
+            this.saveState++;
         }
+        console.log(this.interval);
         setTimeout(this.controlInterval.bind(this), this.interval)
+    }
+
+    /*ALL BUTTON CLICK HANDLERS*/
+    async clickHandler(url, command) {
+        let result;
+        if (command == "MDI") {
+            result = await this.request.post(url, {
+                "command": document.getElementById("mdi-command-input").value
+            });
+            this.interval = 200;
+        } else {
+            result = await this.request.post(url, {
+                "command": command
+            });
+        }
+        if ("errors" in result) {
+            return this.errorHandler(result.errors);
+        }
+        this.getMachineVitals();
     }
 }
 

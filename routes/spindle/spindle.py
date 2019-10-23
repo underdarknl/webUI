@@ -14,11 +14,11 @@ with open("./jsonFiles/errorMessages.json") as f:
 @auth
 @errors
 def set_machinekit_spindle_speed():
-    if not "spindle_speed" in request.json:
+    if not "command" in request.json:
         raise ValueError(errorMessages['2'])
 
     data = request.json
-    command = escape(data["spindle_speed"])
+    command = escape(data["command"])
     return settings.controller.spindle_speed(command)
 
 
@@ -26,11 +26,11 @@ def set_machinekit_spindle_speed():
 @auth
 @errors
 def set_machinekit_spindle_brake():
-    if not "spindle_brake" in request.json:
+    if not "command" in request.json:
         raise ValueError(errorMessages['2'])
 
     data = request.json
-    command = escape(data["spindle_brake"])
+    command = escape(data["command"])
     return settings.controller.spindle_brake(command)
 
 
@@ -38,11 +38,11 @@ def set_machinekit_spindle_brake():
 @auth
 @errors
 def set_machinekit_spindle_direction():
-    if not "spindle_direction" in request.json:
+    if not "command" in request.json:
         raise ValueError(errorMessages['2'])
 
     data = request.json
-    command = escape(data['spindle_direction'])
+    command = escape(data['command'])
     return settings.controller.spindle_direction(command)
 
 
@@ -50,11 +50,11 @@ def set_machinekit_spindle_direction():
 @auth
 @errors
 def set_spindle_enabled():
-    if not "spindle_enabled" in request.json:
+    if not "command" in request.json:
         raise ValueError(errorMessages['2'])
 
     data = request.json
-    command = escape(data["spindle_enabled"])
+    command = escape(data["command"])
     return settings.controller.spindle_enabled(command)
 
 
@@ -62,9 +62,9 @@ def set_spindle_enabled():
 @auth
 @errors
 def set_machinekit_spindle_override():
-    if not "spindle_override" in request.json:
+    if not "command" in request.json:
         raise ValueError(errorMessages['2'])
 
     data = request.json
-    command = escape(data["spindle_override"])
+    command = escape(data["command"])
     return settings.controller.spindleoverride(float(command))

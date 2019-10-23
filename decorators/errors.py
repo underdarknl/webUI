@@ -2,6 +2,7 @@ from flask import request
 import json
 import configparser
 import settings
+import werkzeug
 
 config = configparser.ConfigParser()
 config.read("default.ini")
@@ -14,7 +15,7 @@ def errors(f):
         try:
             if request.method == "POST":
                 if not request.json:
-                    raise Exception(errorMessages['4'])
+                    raise ValueError(errorMessages['4'])
             if settings.machinekit_running == False:
                 return {"errors": errorMessages['0']}, 500
             return f(*args, **kwargs)
@@ -23,13 +24,15 @@ def errors(f):
             if type(e.message) == str:
                 return {"errors": {"message": e.message, "status": 400, "type": "ValueError"}}, 400
             else:
-                return {"errors": e.message}, 400
+                return {"errors": e.message}, e.message['status']
         except RuntimeError as e:
-            return {"errors": e.message}, 400
+            return {"errors": e.message}, e.message['status']
         except KeyError as e:
             return {"errors": {"message": "Unknown key expected: " + e.message, "status": 400, "type": "KeyError"}}, 400
         except NameError as e:
-            return {"errors": e.message}, 404
+            return {"errors": e.message}, e.message['status']
+        except (werkzeug.exceptions.BadRequest) as e:
+            return {"errors": errorMessages['10']}
         except Exception as e:
             return {"errors": {"message": e.message}}
 

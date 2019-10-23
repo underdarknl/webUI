@@ -8,7 +8,7 @@ API_KEY: {{token}}
 Content-Type: application/json
 
 {
-    "spindle_direction": "spindle_reverse"
+    "command": "spindle_reverse"
 }
 
 
@@ -18,7 +18,7 @@ API_KEY: {{token}}
 Content-Type: application/json
 
 {
-    "spindle_enabled": "spindle_on"
+    "command": "spindle_on"
 }
 
 ###
@@ -27,7 +27,7 @@ API_KEY: {{token}}
 Content-Type: application/json
 
 {
-    "spindle_speed": "spindle_decrease"
+    "command": "spindle_decrease"
 }
 
 ###
@@ -36,7 +36,7 @@ API_KEY: {{token}}
 Content-Type: application/json
 
 {
-    "spindle_override": 1
+    "command": 1
 }
 
 ###
@@ -45,5 +45,5 @@ API_KEY: {{token}}
 Content-Type: application/json
 
 {
-    "spindle_brake": "brake_engaged"
+    "command": "brake_engaged"
 }

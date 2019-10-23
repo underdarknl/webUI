@@ -25,14 +25,14 @@ def set_home_axes():
 @auth
 @errors
 def send_command():
-    if not "mdi_command" in request.json:
+    if not "command" in request.json:
         raise ValueError(errorMessages['2'])
 
-    if len(request.json["mdi_command"]) == 0:
+    if len(request.json["command"]) == 0:
         raise ValueError(errorMessages['3'])
 
     data = request.json
-    command = escape(data["mdi_command"])
+    command = escape(data["command"])
     return settings.controller.mdi_command(command)
 
 

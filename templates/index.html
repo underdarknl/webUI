@@ -103,24 +103,26 @@
             <form onsubmit="event.preventDefault()">
                 <div id="machine-estop">
                     <label>ESTOP</label>
-                    <button class="button error" id="toggleEstopBtn" onClick="toggleStatus('estop')">
+                    <button class="button error" id="toggleEstopBtn"
+                        onClick="machinekit.clickHandler('/machinekit/status','estop')">
                         TOGGLE ESTOP
                     </button>
                 </div>
 
                 <div id="machine-power">
                     <label>Power</label>
-                    <button class="button primary" id="togglePowerBtn" onClick="toggleStatus('power')">
+                    <button class="button primary" id="togglePowerBtn"
+                        onClick="machinekit.clickHandler('/machinekit/status', 'power')">
                         Toggle power
                     </button>
                 </div>
 
                 <div id="machine-home-axes">
                     <label>Axes</label>
-                    <button class="button primary" onClick="homeAxes('home')">
+                    <button class="button primary" onClick="machinekit.clickHandler('/machinekit/axes/home','home')">
                         Home
                     </button>
-                    <button class="button primary" onClick="homeAxes('unhome')">
+                    <button class="button primary" onClick="machinekit.clickHandler('/machinekit/axes/home','unhome')">
                         Unhome
                     </button>
                 </div>
@@ -128,36 +130,82 @@
 
                 <div id="program-control">
                     <label>Program</label>
-                    <button class="button primary" id="program-start" onclick="programControl('start')">
+                    <button class="button primary" id="program-start"
+                        onclick="machinekit.clickHandler('/machinekit/program','start')">
                         Start
                     </button>
-                    <button class="button primary" id="program-pause" onclick="programControl('pause')">
+                    <button class="button primary" id="program-pause"
+                        onclick="machinekit.clickHandler('/machinekit/program','pause')">
                         Pause
                     </button>
-                    <button class="button primary" id="program-resume" onclick="programControl('resume')">
+                    <button class="button primary" id="program-resume"
+                        onclick="machinekit.clickHandler('/machinekit/program','resume')">
                         Resume
                     </button>
-                    <button class="button error" id="program-stop" onclick="programControl('stop')">
+                    <button class="button error" id="program-stop"
+                        onclick="machinekit.clickHandler('/machinekit/program','stop')">
                         Stop
                     </button>
                 </div>
 
                 <div id="spindle-control">
                     <label>Spindle</label>
-                    <button class="button primary" id="reverse" onclick="spindleControl('reverse')">
+                    <button class="button primary" id="reverse"
+                        onclick="machinekit.clickHandler('/machinekit/spindle/direction','spindle_reverse')">
                         reverse
                     </button>
-                    <button class="button primary" id="forward" onclick="spindleControl('forward')">
+                    <button class="button primary" id="forward"
+                        onclick="machinekit.clickHandler('/machinekit/spindle/direction','spindle_forward')">
                         forward
                     </button>
-                    <button class="button primary" id="brake" onclick="spindleControl('brake')">
+                    <button class="button primary" id="brake"
+                        onclick="machinekit.clickHandler('/machinekit/spindle/brake','brake_engaged')">
                         brake
                     </button>
-                    <button class="button error" id="off" onclick="spindleControl('off')">
+                    <button class="button error" id="off"
+                        onclick="machinekit.clickHandler('/machinekit/spindle/enabled','spindle_off')">
                         off
                     </button>
                 </div>
 
+                <div id="spindle-speed-control">
+                    <label>Spindle speed</label>
+                    <button class="button primary"
+                        onclick="machinekit.clickHandler('/machinekit/spindle/speed','spindle_decrease')">
+                        -
+                    </button>
+                    <button class="button primary"
+                        onclick="machinekit.clickHandler('/machinekit/spindle/speed', 'spindle_increase')">
+                        +
+                    </button>
+                </div>
+
+                <div id="mdi-command">
+                    <label>MDI command</label>
+                    <input type="text" id="mdi-command-input" placeholder="X1 Y1 Z1" value="X0 Z0 Y0" />
+                    <button onclick="machinekit.clickHandler('/machinekit/position/mdi', 'MDI')">send</button>
+                </div>
+
+                <div id="feed-override-control">
+                    <label>Feed override</label>
+                    <input type="range" min="0" max="120" value="0" onchange="controlOverrides(this)"
+                        id="feed-override" />
+                    <span><output id="feed-override-output">120</output>%</span>
+                </div>
+
+                <div id="spindle-override-control">
+                    <label>Spindle override</label>
+                    <input type="range" min="0" max="100" value="0" onchange="controlOverrides(this)"
+                        id="spindle-override" />
+                    <span><output id="spindle-override-output">100</output>%</span>
+                </div>
+
+                <div id="max-velocity-control">
+                    <label>Max velocity</label>
+                    <input type="range" min="0" max="3200" value="0" onchange="controlOverrides(this)"
+                        id="max-velocity" />
+                    <span><output id="max-velocity-output">3200</output></span>
+                </div>
             </form>
         </section>
     </main>

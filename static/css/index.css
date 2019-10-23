@@ -23,7 +23,8 @@
 }
 
 /*Sections*/
-#section-vitals {
+#section-vitals,
+#controls {
     display: none;
 }
 
@@ -34,7 +35,12 @@
 #program-control,
 #program-control button,
 #spindle-control,
-#spindle-control button {
+#spindle-control button,
+#spindle-speed-control,
+#feed-override-control,
+#spindle-override-control,
+#max-velocity-control,
+#mdi-command {
     display: none
 }
 
@@ -45,7 +51,8 @@ body.no-critical-errors.no-file-selected #no-file-selected {
 }
 
 body.no-critical-errors #no-critical-errors,
-body.controller.no-critical-errors #section-vitals {
+body.controller.no-critical-errors #section-vitals,
+body.no-critical-errors #controls {
     display: block;
 }
 
@@ -66,9 +73,14 @@ body.controller.no-critical-errors #spindle-speed {
 
 body.controller.no-critical-errors #machine-estop,
 body.controller.no-critical-errors.estop-disabled #machine-power,
-body.controller.no-critical-errors.estop-disabled.power-on #machine-home-axes,
+body.controller.no-critical-errors.estop-disabled.power-on.interp-idle #machine-home-axes,
 body.controller.no-critical-errors.estop-disabled.power-on.homed.file-selected #program-control,
-body.controller.no-critical-errors.estop-disabled.power-on #spindle-control {
+body.controller.no-critical-errors.estop-disabled.power-on #spindle-control,
+body.controller.no-critical-errors.estop-disabled.power-on.spindle-brake-disengaged #spindle-speed-control,
+body.controller.no-critical-errors.estop-disabled.power-on #max-velocity-control,
+body.controller.no-critical-errors.estop-disabled.power-on #feed-override-control,
+body.controller.no-critical-errors.estop-disabled.power-on #spindle-override-control,
+body.controller.no-critical-errors.estop-disabled.power-on.homed.interp-idle #mdi-command {
     display: flex;
 }
 
