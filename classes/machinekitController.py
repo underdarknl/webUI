@@ -63,7 +63,6 @@ class MachinekitController():
             pos = round(self.s.axis[i]['input'], 3)
             self.axes_with_cords[self.axes[i]] = {"pos": pos, "homed": homed}
             i += 1
-
         return self.axes_with_cords
 
     def errors(self):

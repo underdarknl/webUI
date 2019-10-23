@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+    <title>CNC Controller</title>
     <script src="/static/javascript/machinekit.js"></script>
     <link href="//css.underdark.nl/0.2/base.css" rel="stylesheet" />
     <link href="//css.underdark.nl/0.2/layout.css" rel="stylesheet" />
@@ -91,12 +91,74 @@
                 </thead>
                 <tbody>
                     <tr id="tbody_axes">
-                        <td>0</td>
-                        <td>0</td>
-                        <td>0</td>
+                        <td id="x-axe">0</td>
+                        <td id="y-axe">0</td>
+                        <td id="z-axe">0</td>
                     </tr>
                 </tbody>
             </table>
+        </section>
+
+        <section id="controls">
+            <form onsubmit="event.preventDefault()">
+                <div id="machine-estop">
+                    <label>ESTOP</label>
+                    <button class="button error" id="toggleEstopBtn" onClick="toggleStatus('estop')">
+                        TOGGLE ESTOP
+                    </button>
+                </div>
+
+                <div id="machine-power">
+                    <label>Power</label>
+                    <button class="button primary" id="togglePowerBtn" onClick="toggleStatus('power')">
+                        Toggle power
+                    </button>
+                </div>
+
+                <div id="machine-home-axes">
+                    <label>Axes</label>
+                    <button class="button primary" onClick="homeAxes('home')">
+                        Home
+                    </button>
+                    <button class="button primary" onClick="homeAxes('unhome')">
+                        Unhome
+                    </button>
+                </div>
+
+
+                <div id="program-control">
+                    <label>Program</label>
+                    <button class="button primary" id="program-start" onclick="programControl('start')">
+                        Start
+                    </button>
+                    <button class="button primary" id="program-pause" onclick="programControl('pause')">
+                        Pause
+                    </button>
+                    <button class="button primary" id="program-resume" onclick="programControl('resume')">
+                        Resume
+                    </button>
+                    <button class="button error" id="program-stop" onclick="programControl('stop')">
+                        Stop
+                    </button>
+                </div>
+
+                <div id="spindle-control">
+                    <label>Spindle</label>
+                    <button class="button primary" id="reverse" onclick="spindleControl('reverse')">
+                        reverse
+                    </button>
+                    <button class="button primary" id="forward" onclick="spindleControl('forward')">
+                        forward
+                    </button>
+                    <button class="button primary" id="brake" onclick="spindleControl('brake')">
+                        brake
+                    </button>
+                    <button class="button error" id="off" onclick="spindleControl('off')">
+                        off
+                    </button>
+                </div>
+
+            </form>
         </section>
     </main>
 </body>

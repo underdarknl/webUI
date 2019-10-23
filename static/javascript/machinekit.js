@@ -82,8 +82,125 @@ class Machinekit {
         if ("errors" in result) {
             return this.errorHandler(result.errors);
         }
+        this.state = result;
 
+        this.buildControllerPage();
+    }
+
+    buildControllerPage() {
+        const {
+            power: {
+                enabled,
+                estop
+            },
+            program: {
+                file,
+                interp_state,
+                task_mode
+            },
+            spindle: {
+                spindle_speed,
+                spindle_brake,
+                spindle_direction
+            },
+            position
+        } = this.state;
         document.body.className = "controller no-critical-errors";
+
+        if (file) {
+            document.getElementById("current-file").innerHTML = file;
+            document.body.classList.add("file-selected");
+
+        } else {
+            document.body.classList.add("no-file-selected");
+        }
+
+        if (enabled) {
+            document.body.classList.add("power-on");
+        } else {
+            document.body.classList.add("power-off");
+        }
+
+        if (estop) {
+            document.body.classList.add("estop-enabled");
+        } else {
+            document.body.classList.add("estop-disabled");
+        }
+
+        switch (interp_state) {
+            case "INTERP_IDLE":
+                document.body.classList.add("interp-idle");
+                break;
+            case "INTERP_PAUSED":
+                document.body.classList.add("interp-paused");
+                break;
+            case "INTERP_WAITING":
+                document.body.classList.add("interp-waiting");
+                break;
+            case "INTERP_READING":
+                document.body.classList.add("interp-reading");
+                break;
+        }
+
+        switch (task_mode) {
+            case "MODE_MDI":
+                document.body.classList.add("mode-mdi");
+                break;
+            case "MODE_MANUAL":
+                document.body.classList.add("mode-manual");
+                break;
+            case "MODE_AUTO":
+                document.body.classList.add("mode-auto");
+                break;
+        }
+
+        document.getElementById("spindle-speed").innerHTML = spindle_speed;
+        let axesHomed = 0;
+        const totalAxes = Object.keys(position).length;
+        if (totalAxes === 3) {
+            for (const axe in position) {
+                let homed = "";
+                let color = "error";
+                if (position[axe].homed) {
+                    homed = " (H)";
+                    color = "success";
+                    axesHomed++;
+                }
+                if (axe == "x") {
+                    document.getElementById("x-axe").innerHTML = position[axe].pos + homed;
+                    document.getElementById("x-axe").className = color;
+                } else if (axe == "y") {
+                    document.getElementById("y-axe").innerHTML = position[axe].pos + homed;
+                    document.getElementById("y-axe").className = color;
+                } else {
+                    document.getElementById("z-axe").innerHTML = position[axe].pos + homed;
+                    document.getElementById("z-axe").className = color;
+                }
+            }
+        } else {
+            console.log("render custom table for axes");
+        }
+
+        if (totalAxes === axesHomed) {
+            document.body.classList.add("homed");
+        } else {
+            document.body.classList.add("unhomed");
+        }
+
+        if (spindle_brake) {
+            document.body.classList.add("spindle-brake-engaged");
+        } else {
+            document.body.classList.add("spindle-brake-disengaged");
+        }
+
+        if (spindle_direction == 1) {
+            document.body.classList.add("spindle-forward");
+        } else if (spindle_direction == -1) {
+            document.body.classList.add("spindle-reverse");
+        } else {
+            document.body.classList.add("spindle-not-moving");
+        }
+
     }
 
     fileManager() {

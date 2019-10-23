@@ -22,15 +22,70 @@
     display: none;
 }
 
+/*Sections*/
 #section-vitals {
     display: none;
 }
 
-body.not-authorized #invalid-api-key {
+/*Controls*/
+#machine-power,
+#machine-estop,
+#machine-home-axes,
+#program-control,
+#program-control button,
+#spindle-control,
+#spindle-control button {
+    display: none
+}
+
+body.not-authorized #invalid-api-key,
+body.machinekit-down #machinekit-down,
+body.no-critical-errors.no-file-selected #no-file-selected {
     display: block;
 }
 
 body.no-critical-errors #no-critical-errors,
 body.controller.no-critical-errors #section-vitals {
+    display: block;
+}
+
+body.controller.no-critical-errors.estop-enabled #estop-enabled,
+body.controller.no-critical-errors.estop-disabled #estop-disabled,
+body.controller.no-critical-errors.power-on #power-on,
+body.controller.no-critical-errors.power-off #power-off,
+body.controller.no-critical-errors.interp-idle #interp-idle,
+body.controller.no-critical-errors.interp-paused #interp-paused,
+body.controller.no-critical-errors.interp-waiting #interp-waiting,
+body.controller.no-critical-errors.interp-reading #interp-reading,
+body.controller.no-critical-errors.mode-auto #task-auto,
+body.controller.no-critical-errors.mode-mdi #task-mdi,
+body.controller.no-critical-errors.mode-manual #task-manual,
+body.controller.no-critical-errors #spindle-speed {
+    display: table-cell;
+}
+
+body.controller.no-critical-errors #machine-estop,
+body.controller.no-critical-errors.estop-disabled #machine-power,
+body.controller.no-critical-errors.estop-disabled.power-on #machine-home-axes,
+body.controller.no-critical-errors.estop-disabled.power-on.homed.file-selected #program-control,
+body.controller.no-critical-errors.estop-disabled.power-on #spindle-control {
+    display: flex;
+}
+
+body.controller.no-critical-errors.estop-disabled.power-on.homed.file-selected.interp-idle #program-start,
+body.controller.no-critical-errors.estop-disabled.power-on.homed.file-selected.interp-paused #program-resume,
+body.controller.no-critical-errors.estop-disabled.power-on.homed.file-selected.interp-paused #program-stop,
+body.controller.no-critical-errors.estop-disabled.power-on.homed.file-selected.interp-waiting #program-stop,
+body.controller.no-critical-errors.estop-disabled.power-on.homed.file-selected.interp-reading #program-stop,
+body.controller.no-critical-errors.estop-disabled.power-on.homed.file-selected.interp-reading #program-pause,
+body.controller.no-critical-errors.estop-disabled.power-on.homed.file-selected.interp-waiting #program-pause,
+body.controller.no-critical-errors.estop-disabled.power-on.spindle-brake-engaged #reverse,
+body.controller.no-critical-errors.estop-disabled.power-on.spindle-brake-engaged #forward,
+body.controller.no-critical-errors.estop-disabled.power-on.spindle-forward #reverse,
+body.controller.no-critical-errors.estop-disabled.power-on.spindle-reverse #forward,
+body.controller.no-critical-errors.estop-disabled.power-on.spindle-forward #brake,
+body.controller.no-critical-errors.estop-disabled.power-on.spindle-reverse #brake,
+body.controller.no-critical-errors.estop-disabled.power-on.spindle-forward #off,
+body.controller.no-critical-errors.estop-disabled.power-on.spindle-reverse #off {
     display: block;
 }
