@@ -37,7 +37,8 @@ class linuxcnc():
     SPINDLE_DECREASE = -100
     SPINDLE_CONSTANT = 50
 
-
+    BRAKE_ENGAGE = 1
+    BRAKE_RELEASE = 0
     class stat():
         def __init__(self):
             print("Hello from stat")
@@ -59,7 +60,7 @@ class linuxcnc():
             self.spindle_direction = 1
             self.spindle_increasing = 0
             self.spindle_override_enabled = 0
-            self.spindlerate = 300
+            self.spindlerate = 1
             self.tool_in_spindle = 0
 
             self.file = "/dir/files/smile.nc"
@@ -396,6 +397,8 @@ class MachinekitController():
         if self.s.interp_state is not linuxcnc.INTERP_IDLE:
             return {"errors": "Cannot execute command when machine interp state isn't idle"}
 
+        if brake_command == linuxcnc.BRAKE_ENGAGE:
+            self.s.spindle_direction = 0
         self.s.spindle_brake = brake_command
         return self.errors()
 
@@ -414,6 +417,7 @@ class MachinekitController():
 
         if self.s.spindle_direction == commands[command]:
             return {"errors": "Command could not be executed because the spindle_direction is already in this state"}
+        self.s.spindle_brake = linuxcnc.BRAKE_RELEASE
         self.s.spindle_direction = commands[command]
         return self.errors()
 
