@@ -24,13 +24,18 @@
 
 /*Sections*/
 #section-vitals,
-#controls {
+#controls,
+#xy-control,
+#z-control,
+#file-manager {
     display: none;
 }
 
 /*Controls*/
 #machine-power,
 #machine-estop,
+#machine-power-manual,
+#machine-estop-manual,
 #machine-home-axes,
 #program-control,
 #program-control button,
@@ -52,7 +57,8 @@ body.no-critical-errors.no-file-selected #no-file-selected {
 
 body.no-critical-errors #no-critical-errors,
 body.controller.no-critical-errors #section-vitals,
-body.no-critical-errors #controls {
+body.controller.no-critical-errors #controls,
+body.filemanager.no-critical-errors #file-manager {
     display: block;
 }
 
@@ -72,7 +78,9 @@ body.controller.no-critical-errors #spindle-speed {
 }
 
 body.controller.no-critical-errors #machine-estop,
+body.controller.no-critical-errors #machine-estop-manual,
 body.controller.no-critical-errors.estop-disabled #machine-power,
+body.controller.no-critical-errors.estop-disabled #machine-power-manual,
 body.controller.no-critical-errors.estop-disabled.power-on.interp-idle #machine-home-axes,
 body.controller.no-critical-errors.estop-disabled.power-on.homed.file-selected #program-control,
 body.controller.no-critical-errors.estop-disabled.power-on #spindle-control,
@@ -100,4 +108,100 @@ body.controller.no-critical-errors.estop-disabled.power-on.spindle-reverse #brak
 body.controller.no-critical-errors.estop-disabled.power-on.spindle-forward #off,
 body.controller.no-critical-errors.estop-disabled.power-on.spindle-reverse #off {
     display: block;
+}
+
+body.controller.no-critical-errors.estop-disabled.power-on #xy-control,
+body.controller.no-critical-errors.estop-disabled.power-on #z-control {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: unset;
+    -webkit-align-items: unset;
+}
+
+#center-controls {
+    display: flex;
+    justify-content: center;
+}
+
+.center {
+    min-width: 0px;
+    width: 65px;
+    height: 55px;
+}
+
+#center-controls button,
+#xy-control button,
+#z-control button {
+    display: flex;
+    justify-content: center;
+    align-self: center;
+    margin: 2px;
+}
+
+.small-horizontal {
+    min-width: 0px;
+    height: 65px;
+    width: 60px;
+}
+
+.medium-horizontal {
+    min-width: 0;
+    height: 85px;
+    width: 70px;
+}
+
+.large-horizontal {
+    min-width: 0;
+    height: 105px;
+    width: 80px;
+}
+
+.medium {
+    width: 140px;
+    height: 45px;
+}
+
+.large {
+    width: 160px;
+    height: 55px;
+}
+
+@media only screen and (max-width: 600px) {
+    .center {
+        min-width: 0px;
+        width: 40px;
+        height: 40px;
+    }
+
+    .small-horizontal {
+        min-width: 0px;
+        height: 50px;
+        width: 40px;
+    }
+
+    .medium-horizontal {
+        min-width: 0;
+        height: 50px;
+        width: 40px;
+        font-size: 22px;
+    }
+
+    .large-horizontal {
+        min-width: 0;
+        height: 50px;
+        width: 30px;
+        font-size: 25px;
+    }
+
+    .medium {
+        height: 40px;
+        font-size: 22px;
+    }
+
+    .large {
+        height: 55px;
+        font-size: 25px;
+    }
+
 }

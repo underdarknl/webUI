@@ -262,25 +262,6 @@ class MachinekitController():
     def manual_control(self, axes, speed, increment):
         """ Manual continious transmission. axes=int speed=int in mm increment=int in mm"""
         self.s.poll()
-        if not type(axes) == int:
-            if type(axes) == float:
-                raise ValueError(
-                    {"message": "Axe cannot be a float", "status": 400, "type": "ValueError"})
-            if not axes.isdecimal():
-                raise ValueError(
-                    {"message": "Axe must be an integer or convertable to an integer", "status": 400, "type": "ValueError"})
-        if not type(speed) == float:
-            if not speed.replace(".", "").isdecimal():
-                raise ValueError(
-                    {"message": "Speed must be a float or convertable to a float", "status": 400, "type": "ValueError"})
-        if not type(increment) == int:
-            if type(increment) == float:
-                raise ValueError(
-                    {"message": "Increment cannot be a float", "status": 400, "type": "ValueError"})
-            if not increment.isdecimal():
-                raise ValueError(
-                    {"message": "Increment must be an integer or convertable to an integer", "status": 400, "type": "ValueError"})
-
         if self.s.interp_state is not linuxcnc.INTERP_IDLE:
             raise RuntimeError(
                 {"message": "Cannot execute command when machine interp state isn't idle", "status": 502})

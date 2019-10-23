@@ -45,11 +45,11 @@ def set_machinekit_status():
 @auth
 @errors
 def set_machinekit_feedrate():
-    if not "feedrate" in request.json:
+    if not "command" in request.json:
         raise ValueError(errorMessages['2'])
 
     data = request.json
-    command = float(escape(data["feedrate"]))
+    command = float(escape(data["command"]))
     return settings.controller.feedoverride(command)
 
 
@@ -57,11 +57,11 @@ def set_machinekit_feedrate():
 @auth
 @errors
 def maxvel():
-    if not "velocity" in request.json:
+    if not "command" in request.json:
         raise ValueError(errorMessages['2'])
 
     data = request.json
-    command = escape(data["velocity"])
+    command = escape(data["command"])
     return settings.controller.maxvel(float(command))
 
 

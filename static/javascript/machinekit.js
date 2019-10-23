@@ -1,3 +1,9 @@
+window.onload = async () => {
+    const sortable = new Sortable.default(document.getElementById('tbody_queue'), {
+        draggable: 'tr'
+    });
+
+}
 class Request {
     api = "http://192.168.1.116:5000";
     api_key = "test_secret";
@@ -36,12 +42,21 @@ class Machinekit {
     state = {}
     displayedErrors = [];
     page = "controller";
+    saveState = 1;
+
+    slowInterval = 2000
+    fastInterval = 200;
     interval = 2000;
     isIntervalRunning = false;
-    saveState = 1;
+
+    file_queue = [];
+    local_file_queue = [];
+    files_on_server = [];
+
     constructor() {
         this.request = new Request();
         this.controlInterval();
+        this.page = localStorage.getItem("page");
     }
 
     async getMachineVitals() {
@@ -63,12 +78,17 @@ class Machinekit {
             program: {
                 file,
                 interp_state,
-                task_mode
+                task_mode,
+                feedrate
             },
             spindle: {
                 spindle_speed,
                 spindle_brake,
-                spindle_direction
+                spindle_direction,
+                spindlerate
+            },
+            values: {
+                max_velocity
             },
             position
         } = this.state;
@@ -168,12 +188,58 @@ class Machinekit {
         } else {
             document.body.classList.add("spindle-not-moving");
         }
+        document.getElementById("feed-override").value = Math.round((feedrate * 100));
+        document.getElementById("feed-override-output").innerHTML = Math.round((feedrate * 100));
 
+        document.getElementById("spindle-override").value = Math.round((spindlerate * 100));
+        document.getElementById("spindle-override-output").innerHTML = Math.round((spindlerate * 100));
+
+        document.getElementById("max-velocity").value = Math.round((max_velocity));
+        document.getElementById("max-velocity-output").innerHTML = Math.round((max_velocity));
     }
 
-    fileManager() {
+    async fileManager() {
         console.log("Render the file manager");
         document.body.className = "filemanager no-critical-errors";
+        const result = await this.request.get("/server/files");
+        if ("errors" in result) {
+            return this.errorHandler(result.errors);
+        }
+
+        this.file_queue = result.file_queue;
+        this.files_on_server = result.result;
+        this.buildFileManagerPage();
+    }
+
+    buildFileManagerPage() {
+        document.getElementById("tbody_files").innerHTML = "";
+
+        //Render all files from the server
+        if (this.files_on_server.length > 0) {
+            this.files_on_server.map((item, index) => {
+                document.getElementById("tbody_files").innerHTML +=
+                    `
+                <tr>
+                    <td>${item[1]}</td>
+                    <td>
+                        <button class="warning" onclick="machinekit.addFilesToQueue('${item[1]}')">Add to queue</button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        //Render file_queue
+        if (this.file_queue.length > 0) {
+            document.getElementById("tbody_queue").innerHTML = "";
+            this.file_queue.map((value, index) => {
+                document.getElementById("tbody_queue").innerHTML +=
+                    `<tr id="${value}" class="test">
+                        <td>${value}</td>
+                        <td><button class="error" onclick="machinekit.removeFileFromQueue(${index})">remove</button></td>
+                    </tr>`;
+            });
+        }
+
     }
 
     errorHandler(error) {
@@ -210,7 +276,6 @@ class Machinekit {
     }
 
     navigation(page) {
-        console.log(page);
         localStorage.setItem("page", page);
         this.page = page;
 
@@ -229,10 +294,10 @@ class Machinekit {
             this.getMachineVitals();
             if (this.saveState == 1) {
                 if (this.oldState !== JSON.stringify(this.state.position) && this.oldState != undefined) {
-                    this.interval = 200;
+                    this.interval = this.fastInterval;
                 } else {
-                    if (this.interval != 2000) {
-                        this.interval = 2000;
+                    if (this.interval != this.slowInterval) {
+                        this.interval = this.slowInterval
                     }
                 }
                 this.oldState = JSON.stringify(this.state.position);
@@ -240,7 +305,6 @@ class Machinekit {
             }
             this.saveState++;
         }
-        console.log(this.interval);
         setTimeout(this.controlInterval.bind(this), this.interval)
     }
 
@@ -262,6 +326,97 @@ class Machinekit {
         }
         this.getMachineVitals();
     }
-}
 
+    async controlOverrides(element, url) {
+        let value;
+        const target = element.id;
+        if (target == "max-velocity") {
+            value = element.value;
+        } else {
+            value = (element.value / 100);
+        }
+        document.getElementById(target + "-output").innerHTML = element.value;
+
+        const result = await this.request.post(url, {
+            "command": value
+        });
+
+        if ("errors" in result) {
+            return this.errorHandler(result.errors);
+        }
+        this.getMachineVitals();
+    }
+
+    async manualControl(input, increment, selectedAxe = null) {
+        //Convert axename to number
+        const axeWithNumber = {
+            x: 0,
+            y: 1,
+            z: 2,
+            a: 3,
+            b: 4,
+            c: 5,
+            u: 6,
+            v: 7,
+            w: 8
+        }
+        let axeNumber;
+        if (selectedAxe === null) {
+            axeNumber = 0;
+        } else {
+            axeNumber = axeWithNumber[selectedAxe]
+        }
+
+
+        //Object that contains the axenumber, the speed at which it should move and the incrementation.
+        let command = {
+            "axes": axeNumber,
+            "speed": 10,
+            "increment": increment
+        }
+        const result = await this.request.post("/machinekit/position/manual", command);
+
+        if ("errors" in result) {
+            return this.errorHandler(result.errors);
+        }
+        this.getMachineVitals();
+    }
+
+    addFilesToQueue(file) {
+        this.file_queue.push(file);
+        this.renderFileQueue();
+    }
+
+    renderFileQueue() {
+        document.getElementById("tbody_queue").innerHTML = "";
+        this.file_queue.map((value, index) => {
+            document.getElementById("tbody_queue").innerHTML +=
+                `<tr id="${value}" class="test">
+                        <td>${value}</td>
+                        <td><button class="error" onclick="machinekit.removeFileFromQueue(${index})">remove</button></td>
+                    </tr>`;
+        });
+    }
+
+    removeFileFromQueue(index) {
+        this.file_queue.splice(index, 1);
+        this.renderFileQueue();
+    }
+
+    async updateFileQueueOnServer() {
+        this.file_queue = [];
+        let elements = document.getElementsByClassName("test");
+
+        for (let i = 0; i < elements.length; i++) {
+            this.file_queue.push(elements.item(i).id);
+        }
+        const result = await this.request.post("/server/update_file_queue", {
+            "new_queue": this.file_queue
+        });
+        if ("errors" in result) {
+            return this.errorHandler(result.errors);
+        }
+        this.buildFileManagerPage();
+    }
+}
 let machinekit = new Machinekit();
