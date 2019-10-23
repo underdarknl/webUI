@@ -27,8 +27,8 @@ class linuxcnc():
     STATE_ESTOP = True
     STATE_ESTOP_RESET = False
 
-    STATE_DISABLED = True
-    STATE_ENABLED = False
+    STATE_DISABLED = False
+    STATE_ENABLED = True
 
     SPINDLE_FORWARD = 1
     SPINDLE_REVERSE = -1
@@ -226,6 +226,7 @@ class MachinekitController():
         if command == "power":
             if self.s.estop == linuxcnc.STATE_ESTOP:
                 return {"errors": "Can't turn on machine while it is in E_STOP modus"}
+            print(self.s.enabled)
             if self.s.enabled:
                 self.s.enabled = linuxcnc.STATE_DISABLED
             else:
