@@ -175,5 +175,6 @@ def upload():
 
 
 if __name__ == "__main__":
-    app.run('0.0.0.0', debug=True,
-            port=5000)
+    app.run('0.0.0.0', 
+            debug=(True if config['server'].get('debug', False)),
+            port=config['server']['port'])
